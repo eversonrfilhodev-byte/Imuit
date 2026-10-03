@@ -73,7 +73,9 @@
   <div id="appMainContent" style="display:none;">
     <header class="app-header">
       <div class="brand">
-        <div class="logo-box"><i data-lucide="flame"></i></div>
+        <div class="logo-img-wrapper">
+          <img src="logo.png" alt="Logo App Imuit">
+        </div>
         <div>
           <h1>App Imuit - Gestão de Igreja</h1>
           <span id="userEmailDisplay" style="font-size:0.8rem; color:var(--text-muted);">carregando...</span>
@@ -286,7 +288,7 @@
           <div style="margin:15px 0;">
             <input type="text" id="buscaMembrosLista" placeholder="Pesquisar por nome ou apelido..." oninput="renderListaMembros()">
           </div>
-          <div style="overflow-x:auto;">
+          <div class="table-responsive">
             <table class="data-table">
               <thead>
                 <tr>
@@ -331,7 +333,7 @@
           <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:15px;">
             Gira permissões e aprove o acesso de novos membros da liderança.
           </p>
-          <div style="overflow-x:auto;">
+          <div class="table-responsive">
             <table class="data-table">
               <thead>
                 <tr>
