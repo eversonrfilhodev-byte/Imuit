@@ -15,6 +15,9 @@ let currentMonth = new Date().getMonth();
 let currentYear = new Date().getFullYear();
 let isRegisterMode = false;
 
+// Map de IDs das abas por ordem visual
+const TAB_IDS = ['tabChamada', 'tabCalendario', 'tabMembros', 'tabTutorial', 'tabAdmin'];
+
 // ==========================================
 // INICIALIZAÇÃO DA APLICAÇÃO
 // ==========================================
@@ -218,7 +221,7 @@ function entrarNoApp() {
   }
 
   renderAll();
-  irParaJanela(0);
+  irParaJanela('tabChamada');
 }
 
 function terminarSessao() {
@@ -256,29 +259,50 @@ function renderAll() {
   if (window.lucide) lucide.createIcons();
 }
 
-function irParaJanela(index) {
+// NAVEGAÇÃO DE ABAS CORRIGIDA (Aceita ID como 'tabMembros' ou índice numérico 0, 1, 2...)
+function irParaJanela(target) {
   const tabs = [...document.querySelectorAll('.tab-content')];
   const buttons = [...document.querySelectorAll('.tab-btn')];
 
   if (!tabs.length) return;
-  const safeIndex = Math.max(0, Math.min(index, tabs.length - 1));
 
-  tabs.forEach((tab, i) => {
-    tab.style.display = i === safeIndex ? 'block' : 'none';
+  let targetId = '';
+
+  if (typeof target === 'number') {
+    targetId = TAB_IDS[target] || TAB_IDS[0];
+  } else if (typeof target === 'string') {
+    if (!isNaN(target)) {
+      const idx = parseInt(target, 10);
+      targetId = TAB_IDS[idx] || TAB_IDS[0];
+    } else {
+      targetId = target.replace('#', '');
+    }
+  }
+
+  let selectedTabExists = false;
+
+  tabs.forEach((tab) => {
+    if (tab.id === targetId) {
+      tab.style.display = 'block';
+      selectedTabExists = true;
+    } else {
+      tab.style.display = 'none';
+    }
   });
 
-  buttons.forEach((btn, i) => {
-    btn.classList.toggle('active', i === safeIndex);
+  // Fallback de segurança se a ID fornecida não existir
+  if (!selectedTabExists && tabs[0]) {
+    tabs[0].style.display = 'block';
+    targetId = tabs[0].id;
+  }
+
+  // Atualizar botões ativos de forma segura por correspondência
+  buttons.forEach((btn) => {
+    const onclickAttr = btn.getAttribute('onclick') || '';
+    btn.classList.toggle('active', onclickAttr.includes(targetId));
   });
-}
 
-function navegarProximaJanela(step) {
-  const buttons = [...document.querySelectorAll('.tab-btn')].filter(b => b.style.display !== 'none');
-  if (!buttons.length) return;
-
-  const currentIndex = buttons.findIndex(btn => btn.classList.contains('active'));
-  const nextIndex = Math.max(0, Math.min(currentIndex + step, buttons.length - 1));
-  irParaJanela(nextIndex);
+  if (window.lucide) lucide.createIcons();
 }
 
 function alternarTema() {
@@ -374,7 +398,7 @@ function renderAttendanceListEditor() {
   if (!container) return;
 
   const termo = buscaInput ? buscaInput.value.toLowerCase().trim() : '';
-  const ordenacao = ordenacaoSel ? ordenacaoSel.value : 'PENDENTES';
+  const ordenacao = ordenacaoSel ? ordenacaoSel.value : 'NOME_ASC';
 
   let membrosFiltrados = state.membros.filter(m => {
     const matchNome = (m.nome || '').toLowerCase().includes(termo);
@@ -467,7 +491,7 @@ function renderPastasEListasTree() {
   state.pastas.forEach(pasta => {
     const listasDaPasta = state.chamadas.filter(c => c.pasta === pasta);
     html += `
-      <div class="folder-box">
+      <div class="folder-box" style="margin-bottom:15px;">
         <h4>📁 ${pasta} (${listasDaPasta.length} listas)</h4>
         <div style="margin-top:10px; padding-left:15px;">
           ${listasDaPasta.length === 0 ? '<p style="font-size:0.8rem; color:var(--text-muted);">Nenhuma lista nesta pasta.</p>' : ''}
@@ -508,7 +532,6 @@ function salvarEvento() {
   const hora = document.getElementById('evtHora')?.value;
   const horaFim = document.getElementById('evtHoraFim')?.value;
   const recorrencia = document.getElementById('evtRecorrencia')?.value;
-  const qtd = parseInt(document.getElementById('evtQtd')?.value || '1');
 
   if (!titulo || !data) {
     alert('Informe ao menos o título e a data do evento.');
@@ -517,7 +540,7 @@ function salvarEvento() {
 
   const novoEvento = {
     id: 'evt_' + Date.now(),
-    titulo, data, dataFim, hora, horaFim, recorrencia, qtd
+    titulo, data, dataFim, hora, horaFim, recorrencia
   };
 
   state.eventos.push(novoEvento);
@@ -848,7 +871,6 @@ function alterarPerfilUsuario(uid, novoPerfil) {
 // EXPOSIÇÃO DAS FUNÇÕES GLOBAIS NO WINDOW
 // ==========================================
 window.irParaJanela = irParaJanela;
-window.navegarProximaJanela = navegarProximaJanela;
 window.mudarMesCalendario = mudarMesCalendario;
 window.atualizarBuscaChamada = atualizarBuscaChamada;
 window.alterarOrdenacaoChamada = alterarOrdenacaoChamada;
