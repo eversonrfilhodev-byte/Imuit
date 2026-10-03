@@ -1,0 +1,38 @@
+{
+  "rules": {
+    ".read": "auth != null && root.child('users').child(auth.uid).child('aprovado').val() == true",
+    ".write": "auth != null && root.child('users').child(auth.uid).child('perfil').val() == 'A'",
+
+    "users": {
+      "$uid": {
+        ".read": "auth != null && (auth.uid == $uid || root.child('users').child(auth.uid).child('perfil').val() == 'A' || root.child('users').child(auth.uid).child('aprovado').val() == true)",
+        ".write": "auth != null && (auth.uid == $uid || root.child('users').child(auth.uid).child('perfil').val() == 'A' || (!data.exists() && root.child('users').child(auth.uid).child('perfil').val() == 'A'))"
+      }
+    },
+
+    "ministerios": {
+      ".read": "auth != null && root.child('users').child(auth.uid).child('aprovado').val() == true",
+      ".write": "auth != null && root.child('users').child(auth.uid).child('aprovado').val() == true"
+    },
+
+    "membros": {
+      ".read": "auth != null && root.child('users').child(auth.uid).child('aprovado').val() == true",
+      ".write": "auth != null && root.child('users').child(auth.uid).child('aprovado').val() == true"
+    },
+
+    "pastas": {
+      ".read": "auth != null && root.child('users').child(auth.uid).child('aprovado').val() == true",
+      ".write": "auth != null && root.child('users').child(auth.uid).child('aprovado').val() == true"
+    },
+
+    "chamadas": {
+      ".read": "auth != null && root.child('users').child(auth.uid).child('aprovado').val() == true",
+      ".write": "auth != null && root.child('users').child(auth.uid).child('aprovado').val() == true"
+    },
+
+    "eventos": {
+      ".read": "auth != null && root.child('users').child(auth.uid).child('aprovado').val() == true",
+      ".write": "auth != null && root.child('users').child(auth.uid).child('aprovado').val() == true"
+    }
+  }
+}

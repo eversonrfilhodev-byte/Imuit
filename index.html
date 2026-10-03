@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>App Imuit - Gestão Integrada de Igreja</title>
+
+  <link rel="icon" type="image/png" sizes="32x32" href="logo.png">
+  <link rel="shortcut icon" href="logo.png" type="image/x-icon">
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="styles.css">
+
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+  <script src="firebase-init.js" defer></script>
+  <script src="script.js" defer></script>
+</head>
+<body>
+
+  <div id="authModal" class="auth-overlay">
+    <div class="auth-card">
+      <div style="text-align: center; margin-bottom: 15px;">
+        <i data-lucide="shield-check" style="width: 48px; height: 48px; color: var(--accent-blue);"></i>
+      </div>
+      <h2 id="authTitle">Aceder ao App Imuit</h2>
+
+      <div id="authNameGroup" class="form-group" style="display: none;">
+        <label>Nome Completo:</label>
+        <input type="text" id="authNome" placeholder="Ex: Amanda Lima">
+      </div>
+
+      <div class="form-group">
+        <label>Endereço de E-mail:</label>
+        <input type="email" id="authEmail" placeholder="exemplo@igreja.com">
+      </div>
+
+      <div class="form-group">
+        <label>Palavra-passe:</label>
+        <input type="password" id="authPassword" placeholder="••••••••">
+      </div>
+
+      <button type="button" id="btnAuthSubmit" style="width: 100%; margin-top: 10px; padding: 12px;">
+        <i data-lucide="log-in"></i> Iniciar Sessão
+      </button>
+
+      <button type="button" class="auth-toggle-btn" id="authToggleBtn">
+        Não tem conta? Solicitar Acesso
+      </button>
+    </div>
+  </div>
+
+  <div id="pendingApprovalModal" class="auth-overlay" style="display: none;">
+    <div class="auth-card" style="text-align: center;">
+      <i data-lucide="clock" style="width: 56px; height: 56px; color: var(--accent-yellow); margin-bottom: 15px;"></i>
+      <h2>Acesso Pendente de Aprovação</h2>
+      <p style="margin: 15px 0; color: var(--text-muted); font-size: 0.95rem; line-height: 1.5;">
+        O seu registo foi efetuado com sucesso! Para aceder ao sistema, solicite ao <b>Administrador</b> ou <b>Pastor</b> que aprove a sua conta.
+      </p>
+      <button type="button" class="btn-danger" onclick="terminarSessao()" style="width: 100%; padding: 10px; margin-top: 10px;">
+        <i data-lucide="log-out"></i> Sair
+      </button>
+    </div>
+  </div>
+
+  <!-- Modal para visualizar Ficha do Membro -->
+  <div id="fichaMembroModal" class="auth-overlay" style="display: none;">
+    <div class="auth-card" style="max-width: 600px; max-height: 80vh; overflow-y: auto;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+        <h2 id="fichaTitle">Ficha do Membro</h2>
+        <button type="button" onclick="fecharFichaMembro()" style="background: none; border: none; cursor: pointer; color: var(--text-main); font-size: 1.5rem;">✕</button>
+      </div>
+      <div id="fichaConteudo"></div>
+      <div style="margin-top: 20px; display: flex; gap: 10px;">
+        <button type="button" class="btn-secondary" onclick="imprimirFicha()" style="flex: 1;">
+          <i data-lucide="printer"></i> Imprimir
+        </button>
+        <button type="button" class="btn-danger" onclick="fecharFichaMembro()" style="flex: 1;">
+          <i data-lucide="x"></i> Fechar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <button type="button" class="nav-arrow left" onclick="navegarProximaJanela(-1)"><i data-lucide="chevron-left"></i></button>
+  <button type="button" class="nav-arrow right" onclick="navegarProximaJanela(1)"><i data-lucide="chevron-right"></i></button>
+
+  <div class="container" id="appMainContent" style="display: none;">
+    <header>
+      <div class="logo-container">
+        <div class="logo-img-wrapper">
+          <img id="appLogoImg" src="logo.png" alt="Logo" onerror="this.style.display='none'; document.getElementById('altChurchIcon').style.display='block';">
+          <i id="altChurchIcon" data-lucide="church" style="width:28px; color:var(--accent-blue); display:none;"></i>
+        </div>
+        <div>
+          <h1>App Imuit - Gestão de Igreja</h1>
+          <p style="font-size: 0.8rem; color: var(--text-muted);" id="userEmailDisplay">Sessão Ativa</p>
+        </div>
+      </div>
+      <div class="header-controls">
+        <span id="userRoleBadge" class="tag tag-blue" style="font-size: 0.85rem; padding: 6px 12px;">Perfil: L</span>
+        <button type="button" class="btn-secondary" onclick="alternarTema()" id="btnTema">🌙 Modo Escuro</button>
+        <div id="status" class="status-badge status-offline">
+          <i data-lucide="wifi-off" style="width: 14px;"></i> Conectando...
+        </div>
+        <button type="button" class="btn-danger" onclick="terminarSessao()" style="padding: 6px 12px; font-size: 0.8rem;">
+          <i data-lucide="log-out" style="width:14px;"></i> Sair
+        </button>
+      </div>
+    </header>
+
+    <div class="tabs-nav">
+      <button type="button" class="tab-btn active" onclick="irParaJanela(0)"><i data-lucide="clipboard-check"></i> 1. Chamada e Pastas</button>
+      <button type="button" class="tab-btn" onclick="irParaJanela(1)"><i data-lucide="calendar"></i> 2. Calendário</button>
+      <button type="button" class="tab-btn" onclick="irParaJanela(2)"><i data-lucide="users"></i> 3. Membros & Ministérios</button>
+      <button type="button" class="tab-btn" onclick="irParaJanela(3)"><i data-lucide="help-circle"></i> 4. Tutorial</button>
+      <button type="button" class="tab-btn" id="tabBtnAdmin" style="display:none;" onclick="irParaJanela(4)"><i data-lucide="shield-alert"></i> 5. Segurança & Perfis</button>
+    </div>
+
+    <div class="carousel-view" id="carouselView">
+      <div class="carousel-track" id="carouselTrack">
+
+        <div class="tab-content">
+          <div class="grid-2">
+            <div class="card">
+              <div class="card-title"><i data-lucide="folder-plus"></i> Gerenciador de Pastas</div>
+              <div class="form-row">
+                <input type="text" id="novoNomePastaCat" placeholder="Nome da Pasta (ex: Cultos de Domingo)">
+                <button type="button" id="btnCriarPasta" onclick="criarNovaPasta()"><i data-lucide="plus"></i> Criar Pasta</button>
+              </div>
+              <h3 style="font-size:0.9rem; color:var(--text-muted); margin:15px 0 10px 0;">Pastas Existentes:</h3>
+              <div id="listaCategoriasPastas"><p style="color:var(--text-muted);">Nenhuma pasta criada.</p></div>
+            </div>
+
+            <div class="card">
+              <div class="card-title"><i data-lucide="file-check"></i> Realizar Chamada</div>
+
+              <div class="form-group">
+                <label>Busca por nome ou apelido:</label>
+                <input type="text" id="buscaMembroChamada" placeholder="Digite o nome do membro..." oninput="atualizarBuscaChamada()">
+              </div>
+
+              <div class="form-group">
+                <label>Selecione a Pasta de Destino:</label>
+                <select id="selPastaDestino"></select>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group" style="flex: 1;">
+                  <label>Nome do Evento / Lista:</label>
+                  <input type="text" id="listaTitulo" placeholder="Ex: Culto de Domingo">
+                </div>
+                <div class="form-group" style="flex: 1;">
+                  <label>Data:</label>
+                  <input type="date" id="listaData">
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label>Filtrar por Ministério / Cargo:</label>
+                <div id="boxFiltrosMinisteriosChamada" style="display:flex; flex-wrap:wrap; gap:8px; margin-top:8px;"></div>
+              </div>
+
+              <div style="background:var(--bg-dark); padding:10px; border-radius:6px; margin:10px 0; border:1px solid var(--border-color);">
+                <label style="display:block; margin-bottom:6px; font-weight:bold;">Ordenar Lista por:</label>
+                <select id="selOrdenacaoChamada" onchange="alterarOrdenacaoChamada(this.value)">
+                  <option value="PENDENTES">Pendentes Primeiro</option>
+                  <option value="NOME_ASC">Ordem Alfabética A-Z</option>
+                  <option value="NOME_DESC">Ordem Alfabética Z-A</option>
+                  <option value="IDADE_ASC">Idade Crescente</option>
+                  <option value="IDADE_DESC">Idade Decrescente</option>
+                </select>
+              </div>
+
+              <div id="boxMembrosChamada" style="max-height: 380px; overflow-y: auto; padding-right: 5px;"></div>
+
+              <div style="display: flex; gap: 10px; margin-top: 15px;">
+                <button type="button" id="btnSalvarListaReal" onclick="salvarListaNaPasta()" style="flex: 1; padding: 12px; font-size:0.95rem;"><i data-lucide="save"></i> Salvar Lista</button>
+                <button type="button" id="btnExportarPDF" onclick="exportarListaParaPDF()" style="flex: 1; padding: 12px; font-size:0.95rem; background: var(--accent-green);"><i data-lucide="download"></i> PDF</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title"><i data-lucide="folder-tree"></i> Pastas e Listas Salvas</div>
+            <div id="arvorePastasEListas"></div>
+          </div>
+        </div>
+
+        <div class="tab-content">
+          <div class="grid-2">
+            <div class="card">
+              <div class="card-title"><i data-lucide="calendar-plus"></i> Agendar Evento</div>
+
+              <div class="form-group">
+                <label>Título do Evento:</label>
+                <input type="text" id="evtTitulo" placeholder="Ex: Culto de Celebração">
+              </div>
+
+              <div class="form-row">
+                <div class="form-group" style="flex: 1;">
+                  <label>Data Inicial:</label>
+                  <input type="date" id="evtData">
+                </div>
+                <div class="form-group" style="flex: 1;">
+                  <label>Data Final:</label>
+                  <input type="date" id="evtDataFim">
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group" style="flex: 1;">
+                  <label>Hora Inicial:</label>
+                  <input type="time" id="evtHora" value="19:00">
+                </div>
+                <div class="form-group" style="flex: 1;">
+                  <label>Hora Final:</label>
+                  <input type="time" id="evtHoraFim" value="20:30">
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label>Recorrência:</label>
+                <select id="evtRecorrencia">
+                  <option value="UNICO">Único</option>
+                  <option value="SEMANAL">Semanal</option>
+                  <option value="MENSAL">Mensal</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label>Quantidade de Repetições:</label>
+                <input type="number" id="evtQtd" value="4" min="1">
+              </div>
+
+              <button type="button" onclick="salvarEvento()" style="width:100%; margin-top:15px; padding: 12px; font-size:1rem;"><i data-lucide="calendar-check"></i> Agendar</button>
+            </div>
+
+            <div class="card">
+              <div class="card-title"><i data-lucide="calendar"></i> Calendário</div>
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <button type="button" class="btn-secondary" style="padding:6px 8px;" onclick="mudarMesCalendario(-1)"><i data-lucide="chevron-left"></i></button>
+                <strong id="calTituloMes">Janeiro 2025</strong>
+                <button type="button" class="btn-secondary" style="padding:6px 8px;" onclick="mudarMesCalendario(1)"><i data-lucide="chevron-right"></i></button>
+              </div>
+              <div class="cal-header">
+                <div>Dom</div><div>Seg</div><div>Ter</div><div>Qua</div><div>Qui</div><div>Sex</div><div>Sab</div>
+              </div>
+              <div id="gridCalendarioDias" class="cal-grid"></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title"><i data-lucide="list"></i> Próximos Eventos</div>
+            <div id="listaEventosProximos"></div>
+          </div>
+        </div>
+
+        <div class="tab-content">
+          <div class="grid-2">
+            <div class="card">
+              <div class="card-title"><i data-lucide="user-plus"></i> Cadastrar Membro</div>
+
+              <div class="form-group">
+                <label>Nome Completo:</label>
+                <input type="text" id="memNome" placeholder="Ex: João Silva">
+              </div>
+
+              <div class="form-group">
+                <label>Apelido:</label>
+                <input type="text" id="memApelido" placeholder="Como prefere ser chamado?">
+              </div>
+
+              <div class="form-row">
+                <div class="form-group" style="flex: 1;">
+                  <label>Data de Nascimento:</label>
+                  <input type="date" id="memNasc">
+                </div>
+                <div class="form-group" style="flex: 1;">
+                  <label>Telefone:</label>
+                  <input type="text" id="memFone" placeholder="(99) 99999-9999" oninput="mascaraTelefone(this)">
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label>E-mail:</label>
+                <input type="email" id="memEmail" placeholder="exemplo@email.com">
+              </div>
+
+              <div class="form-row">
+                <div class="form-group" style="flex: 1;">
+                  <label>Estado Civil:</label>
+                  <select id="memEstadoCivil">
+                    <option value="">Selecione...</option>
+                    <option value="SOLTEIRO">Solteiro(a)</option>
+                    <option value="CASADO">Casado(a)</option>
+                    <option value="DIVORCIADO">Divorciado(a)</option>
+                    <option value="VIUVO">Viúvo(a)</option>
+                  </select>
+                </div>
+                <div class="form-group" style="flex: 1;">
+                  <label>Data do Batismo:</label>
+                  <input type="date" id="memBatismoData">
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label>Endereço:</label>
+                <input type="text" id="memEndereco" placeholder="Rua, número, bairro...">
+              </div>
+
+              <div class="form-group">
+                <label>Responsável (se menor):</label>
+                <input type="text" id="memResponsavelNome" placeholder="Nome do responsável">
+              </div>
+
+              <div class="form-group">
+                <label>Telefone do Responsável:</label>
+                <input type="text" id="memResponsavelFone" placeholder="(99) 99999-9999" oninput="mascaraTelefone(this)">
+              </div>
+
+              <div class="form-group">
+                <label>Ministérios:</label>
+                <div id="boxCheckMinisterios" style="display:flex; flex-wrap:wrap; gap:8px;"></div>
+              </div>
+
+              <button type="button" onclick="salvarMembro()" style="width:100%; margin-top:15px; padding: 12px; font-size:1rem;"><i data-lucide="user-check"></i> Salvar Membro</button>
+            </div>
+
+            <div class="card">
+              <div class="card-title"><i data-lucide="briefcase"></i> Ministérios</div>
+              <div class="form-group">
+                <label>Novo Ministério:</label>
+                <div class="form-row">
+                  <input type="text" id="novoMinNome" placeholder="Ex: Louvor">
+                  <button type="button" onclick="criarMinisterio()"><i data-lucide="plus"></i> Criar</button>
+                </div>
+              </div>
+              <div id="listaMinisteriosCadastrados"></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title"><i data-lucide="table"></i> Lista de Membros</div>
+            <div class="form-group">
+              <label>Buscar membro:</label>
+              <input type="text" id="buscaMembrosLista" placeholder="Digite nome ou apelido..." oninput="renderListaMembros()">
+            </div>
+            <div style="overflow-x: auto;">
+              <table class="table-members">
+                <thead>
+                  <tr>
+                    <th>Nome</th>
+                    <th>Idade</th>
+                    <th>Telefone</th>
+                    <th>Ministérios</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+                <tbody id="tbMembrosCorpo"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="tab-content">
+          <div class="card">
+            <div class="card-title"><i data-lucide="help-circle"></i> Guia de Uso</div>
+            <div style="line-height: 1.8; color: var(--text-main);">
+              <h3>📋 Aba 1: Chamada e Pastas</h3>
+              <p>Crie pastas para organizar suas listas de chamada. Selecione membros, filtro por ministério e salve. Depois exporte para PDF com gráfico de presença.</p>
+
+              <h3 style="margin-top: 15px;">📅 Aba 2: Calendário</h3>
+              <p>Agende eventos (cultos, reuniões, etc). Defina recorrência semanal ou mensal. Os aniversários dos membros aparecem automaticamente.</p>
+
+              <h3 style="margin-top: 15px;">👥 Aba 3: Membros</h3>
+              <p>Cadastre membros com foto, dados pessoais, telefone, etc. Crie ministérios e associe aos membros. Visualize fichas completas.</p>
+
+              <h3 style="margin-top: 15px;">🔧 Aba 4 (Admin): Segurança</h3>
+              <p>Aprove novos usuários, defina perfis (Líder, Ordem de Culto, Admin). Gerencie acessos ao sistema.</p>
+
+              <p style="margin-top: 20px; padding: 10px; background: var(--card-bg); border-radius: 6px; border-left: 4px solid var(--accent-yellow);">
+                <strong>💡 Dica:</strong> Use os botões nas laterais para navegar entre as abas. Salve frequentemente suas listas!
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="tab-content" style="display: none;">
+          <div class="grid-2">
+            <div class="card">
+              <div class="card-title"><i data-lucide="user-check"></i> Aprovar Novos Usuários</div>
+              <div style="overflow-x: auto;">
+                <table class="table-members">
+                  <thead>
+                    <tr>
+                      <th>Nome</th>
+                      <th>E-mail</th>
+                      <th>Status</th>
+                      <th>Perfil</th>
+                      <th>Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tbPerfisUsuarios"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>
