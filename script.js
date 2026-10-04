@@ -311,7 +311,7 @@ function alternarTema() {
 
   const btn = document.getElementById('btnTema');
   if (btn) {
-    btn.textContent = novoTema === 'dark' ? '🌙 Modo Escuro' : '☀️ Modo Claro';
+    btn.textContent = novoTema === 'dark' ? '🌙 Modo Escuro' : '☀️️ Modo Claro';
   }
 }
 
@@ -630,10 +630,6 @@ function salvarMembro() {
   const apelido = document.getElementById('memApelido')?.value.trim();
   const nasc = document.getElementById('memNasc')?.value;
   const fone = document.getElementById('memFone')?.value;
-  const email = document.getElementById('memEmail')?.value.trim();
-  const estadoCivil = document.getElementById('memEstadoCivil')?.value;
-  const batismoData = document.getElementById('memBatismoData')?.value;
-  const endereco = document.getElementById('memEndereco')?.value;
   const respNome = document.getElementById('memResponsavelNome')?.value;
   const respFone = document.getElementById('memResponsavelFone')?.value;
 
@@ -647,7 +643,10 @@ function salvarMembro() {
 
   const novoMembro = {
     id: 'mem_' + Date.now(),
-    nome, apelido, nasc, fone, email, estadoCivil, batismoData, endereco,
+    nome, 
+    apelido, 
+    nasc, 
+    fone,
     responsavel: { nome: respNome, fone: respFone },
     ministerios: selectedMin
   };
@@ -662,10 +661,12 @@ function salvarMembro() {
 }
 
 function limparFormMembro() {
-  ['memNome', 'memApelido', 'memNasc', 'memFone', 'memEmail', 'memEndereco', 'memResponsavelNome', 'memResponsavelFone', 'memBatismoData'].forEach(id => {
+  ['memNome', 'memApelido', 'memNasc', 'memFone', 'memResponsavelNome', 'memResponsavelFone'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.value = '';
   });
+
+  document.querySelectorAll('.chk-min-item').forEach(c => c.checked = false);
 }
 
 function criarMinisterio() {
@@ -792,10 +793,6 @@ function abrirFichaMembro(id) {
       <p><b>Apelido:</b> ${membro.apelido || '-'}</p>
       <p><b>Data de Nascimento:</b> ${membro.nasc || '-'} (${calcularIdade(membro.nasc)} anos)</p>
       <p><b>Telefone:</b> ${membro.fone || '-'}</p>
-      <p><b>E-mail:</b> ${membro.email || '-'}</p>
-      <p><b>Estado Civil:</b> ${membro.estadoCivil || '-'}</p>
-      <p><b>Data de Batismo:</b> ${membro.batismoData || '-'}</p>
-      <p><b>Endereço:</b> ${membro.endereco || '-'}</p>
       <hr style="margin:10px 0; border-color:var(--border-color);">
       <p><b>Responsável:</b> ${membro.responsavel?.nome || '-'}</p>
       <p><b>Telefone Responsável:</b> ${membro.responsavel?.fone || '-'}</p>
