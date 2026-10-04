@@ -154,7 +154,6 @@ function submeterAutenticacao() {
         .catch(err => alert('Erro ao iniciar sessão: ' + err.message));
     }
   } else {
-    // Fallback Offline via LocalStorage
     const offlineUser = {
       uid: 'offline_' + Date.now(),
       email: email,
@@ -259,7 +258,6 @@ function renderAll() {
   if (window.lucide) lucide.createIcons();
 }
 
-// NAVEGAÇÃO DE ABAS (Aceita ID como 'tabMembros' ou índice numérico 0, 1, 2...)
 function irParaJanela(target) {
   const tabs = [...document.querySelectorAll('.tab-content')];
   const buttons = [...document.querySelectorAll('.tab-btn')];
@@ -311,7 +309,7 @@ function alternarTema() {
 
   const btn = document.getElementById('btnTema');
   if (btn) {
-    btn.textContent = novoTema === 'dark' ? '🌙 Modo Escuro' : '☀️️ Modo Claro';
+    btn.textContent = novoTema === 'dark' ? '🌙 Modo Escuro' : '☀ Modo Claro';
   }
 }
 
@@ -388,6 +386,7 @@ function excluirPasta(nome) {
   }
 }
 
+// RENDERIZADOR DA LISTA DE CHAMADA COM STATUS COMPLETO
 function renderAttendanceListEditor() {
   const container = document.getElementById('boxMembrosChamada');
   const buscaInput = document.getElementById('buscaMembroChamada');
@@ -416,15 +415,19 @@ function renderAttendanceListEditor() {
   }
 
   container.innerHTML = membrosFiltrados.map(m => `
-    <div class="member-item-row">
+    <div class="member-item-row" style="display:flex; justify-content:space-between; align-items:center; padding:10px; border-bottom:1px solid var(--border-color, #3f445e);">
       <div>
         <strong>${m.nome}</strong> ${m.apelido ? `(${m.apelido})` : ''}
         <div style="font-size:0.75rem; color:var(--text-muted);">${(m.ministerios || []).join(', ')}</div>
       </div>
       <div>
-        <label style="cursor:pointer; font-weight:600; display:flex; align-items:center; gap:5px;">
-          <input type="checkbox" class="chk-presenca" data-id="${m.id}"> Presente
-        </label>
+        <select class="sel-status-presenca" data-id="${m.id}" style="padding:6px 10px; border-radius:6px; background:var(--bg-card-secondary, #2a2d3e); color:var(--text-color, #fff); border:1px solid var(--border-color, #3f445e);">
+          <option value="PENDENTE">⏳ Pendente</option>
+          <option value="PRESENTE">✅ Presente</option>
+          <option value="AUSENTE">❌ Ausente</option>
+          <option value="JUSTIFICADO">📝 Justificado</option>
+          <option value="FALTA">⚠️ Falta</option>
+        </select>
       </div>
     </div>
   `).join('');
@@ -452,13 +455,12 @@ function salvarListaNaPasta() {
     return;
   }
 
-  const checkboxes = document.querySelectorAll('.chk-presenca');
-  const presentes = [];
+  const selects = document.querySelectorAll('.sel-status-presenca');
+  const registrosStatus = {};
 
-  checkboxes.forEach(chk => {
-    if (chk.checked) {
-      presentes.push(chk.getAttribute('data-id'));
-    }
+  selects.forEach(sel => {
+    const memberId = sel.getAttribute('data-id');
+    registrosStatus[memberId] = sel.value;
   });
 
   const novaChamada = {
@@ -466,7 +468,7 @@ function salvarListaNaPasta() {
     pasta: pasta,
     titulo: titulo,
     data: data,
-    presentesIds: presentes,
+    statusMembros: registrosStatus,
     totalMembros: state.membros.length
   };
 
@@ -493,12 +495,16 @@ function renderPastasEListasTree() {
         <h4>📁 ${pasta} (${listasDaPasta.length} listas)</h4>
         <div style="margin-top:10px; padding-left:15px;">
           ${listasDaPasta.length === 0 ? '<p style="font-size:0.8rem; color:var(--text-muted);">Nenhuma lista nesta pasta.</p>' : ''}
-          ${listasDaPasta.map(l => `
-            <div style="display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-bottom:1px solid var(--border-color);">
-              <span>📋 <b>${l.titulo}</b> (${l.data}) - ${l.presentesIds.length}/${l.totalMembros} presentes</span>
-              <button type="button" class="btn-danger" style="padding:2px 6px; font-size:0.7rem;" onclick="excluirChamada('${l.id}')">Excluir</button>
-            </div>
-          `).join('')}
+          ${listasDaPasta.map(l => {
+            const statusObj = l.statusMembros || {};
+            const numPresentes = Object.values(statusObj).filter(v => v === 'PRESENTE').length;
+            return `
+              <div style="display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-bottom:1px solid var(--border-color);">
+                <span>📋 <b>${l.titulo}</b> (${l.data}) - ${numPresentes}/${l.totalMembros} presentes</span>
+                <button type="button" class="btn-danger" style="padding:2px 6px; font-size:0.7rem;" onclick="excluirChamada('${l.id}')">Excluir</button>
+              </div>
+            `;
+          }).join('')}
         </div>
       </div>
     `;
@@ -516,7 +522,6 @@ function excluirChamada(id) {
 }
 
 function exportarListaParaPDF() {
-  alert('Preparando documento em PDF...');
   window.print();
 }
 
@@ -702,6 +707,7 @@ function excluirMinisterio(nomeMinisterio) {
   }
 }
 
+// RENDERIZADOR DE MINISTÉRIOS COM FORMATO DE CHIPS
 function renderMinistryCheckboxes() {
   const box = document.getElementById('boxCheckMinisterios');
   const boxChamada = document.getElementById('boxFiltrosMinisteriosChamada');
@@ -709,8 +715,9 @@ function renderMinistryCheckboxes() {
 
   if (box) {
     box.innerHTML = state.ministries.map(m => `
-      <label style="font-size:0.85rem; display:flex; align-items:center; gap:4px;">
-        <input type="checkbox" class="chk-min-item" value="${m}"> ${m}
+      <label class="chip-item">
+        <input type="checkbox" class="chk-min-item" value="${m}">
+        <span>${m}</span>
       </label>
     `).join('');
   }
