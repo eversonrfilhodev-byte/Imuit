@@ -11,9 +11,8 @@
   <!-- CSS Principal -->
   <link rel="stylesheet" href="styles.css">
   
-  <!-- Estilos de Impressão (PDF) -->
+  <!-- Estilos Customizados (Pills / Chips de Seleção) -->
   <style>
-    /* Estilo para os botões/pills de seleção de ministérios */
     .ministry-chips-container {
       display: flex;
       flex-wrap: wrap;
@@ -41,36 +40,6 @@
       border-color: var(--accent-blue, #2563eb);
       color: #ffffff;
       font-weight: 600;
-    }
-
-    /* Regras para geração limpa do PDF / Impressão */
-    @media print {
-      body {
-        background-color: #ffffff !important;
-        color: #000000 !important;
-      }
-      .app-header, .nav-tabs, .btn-primary, .btn-secondary, .btn-danger, .filter-bar, #authModal, #pendingApprovalModal {
-        display: none !important;
-      }
-      .main-container, .tab-content, .card {
-        display: block !important;
-        background: transparent !important;
-        border: none !important;
-        box-shadow: none !important;
-        padding: 0 !important;
-        margin: 0 !important;
-        width: 100% !important;
-      }
-      .attendance-grid, .member-item-row {
-        border-bottom: 1px solid #ccc !important;
-        page-break-inside: avoid;
-      }
-      select {
-        border: none !important;
-        appearance: none !important;
-        -webkit-appearance: none !important;
-        font-weight: bold !important;
-      }
     }
   </style>
   
