@@ -386,7 +386,6 @@ function excluirPasta(nome) {
   }
 }
 
-// RENDERIZADOR DA LISTA DE CHAMADA COM STATUS COMPLETO
 function renderAttendanceListEditor() {
   const container = document.getElementById('boxMembrosChamada');
   const buscaInput = document.getElementById('buscaMembroChamada');
@@ -521,8 +520,80 @@ function excluirChamada(id) {
   }
 }
 
+// EXPORTAÇÃO COMPATÍVEL COM PDF (JANELA DE IMPRESSÃO DEDICADA)
 function exportarListaParaPDF() {
-  window.print();
+  const pasta = document.getElementById('selPastaDestino')?.value || 'Sem Pasta';
+  const titulo = document.getElementById('listaTitulo')?.value.trim() || 'Chamada Geral';
+  const data = document.getElementById('listaData')?.value || new Date().toLocaleDateString('pt-BR');
+
+  const rows = document.querySelectorAll('#boxMembrosChamada .member-item-row');
+  
+  if (!rows.length) {
+    alert('Não há membros na lista para exportar.');
+    return;
+  }
+
+  let tabelaHTML = '';
+  rows.forEach(row => {
+    const nome = row.querySelector('strong')?.innerText || '';
+    const infoSecundaria = row.querySelector('div div')?.innerText || '';
+    const select = row.querySelector('select');
+    const statusTexto = select ? select.options[select.selectedIndex].text : 'PENDENTE';
+
+    tabelaHTML += `
+      <tr>
+        <td style="padding: 8px; border-bottom: 1px solid #ddd;">
+          <strong>${nome}</strong>
+          ${infoSecundaria ? `<br><small style="color:#666;">${infoSecundaria}</small>` : ''}
+        </td>
+        <td style="padding: 8px; border-bottom: 1px solid #ddd; text-align: right;">
+          <strong>${statusTexto}</strong>
+        </td>
+      </tr>
+    `;
+  });
+
+  const janelaImpressao = window.open('', '_blank', 'width=800,height=600');
+  
+  janelaImpressao.document.write(`
+    <!DOCTYPE html>
+    <html lang="pt-BR">
+    <head>
+      <meta charset="UTF-8">
+      <title>${titulo} - ${data}</title>
+      <style>
+        body { font-family: Arial, sans-serif; padding: 20px; color: #000; background: #fff; }
+        h2 { margin-bottom: 5px; }
+        p { margin-top: 0; color: #555; font-size: 0.9rem; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th { text-align: left; padding: 8px; border-bottom: 2px solid #000; background: #f2f2f2; }
+      </style>
+    </head>
+    <body>
+      <h2>${titulo}</h2>
+      <p><strong>Pasta:</strong> ${pasta} | <strong>Data:</strong> ${data}</p>
+      <table>
+        <thead>
+          <tr>
+            <th>Membro / Ministério</th>
+            <th style="text-align: right;">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${tabelaHTML}
+        </tbody>
+      </table>
+      <script>
+        window.onload = function() {
+          window.print();
+          window.onafterprint = function() { window.close(); };
+        };
+      <\/script>
+    </body>
+    </html>
+  `);
+
+  janelaImpressao.document.close();
 }
 
 // ==========================================
@@ -616,7 +687,7 @@ function renderCalendar() {
 
   if (listaProximos) {
     if (!state.eventos.length) {
-      listaProximos.innerHTML = '<p style="color:var(--text-muted);">Nenhum evento agendado.</p>';
+      listaProximos.innerHTML = '<p style="color:var(--text-muted);">Nenum evento agendado.</p>';
     } else {
       listaProximos.innerHTML = state.eventos.slice(-5).map(e => `
         <div style="padding:8px; border-bottom:1px solid var(--border-color);">
@@ -707,7 +778,6 @@ function excluirMinisterio(nomeMinisterio) {
   }
 }
 
-// RENDERIZADOR DE MINISTÉRIOS COM FORMATO DE CHIPS
 function renderMinistryCheckboxes() {
   const box = document.getElementById('boxCheckMinisterios');
   const boxChamada = document.getElementById('boxFiltrosMinisteriosChamada');
