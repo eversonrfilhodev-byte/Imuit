@@ -259,7 +259,7 @@ function renderAll() {
   if (window.lucide) lucide.createIcons();
 }
 
-// NAVEGAÇÃO DE ABAS CORRIGIDA (Aceita ID como 'tabMembros' ou índice numérico 0, 1, 2...)
+// NAVEGAÇÃO DE ABAS (Aceita ID como 'tabMembros' ou índice numérico 0, 1, 2...)
 function irParaJanela(target) {
   const tabs = [...document.querySelectorAll('.tab-content')];
   const buttons = [...document.querySelectorAll('.tab-btn')];
@@ -290,13 +290,11 @@ function irParaJanela(target) {
     }
   });
 
-  // Fallback de segurança se a ID fornecida não existir
   if (!selectedTabExists && tabs[0]) {
     tabs[0].style.display = 'block';
     targetId = tabs[0].id;
   }
 
-  // Atualizar botões ativos de forma segura por correspondência
   buttons.forEach((btn) => {
     const onclickAttr = btn.getAttribute('onclick') || '';
     btn.classList.toggle('active', onclickAttr.includes(targetId));
@@ -692,6 +690,17 @@ function criarMinisterio() {
   alert('✅ Ministério criado com sucesso!');
 }
 
+function excluirMinisterio(nomeMinisterio) {
+  if (confirm(`Tem certeza de que deseja excluir o ministério "${nomeMinisterio}"?`)) {
+    state.ministries = (state.ministries || []).filter(m => m !== nomeMinisterio);
+    saveState();
+    renderMinistryCheckboxes();
+    renderAttendanceListEditor();
+    renderMembersTable();
+    alert('🗑️ Ministério excluído com sucesso!');
+  }
+}
+
 function renderMinistryCheckboxes() {
   const box = document.getElementById('boxCheckMinisterios');
   const boxChamada = document.getElementById('boxFiltrosMinisteriosChamada');
@@ -712,11 +721,18 @@ function renderMinistryCheckboxes() {
   }
 
   if (listaMin) {
-    listaMin.innerHTML = state.ministries.map(m => `
-      <div style="display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-bottom:1px solid var(--border-color);">
-        <span>📌 ${m}</span>
-      </div>
-    `).join('');
+    if (!state.ministries.length) {
+      listaMin.innerHTML = '<p style="color:var(--text-muted); font-size:0.85rem;">Nenhum ministério cadastrado.</p>';
+    } else {
+      listaMin.innerHTML = state.ministries.map(m => `
+        <div style="display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-bottom:1px solid var(--border-color);">
+          <span>📌 <b>${m}</b></span>
+          <button type="button" class="btn-danger" style="padding:4px 8px; font-size:0.75rem;" onclick="excluirMinisterio('${m}')">
+            Excluir
+          </button>
+        </div>
+      `).join('');
+    }
   }
 }
 
@@ -875,6 +891,7 @@ window.mudarMesCalendario = mudarMesCalendario;
 window.atualizarBuscaChamada = atualizarBuscaChamada;
 window.alterarOrdenacaoChamada = alterarOrdenacaoChamada;
 window.criarMinisterio = criarMinisterio;
+window.excluirMinisterio = excluirMinisterio;
 window.salvarListaNaPasta = salvarListaNaPasta;
 window.alternarTema = alternarTema;
 window.mascaraTelefone = mascaraTelefone;
