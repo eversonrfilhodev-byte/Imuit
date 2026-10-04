@@ -11,6 +11,69 @@
   <!-- CSS Principal -->
   <link rel="stylesheet" href="styles.css">
   
+  <!-- Estilos de Impressão (PDF) -->
+  <style>
+    /* Estilo para os botões/pills de seleção de ministérios */
+    .ministry-chips-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .chip-item {
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 14px;
+      border-radius: 20px;
+      background-color: var(--bg-card-secondary, #2a2d3e);
+      border: 1px solid var(--border-color, #3f445e);
+      color: var(--text-color, #e0e0e0);
+      font-size: 0.85rem;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.2s ease;
+    }
+    .chip-item input[type="checkbox"] {
+      display: none;
+    }
+    .chip-item:has(input[type="checkbox"]:checked) {
+      background-color: var(--accent-blue, #2563eb);
+      border-color: var(--accent-blue, #2563eb);
+      color: #ffffff;
+      font-weight: 600;
+    }
+
+    /* Regras para geração limpa do PDF / Impressão */
+    @media print {
+      body {
+        background-color: #ffffff !important;
+        color: #000000 !important;
+      }
+      .app-header, .nav-tabs, .btn-primary, .btn-secondary, .btn-danger, .filter-bar, #authModal, #pendingApprovalModal {
+        display: none !important;
+      }
+      .main-container, .tab-content, .card {
+        display: block !important;
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        width: 100% !important;
+      }
+      .attendance-grid, .member-item-row {
+        border-bottom: 1px solid #ccc !important;
+        page-break-inside: avoid;
+      }
+      select {
+        border: none !important;
+        appearance: none !important;
+        -webkit-appearance: none !important;
+        font-weight: bold !important;
+      }
+    }
+  </style>
+  
   <!-- Ícones Lucide -->
   <script src="https://unpkg.com/lucide@latest"></script>
   
@@ -250,7 +313,7 @@
 
             <hr style="margin:15px 0; border-color:var(--border-color);">
             <h4>Ministérios</h4>
-            <div id="boxCheckMinisterios" style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px;"></div>
+            <div id="boxCheckMinisterios" class="ministry-chips-container"></div>
 
             <button type="button" class="btn-primary" style="width:100%; margin-top:15px;" onclick="salvarMembro()">Cadastrar Membro</button>
           </div>
@@ -293,7 +356,7 @@
           <h2><i data-lucide="help-circle"></i> Manual do Utilizador & Ajuda</h2>
           <div style="line-height:1.6; margin-top:15px;">
             <h4>1. Chamada e Pastas</h4>
-            <p>Crie pastas para organizar as reuniões da igreja. Ao realizar uma chamada, marque os presentes e salve na pasta correspondente.</p>
+            <p>Crie pastas para organizar as reuniões da igreja. Ao realizar uma chamada, marque a presença dos membros e salve na pasta correspondente.</p>
             
             <h4 style="margin-top:15px;">2. Calendário</h4>
             <p>Acompanhe os eventos da igreja e aniversários dos membros. Eventos adicionados aparecem destacados no calendário.</p>
