@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>App Imuit - Gestão de Igreja</title>
+  <title>App Imuit - Gestão Integrada de Igreja</title>
   
   <!-- Web App Manifest (PWA) -->
   <link rel="manifest" href="manifest.json">
@@ -11,7 +11,7 @@
   <!-- CSS Principal -->
   <link rel="stylesheet" href="styles.css">
   
-  <!-- Estilos Customizados (Pills / Chips de Seleção) -->
+  <!-- Estilos Customizados -->
   <style>
     .ministry-chips-container {
       display: flex;
@@ -40,6 +40,18 @@
       border-color: var(--accent-blue, #2563eb);
       color: #ffffff;
       font-weight: 600;
+    }
+    .bulk-modal-textarea {
+      width: 100%;
+      height: 180px;
+      background: var(--bg-dark);
+      color: var(--text-main);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 12px;
+      font-family: monospace;
+      font-size: 0.85rem;
+      resize: vertical;
     }
   </style>
   
@@ -108,8 +120,8 @@
   <div id="appMainContent" style="display:none;">
     <header class="app-header">
       <div class="brand">
-        <div class="logo-img-wrapper">
-          <img src="logo.png" alt="Logo App Imuit">
+        <div class="logo-img-wrapper" id="logoContainer">
+          <img src="./logo.png" alt="Logo App Imuit" id="appLogoImg" onerror="handleLogoError(this)">
         </div>
         <div>
           <h1>App Imuit - Gestão de Igreja</h1>
@@ -169,9 +181,9 @@
 
         <div class="card" style="margin-top:20px;">
           <h3><i data-lucide="users"></i> Marcador de Presença</h3>
-          <div class="filter-bar" style="margin:15px 0;">
-            <input type="text" id="buscaMembroChamada" placeholder="Procurar membro..." oninput="atualizarBuscaChamada()">
-            <select id="selOrdenacaoChamada" onchange="alterarOrdenacaoChamada(this.value)">
+          <div class="filter-bar" style="margin:15px 0; display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+            <input type="text" id="buscaMembroChamada" placeholder="Procurar membro..." oninput="atualizarBuscaChamada()" style="flex:1;">
+            <select id="selOrdenacaoChamada" onchange="alterarOrdenacaoChamada(this.value)" style="width:auto;">
               <option value="NOME_ASC">Nome (A - Z)</option>
               <option value="NOME_DESC">Nome (Z - A)</option>
             </select>
@@ -181,7 +193,7 @@
           <div id="boxMembrosChamada" class="attendance-grid"></div>
 
           <div style="margin-top:15px; display:flex; gap:10px; justify-content:flex-end;">
-            <button type="button" class="btn-secondary" onclick="exportarListaParaPDF()"><i data-lucide="printer"></i> Imprimir / PDF</button>
+            <button type="button" class="btn-secondary" onclick="exportarListaParaPDF()"><i data-lucide="printer"></i> Imprimir / PDF Futurista</button>
             <button type="button" class="btn-primary" onclick="salvarListaNaPasta()"><i data-lucide="save"></i> Salvar Chamada</button>
           </div>
         </div>
@@ -249,6 +261,12 @@
 
       <!-- ABA 3: MEMBROS & MINISTÉRIOS -->
       <section id="tabMembros" class="tab-content" style="display:none;">
+        <div style="display:flex; justify-content:flex-end; margin-bottom:15px;">
+          <button type="button" class="btn-secondary" onclick="abrirModalImportacaoMassa()">
+            <i data-lucide="file-spreadsheets"></i> Importar Membros em Massa (Planilha/CSV)
+          </button>
+        </div>
+
         <div class="grid-2col">
           <div class="card">
             <h3><i data-lucide="user-plus"></i> Cadastrar Novo Membro</h3>
@@ -330,12 +348,8 @@
             <h4 style="margin-top:15px;">2. Calendário</h4>
             <p>Acompanhe os eventos da igreja e aniversários dos membros. Eventos adicionados aparecem destacados no calendário.</p>
 
-            <h4 style="margin-top:15px;">3. Perfis de Utilizador</h4>
-            <ul>
-              <li><b>Administrador:</b> Acesso total a todas as funções e aprovação de novos utilizadores.</li>
-              <li><b>Ordem de Culto:</b> Pode gerir agendas, eventos e relatórios de chamadas.</li>
-              <li><b>Líder:</b> Pode realizar chamadas e gerir os membros dos seus ministérios.</li>
-            </ul>
+            <h4 style="margin-top:15px;">3. Importação em Massa</h4>
+            <p>Na aba de Membros, você pode colar os dados da sua planilha Excel/Google Sheets para cadastrar mais de 100 membros de uma só vez.</p>
           </div>
         </div>
       </section>
@@ -367,6 +381,32 @@
     </main>
   </div>
 
+  <!-- MODAL IMPORTAÇÃO EM MASSA -->
+  <div id="importacaoMassaModal" class="auth-overlay" style="display:none;">
+    <div class="auth-card" style="max-width:600px; text-align:left;">
+      <h3><i data-lucide="upload"></i> Importar Membros em Massa</h3>
+      <p style="font-size:0.85rem; color:var(--text-muted); margin:10px 0;">
+        Cole as linhas da sua planilha abaixo ou envie um arquivo .csv. Cada linha deve conter: <br>
+        <code>Nome, Apelido, DataNasc (AAAA-MM-DD ou DD/MM/AAAA), Telefone</code>
+      </p>
+
+      <div class="form-group">
+        <label>Selecione um Arquivo CSV (Opcional):</label>
+        <input type="file" id="arquivoCsvInput" accept=".csv" onchange="lerArquivoCsv(this)">
+      </div>
+
+      <div class="form-group">
+        <label>Ou cole o texto da planilha aqui:</label>
+        <textarea id="textoCsvInput" class="bulk-modal-textarea" placeholder="Exemplo:&#10;João da Silva, Zé, 1995-05-20, (73) 99999-8888&#10;Maria Oliveira, Mary, 2002-10-12, 73988887777"></textarea>
+      </div>
+
+      <div style="margin-top:20px; display:flex; gap:10px; justify-content:flex-end;">
+        <button type="button" class="btn-secondary" onclick="fecharModalImportacaoMassa()">Cancelar</button>
+        <button type="button" class="btn-primary" onclick="processarImportacaoEmMassa()">Processar e Salvar</button>
+      </div>
+    </div>
+  </div>
+
   <!-- MODAL FICHA DO MEMBRO -->
   <div id="fichaMembroModal" class="auth-overlay" style="display:none;">
     <div class="auth-card" style="max-width:500px; text-align:left;">
@@ -379,5 +419,14 @@
     </div>
   </div>
 
+  <script>
+    function handleLogoError(img) {
+      const container = document.getElementById('logoContainer');
+      if (container) {
+        container.innerHTML = '<i data-lucide="church" style="width:28px; height:28px; color:var(--accent-blue);"></i>';
+        if (window.lucide) lucide.createIcons();
+      }
+    }
+  </script>
 </body>
 </html>
