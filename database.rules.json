@@ -1,36 +1,16 @@
 {
   "rules": {
     ".read": "auth != null && root.child('users').child(auth.uid).child('aprovado').val() == true",
-    ".write": "auth != null && root.child('users').child(auth.uid).child('perfil').val() == 'A'",
+    ".write": "auth != null && root.child('users').child(auth.uid).child('aprovado').val() == true",
 
     "users": {
       "$uid": {
-        ".read": "auth != null && (auth.uid == $uid || root.child('users').child(auth.uid).child('perfil').val() == 'A' || root.child('users').child(auth.uid).child('aprovado').val() == true)",
-        ".write": "auth != null && (auth.uid == $uid || root.child('users').child(auth.uid).child('perfil').val() == 'A' || (!data.exists() && root.child('users').child(auth.uid).child('perfil').val() == 'A'))"
+        ".read": "auth != null",
+        ".write": "auth != null"
       }
     },
-
-    "ministerios": {
-      ".read": "auth != null && root.child('users').child(auth.uid).child('aprovado').val() == true",
-      ".write": "auth != null && root.child('users').child(auth.uid).child('aprovado').val() == true"
-    },
-
-    "membros": {
-      ".read": "auth != null && root.child('users').child(auth.uid).child('aprovado').val() == true",
-      ".write": "auth != null && root.child('users').child(auth.uid).child('aprovado').val() == true"
-    },
-
-    "pastas": {
-      ".read": "auth != null && root.child('users').child(auth.uid).child('aprovado').val() == true",
-      ".write": "auth != null && root.child('users').child(auth.uid).child('aprovado').val() == true"
-    },
-
-    "chamadas": {
-      ".read": "auth != null && root.child('users').child(auth.uid).child('aprovado').val() == true",
-      ".write": "auth != null && root.child('users').child(auth.uid).child('aprovado').val() == true"
-    },
-
-    "eventos": {
+    
+    "app_data": {
       ".read": "auth != null && root.child('users').child(auth.uid).child('aprovado').val() == true",
       ".write": "auth != null && root.child('users').child(auth.uid).child('aprovado').val() == true"
     }
