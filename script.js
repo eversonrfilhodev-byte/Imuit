@@ -14,6 +14,7 @@ let state = {
 let currentMonth = new Date().getMonth();
 let currentYear = new Date().getFullYear();
 let isRegisterMode = false;
+let isFirebaseListening = false;
 
 // Map de IDs das abas por ordem visual
 const TAB_IDS = ['tabChamada', 'tabCalendario', 'tabMembros', 'tabTutorial', 'tabAdmin'];
@@ -46,14 +47,35 @@ function saveState() {
     const fb = window.getFirebase ? window.getFirebase() : null;
     if (fb && fb.db && state.currentUser) {
       fb.db.ref('app_data').set({
-        membros: state.membros,
-        ministries: state.ministries,
-        pastas: state.pastas,
-        chamadas: state.chamadas,
-        eventos: state.eventos
+        membros: state.membros || [],
+        ministries: state.ministries || [],
+        pastas: state.pastas || [],
+        chamadas: state.chamadas || [],
+        eventos: state.eventos || []
       }).catch(err => console.warn('Aviso ao sincronizar Firebase:', err));
     }
   }
+}
+
+function iniciarOuvinteFirebaseGlobal() {
+  if (isFirebaseListening || !window.firebase || !firebase.database) return;
+  
+  const fb = window.getFirebase ? window.getFirebase() : null;
+  if (!fb || !fb.db) return;
+
+  isFirebaseListening = true;
+  fb.db.ref('app_data').on('value', snapshot => {
+    const val = snapshot.val();
+    if (val) {
+      state.membros = val.membros || [];
+      state.ministries = val.ministries || ['Louvor', 'Infantil', 'Jovens', 'Mídia', 'Recepção'];
+      state.pastas = val.pastas || [];
+      state.chamadas = val.chamadas || [];
+      state.eventos = val.eventos || [];
+      localStorage.setItem('app_imuit_state', JSON.stringify(state));
+      renderAll();
+    }
+  });
 }
 
 function initDateInputs() {
@@ -219,6 +241,7 @@ function entrarNoApp() {
     statusDiv.innerHTML = '<i data-lucide="wifi" style="width: 14px;"></i> Conectado';
   }
 
+  iniciarOuvinteFirebaseGlobal();
   renderAll();
   irParaJanela('tabChamada');
 }
@@ -420,7 +443,7 @@ function renderAttendanceListEditor() {
         <div style="font-size:0.75rem; color:var(--text-muted);">${(m.ministerios || []).join(', ')}</div>
       </div>
       <div>
-        <select class="sel-status-presenca" data-id="${m.id}" style="padding:6px 10px; border-radius:6px; background:var(--bg-card-secondary, #2a2d3e); color:var(--text-color, #fff); border:1px solid var(--border-color, #3f445e);">
+        <select class="sel-status-presenca" data-id="${m.id}" style="padding:6px 10px; border-radius:6px; background:var(--bg-dark); color:var(--text-main); border:1px solid var(--border-color);">
           <option value="PENDENTE">⏳ Pendente</option>
           <option value="PRESENTE">✅ Presente</option>
           <option value="AUSENTE">❌ Ausente</option>
@@ -520,11 +543,15 @@ function excluirChamada(id) {
   }
 }
 
-// EXPORTAÇÃO COMPATÍVEL COM PDF (JANELA DE IMPRESSÃO DEDICADA)
+// ==========================================
+// IMPRESSÃO / PDF FUTURISTA E MODERNO
+// ==========================================
 function exportarListaParaPDF() {
-  const pasta = document.getElementById('selPastaDestino')?.value || 'Sem Pasta';
+  const pasta = document.getElementById('selPastaDestino')?.value || 'Geral';
   const titulo = document.getElementById('listaTitulo')?.value.trim() || 'Chamada Geral';
-  const data = document.getElementById('listaData')?.value || new Date().toLocaleDateString('pt-BR');
+  const dataRaw = document.getElementById('listaData')?.value || new Date().toISOString().split('T')[0];
+  const [ano, mes, dia] = dataRaw.split('-');
+  const dataFormatada = `${dia}/${mes}/${ano}`;
 
   const rows = document.querySelectorAll('#boxMembrosChamada .member-item-row');
   
@@ -533,56 +560,230 @@ function exportarListaParaPDF() {
     return;
   }
 
+  let totalMembros = rows.length;
+  let contPresentes = 0;
+  let contAusentes = 0;
+  let contJustificados = 0;
+  let contPendentes = 0;
+
   let tabelaHTML = '';
+
   rows.forEach(row => {
     const nome = row.querySelector('strong')?.innerText || '';
-    const infoSecundaria = row.querySelector('div div')?.innerText || '';
+    const infoSecundario = row.querySelector('div div')?.innerText || 'Membro';
     const select = row.querySelector('select');
-    const statusTexto = select ? select.options[select.selectedIndex].text : 'PENDENTE';
+    const statusVal = select ? select.value : 'PENDENTE';
+
+    let badgeClass = 'status-pendente';
+    let statusText = 'Pendente';
+
+    if (statusVal === 'PRESENTE') {
+      contPresentes++;
+      badgeClass = 'status-presente';
+      statusText = 'Presente';
+    } else if (statusVal === 'AUSENTE' || statusVal === 'FALTA') {
+      contAusentes++;
+      badgeClass = 'status-ausente';
+      statusText = 'Ausente';
+    } else if (statusVal === 'JUSTIFICADO') {
+      contJustificados++;
+      badgeClass = 'status-justificado';
+      statusText = 'Justificado';
+    } else {
+      contPendentes++;
+    }
 
     tabelaHTML += `
       <tr>
-        <td style="padding: 8px; border-bottom: 1px solid #ddd;">
-          <strong>${nome}</strong>
-          ${infoSecundaria ? `<br><small style="color:#666;">${infoSecundaria}</small>` : ''}
+        <td>
+          <div class="member-name">${nome}</div>
+          <div class="member-sub">${infoSecundario}</div>
         </td>
-        <td style="padding: 8px; border-bottom: 1px solid #ddd; text-align: right;">
-          <strong>${statusTexto}</strong>
+        <td>${new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</td>
+        <td style="text-align: right;">
+          <span class="badge ${badgeClass}">${statusText}</span>
         </td>
       </tr>
     `;
   });
 
-  const janelaImpressao = window.open('', '_blank', 'width=800,height=600');
+  const pctPresente = totalMembros > 0 ? Math.round((contPresentes / totalMembros) * 100) : 0;
+
+  const janelaImpressao = window.open('', '_blank', 'width=900,height=700');
   
   janelaImpressao.document.write(`
     <!DOCTYPE html>
     <html lang="pt-BR">
     <head>
       <meta charset="UTF-8">
-      <title>${titulo} - ${data}</title>
+      <title>Relatório - ${titulo}</title>
       <style>
-        body { font-family: Arial, sans-serif; padding: 20px; color: #000; background: #fff; }
-        h2 { margin-bottom: 5px; }
-        p { margin-top: 0; color: #555; font-size: 0.9rem; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th { text-align: left; padding: 8px; border-bottom: 2px solid #000; background: #f2f2f2; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { 
+          font-family: 'Inter', -apple-system, sans-serif; 
+          background-color: #0b0f19; 
+          color: #f1f5f9; 
+          padding: 30px;
+          -webkit-print-color-adjust: exact;
+        }
+
+        .header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding-bottom: 20px;
+          border-bottom: 2px solid #1e293b;
+          margin-bottom: 20px;
+        }
+
+        .brand-title {
+          font-size: 1.6rem;
+          font-weight: 700;
+          background: linear-gradient(135deg, #38bdf8, #818cf8);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          letter-spacing: -0.5px;
+        }
+
+        .meta-info {
+          font-size: 0.85rem;
+          color: #94a3b8;
+          text-align: right;
+        }
+
+        .metrics-grid {
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 12px;
+          margin-bottom: 20px;
+        }
+
+        .metric-card {
+          background: #1e293b;
+          border: 1px solid #334155;
+          border-radius: 8px;
+          padding: 12px;
+          text-align: center;
+        }
+
+        .metric-card .value {
+          font-size: 1.4rem;
+          font-weight: 700;
+          color: #38bdf8;
+        }
+
+        .metric-card .label {
+          font-size: 0.75rem;
+          color: #94a3b8;
+          text-transform: uppercase;
+        }
+
+        .progress-bar-container {
+          background: #1e293b;
+          border-radius: 20px;
+          height: 10px;
+          overflow: hidden;
+          margin-bottom: 25px;
+          border: 1px solid #334155;
+        }
+
+        .progress-bar-fill {
+          height: 100%;
+          background: linear-gradient(90deg, #38bdf8, #34d399);
+          width: ${pctPresente}%;
+        }
+
+        table {
+          width: 100%;
+          border-collapse: collapse;
+          margin-top: 10px;
+        }
+
+        th {
+          background: #1e293b;
+          color: #94a3b8;
+          font-size: 0.75rem;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+          padding: 10px 12px;
+          text-align: left;
+          border-bottom: 2px solid #334155;
+        }
+
+        td {
+          padding: 12px;
+          border-bottom: 1px solid #1e293b;
+          font-size: 0.88rem;
+        }
+
+        .member-name { font-weight: 600; color: #f8fafc; }
+        .member-sub { font-size: 0.75rem; color: #64748b; }
+
+        .badge {
+          display: inline-block;
+          padding: 4px 10px;
+          border-radius: 12px;
+          font-size: 0.75rem;
+          font-weight: 600;
+        }
+
+        .status-presente { background: rgba(52, 211, 153, 0.15); color: #34d399; border: 1px solid rgba(52, 211, 153, 0.3); }
+        .status-ausente { background: rgba(248, 113, 113, 0.15); color: #f87171; border: 1px solid rgba(248, 113, 113, 0.3); }
+        .status-justificado { background: rgba(251, 191, 36, 0.15); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.3); }
+        .status-pendente { background: rgba(148, 163, 184, 0.15); color: #94a3b8; border: 1px solid rgba(148, 163, 184, 0.3); }
+
+        .footer {
+          margin-top: 30px;
+          text-align: center;
+          font-size: 0.75rem;
+          color: #64748b;
+          border-top: 1px solid #1e293b;
+          padding-top: 15px;
+        }
       </style>
     </head>
     <body>
-      <h2>${titulo}</h2>
-      <p><strong>Pasta:</strong> ${pasta} | <strong>Data:</strong> ${data}</p>
+      <div class="header">
+        <div>
+          <div class="brand-title">APP IMUIT</div>
+          <div style="font-size:0.9rem; color:#94a3b8; margin-top:2px;">📁 ${pasta} — <b>${titulo}</b></div>
+        </div>
+        <div class="meta-info">
+          <div><b>Data:</b> ${dataFormatada}</div>
+          <div><b>Gerado por:</b> ${state.currentUser?.nome || 'Sistema'}</div>
+        </div>
+      </div>
+
+      <div class="metrics-grid">
+        <div class="metric-card"><div class="value">${totalMembros}</div><div class="label">Total Cadastrados</div></div>
+        <div class="metric-card"><div class="value">${contPresentes}</div><div class="label">Presentes</div></div>
+        <div class="metric-card"><div class="value">${contAusentes}</div><div class="label">Ausentes</div></div>
+        <div class="metric-card"><div class="value">${pctPresente}%</div><div class="label">Frequência</div></div>
+      </div>
+
+      <div class="progress-bar-container">
+        <div class="progress-bar-fill"></div>
+      </div>
+
       <table>
         <thead>
           <tr>
-            <th>Membro / Ministério</th>
-            <th style="text-align: right;">Status</th>
+            <th>Membro & Ministério</th>
+            <th>Horário</th>
+            <th style="text-align: right;">Status de Presença</th>
           </tr>
         </thead>
         <tbody>
           ${tabelaHTML}
         </tbody>
       </table>
+
+      <div class="footer">
+        Relatório gerado automaticamente via App Imuit · ${new Date().toLocaleString('pt-BR')}
+      </div>
+
       <script>
         window.onload = function() {
           window.print();
@@ -687,7 +888,7 @@ function renderCalendar() {
 
   if (listaProximos) {
     if (!state.eventos.length) {
-      listaProximos.innerHTML = '<p style="color:var(--text-muted);">Nenum evento agendado.</p>';
+      listaProximos.innerHTML = '<p style="color:var(--text-muted);">Nenhum evento agendado.</p>';
     } else {
       listaProximos.innerHTML = state.eventos.slice(-5).map(e => `
         <div style="padding:8px; border-bottom:1px solid var(--border-color);">
@@ -743,6 +944,85 @@ function limparFormMembro() {
   });
 
   document.querySelectorAll('.chk-min-item').forEach(c => c.checked = false);
+}
+
+// IMPORTAÇÃO EM MASSA VIA PLANILHA / CSV
+function abrirModalImportacaoMassa() {
+  document.getElementById('importacaoMassaModal').style.display = 'flex';
+}
+
+function fecharModalImportacaoMassa() {
+  document.getElementById('importacaoMassaModal').style.display = 'none';
+  document.getElementById('textoCsvInput').value = '';
+  document.getElementById('arquivoCsvInput').value = '';
+}
+
+function lerArquivoCsv(input) {
+  const file = input.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function (e) {
+    document.getElementById('textoCsvInput').value = e.target.result;
+  };
+  reader.readAsText(file, 'UTF-8');
+}
+
+function processarImportacaoEmMassa() {
+  const rawText = document.getElementById('textoCsvInput').value.trim();
+  if (!rawText) {
+    alert('Por favor, cole o texto da planilha ou envie um arquivo CSV.');
+    return;
+  }
+
+  const linhas = rawText.split(/\r?\n/);
+  let importados = 0;
+
+  linhas.forEach((linha, index) => {
+    if (!linha.trim()) return;
+
+    // Divide por vírgula, ponto e vírgula ou tabulação
+    const colunas = linha.split(/[,;\t]/).map(c => c.trim().replace(/^["']|["']$/g, ''));
+    
+    // Ignora cabeçalhos se houver
+    if (index === 0 && (colunas[0].toLowerCase().includes('nome') || colunas[0].toLowerCase().includes('name'))) {
+      return;
+    }
+
+    const nome = colunas[0];
+    const apelido = colunas[1] || '';
+    let nasc = colunas[2] || '';
+    const fone = colunas[3] || '';
+
+    if (nasc.includes('/')) {
+      const parts = nasc.split('/');
+      if (parts.length === 3) nasc = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+    }
+
+    if (nome) {
+      state.membros.push({
+        id: 'mem_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+        nome,
+        apelido,
+        nasc,
+        fone,
+        responsavel: { nome: '', fone: '' },
+        ministerios: []
+      });
+      importados++;
+    }
+  });
+
+  if (importados > 0) {
+    saveState();
+    renderMembersTable();
+    renderAttendanceListEditor();
+    renderCalendar();
+    fecharModalImportacaoMassa();
+    alert(`🎉 Sucesso! ${importados} membros foram cadastrados com sucesso.`);
+  } else {
+    alert('Nenhum membro válido pôde ser importado. Verifique o formato.');
+  }
 }
 
 function criarMinisterio() {
@@ -983,3 +1263,7 @@ window.exportarListaParaPDF = exportarListaParaPDF;
 window.terminarSessao = terminarSessao;
 window.aprovarUsuario = aprovarUsuario;
 window.alterarPerfilUsuario = alterarPerfilUsuario;
+window.abrirModalImportacaoMassa = abrirModalImportacaoMassa;
+window.fecharModalImportacaoMassa = fecharModalImportacaoMassa;
+window.lerArquivoCsv = lerArquivoCsv;
+window.processarImportacaoEmMassa = processarImportacaoEmMassa;
