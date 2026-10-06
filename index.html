@@ -121,7 +121,7 @@
     <header class="app-header">
       <div class="brand">
         <div class="logo-img-wrapper" id="logoContainer">
-          <img src="./logo.png" alt="Logo App Imuit" id="appLogoImg" onerror="handleLogoError(this)">
+          <img src="logo.png" alt="Logo App Imuit" id="appLogoImg">
         </div>
         <div>
           <h1>App Imuit - Gestão de Igreja</h1>
@@ -419,14 +419,5 @@
     </div>
   </div>
 
-  <script>
-    function handleLogoError(img) {
-      const container = document.getElementById('logoContainer');
-      if (container) {
-        container.innerHTML = '<i data-lucide="church" style="width:28px; height:28px; color:var(--accent-blue);"></i>';
-        if (window.lucide) lucide.createIcons();
-      }
-    }
-  </script>
 </body>
 </html>
