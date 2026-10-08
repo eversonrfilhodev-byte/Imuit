@@ -72,8 +72,10 @@
     <!-- CABEÇALHO DA APLICAÇÃO -->
     <header class="app-header">
       <div class="brand">
-        <div class="logo-img-wrapper">
-          <i data-lucide="church" style="color: var(--accent-blue); width: 28px; height: 28px;"></i>
+        <div class="logo-img-wrapper" style="display: flex; align-items: center; justify-content: center; width: 36px; height: 36px;">
+          <!-- CORREÇÃO DA LOGO: Carrega logo.png e usa ícone Lucide como fallback -->
+          <img src="logo.png" alt="Logo App Imuit" style="max-width: 100%; max-height: 100%; object-fit: contain;" onerror="this.style.display='none'; document.getElementById('fallbackLogoIcon').style.display='inline-block';">
+          <i id="fallbackLogoIcon" data-lucide="church" style="display: none; color: var(--accent-blue); width: 28px; height: 28px;"></i>
         </div>
         <div>
           <h1>App Imuit</h1>
@@ -143,8 +145,9 @@
             <div class="form-group" style="flex: 1;">
               <label for="selOrdenacaoChamada">Ordem</label>
               <select id="selOrdenacaoChamada" onchange="alterarOrdenacaoChamada(this.value)">
-                <option value="NOME_ASC">Nome (A-Z)</option>
-                <option value="NOME_DESC">Nome (Z-A)</option>
+                <option value="PENDENTES_FIM" selected>⏳ Pendentes no Fim</option>
+                <option value="NOME_ASC">🔤 Nome (A-Z)</option>
+                <option value="NOME_DESC">🔤 Nome (Z-A)</option>
               </select>
             </div>
           </div>
