@@ -16,7 +16,7 @@ let currentYear = new Date().getFullYear();
 let isRegisterMode = false;
 let isFirebaseListening = false;
 
-// Map de IDs das abas por ordem visual
+// Mapeamento de IDs das abas por índice de navegação
 const TAB_IDS = ['tabChamada', 'tabCalendario', 'tabMembros', 'tabTutorial', 'tabAdmin'];
 
 // ==========================================
@@ -36,7 +36,7 @@ function loadState() {
       const parsed = JSON.parse(localData);
       state = { ...state, ...parsed };
     } catch (e) {
-      console.error('Erro ao carregar localStorage:', e);
+      console.error('Erro ao carregar dados do localStorage:', e);
     }
   }
 }
@@ -52,7 +52,7 @@ function saveState() {
         pastas: state.pastas || [],
         chamadas: state.chamadas || [],
         eventos: state.eventos || []
-      }).catch(err => console.warn('Aviso ao sincronizar Firebase:', err));
+      }).catch(err => console.warn('Aviso ao sincronizar dados com o Firebase:', err));
     }
   }
 }
@@ -90,7 +90,7 @@ function initDateInputs() {
 }
 
 // ==========================================
-// LÓGICA DE AUTENTICAÇÃO E PERFIS
+// LÓGICA DE AUTENTICAÇÃO E PERFIS DE UTILIZADOR
 // ==========================================
 function initAuthEventListeners() {
   const btnAuthSubmit = document.getElementById('btnAuthSubmit');
@@ -426,9 +426,9 @@ function renderAttendanceListEditor() {
   });
 
   if (ordenacao === 'NOME_ASC') {
-    membrosFiltrados.sort((a, b) => a.nome.localeCompare(b.nome));
+    membrosFiltrados.sort((a, b) => (a.nome || '').localeCompare(b.nome || ''));
   } else if (ordenacao === 'NOME_DESC') {
-    membrosFiltrados.sort((a, b) => b.nome.localeCompare(a.nome));
+    membrosFiltrados.sort((a, b) => (b.nome || '').localeCompare(a.nome || ''));
   }
 
   if (!membrosFiltrados.length) {
@@ -437,7 +437,7 @@ function renderAttendanceListEditor() {
   }
 
   container.innerHTML = membrosFiltrados.map(m => `
-    <div class="member-item-row" style="display:flex; justify-content:space-between; align-items:center; padding:10px; border-bottom:1px solid var(--border-color, #3f445e);">
+    <div class="member-item-row">
       <div>
         <strong>${m.nome}</strong> ${m.apelido ? `(${m.apelido})` : ''}
         <div style="font-size:0.75rem; color:var(--text-muted);">${(m.ministerios || []).join(', ')}</div>
@@ -513,7 +513,7 @@ function renderPastasEListasTree() {
   state.pastas.forEach(pasta => {
     const listasDaPasta = state.chamadas.filter(c => c.pasta === pasta);
     html += `
-      <div class="folder-box" style="margin-bottom:15px;">
+      <div class="folder-box">
         <h4>📁 ${pasta} (${listasDaPasta.length} listas)</h4>
         <div style="margin-top:10px; padding-left:15px;">
           ${listasDaPasta.length === 0 ? '<p style="font-size:0.8rem; color:var(--text-muted);">Nenhuma lista nesta pasta.</p>' : ''}
@@ -544,7 +544,7 @@ function excluirChamada(id) {
 }
 
 // ==========================================
-// IMPRESSÃO / PDF FUTURISTA E MODERNO
+// IMPRESSÃO E RELATÓRIO PDF
 // ==========================================
 function exportarListaParaPDF() {
   const pasta = document.getElementById('selPastaDestino')?.value || 'Geral';
@@ -619,7 +619,6 @@ function exportarListaParaPDF() {
       <title>Relatório - ${titulo}</title>
       <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-        
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { 
           font-family: 'Inter', -apple-system, sans-serif; 
@@ -628,7 +627,6 @@ function exportarListaParaPDF() {
           padding: 30px;
           -webkit-print-color-adjust: exact;
         }
-
         .header {
           display: flex;
           justify-content: space-between;
@@ -637,7 +635,6 @@ function exportarListaParaPDF() {
           border-bottom: 2px solid #1e293b;
           margin-bottom: 20px;
         }
-
         .brand-title {
           font-size: 1.6rem;
           font-weight: 700;
@@ -646,20 +643,17 @@ function exportarListaParaPDF() {
           -webkit-text-fill-color: transparent;
           letter-spacing: -0.5px;
         }
-
         .meta-info {
           font-size: 0.85rem;
           color: #94a3b8;
           text-align: right;
         }
-
         .metrics-grid {
           display: grid;
           grid-template-columns: repeat(4, 1fr);
           gap: 12px;
           margin-bottom: 20px;
         }
-
         .metric-card {
           background: #1e293b;
           border: 1px solid #334155;
@@ -667,19 +661,16 @@ function exportarListaParaPDF() {
           padding: 12px;
           text-align: center;
         }
-
         .metric-card .value {
           font-size: 1.4rem;
           font-weight: 700;
           color: #38bdf8;
         }
-
         .metric-card .label {
           font-size: 0.75rem;
           color: #94a3b8;
           text-transform: uppercase;
         }
-
         .progress-bar-container {
           background: #1e293b;
           border-radius: 20px;
@@ -688,19 +679,16 @@ function exportarListaParaPDF() {
           margin-bottom: 25px;
           border: 1px solid #334155;
         }
-
         .progress-bar-fill {
           height: 100%;
           background: linear-gradient(90deg, #38bdf8, #34d399);
           width: ${pctPresente}%;
         }
-
         table {
           width: 100%;
           border-collapse: collapse;
           margin-top: 10px;
         }
-
         th {
           background: #1e293b;
           color: #94a3b8;
@@ -711,16 +699,13 @@ function exportarListaParaPDF() {
           text-align: left;
           border-bottom: 2px solid #334155;
         }
-
         td {
           padding: 12px;
           border-bottom: 1px solid #1e293b;
           font-size: 0.88rem;
         }
-
         .member-name { font-weight: 600; color: #f8fafc; }
         .member-sub { font-size: 0.75rem; color: #64748b; }
-
         .badge {
           display: inline-block;
           padding: 4px 10px;
@@ -728,12 +713,10 @@ function exportarListaParaPDF() {
           font-size: 0.75rem;
           font-weight: 600;
         }
-
         .status-presente { background: rgba(52, 211, 153, 0.15); color: #34d399; border: 1px solid rgba(52, 211, 153, 0.3); }
         .status-ausente { background: rgba(248, 113, 113, 0.15); color: #f87171; border: 1px solid rgba(248, 113, 113, 0.3); }
         .status-justificado { background: rgba(251, 191, 36, 0.15); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.3); }
         .status-pendente { background: rgba(148, 163, 184, 0.15); color: #94a3b8; border: 1px solid rgba(148, 163, 184, 0.3); }
-
         .footer {
           margin-top: 30px;
           text-align: center;
@@ -877,7 +860,7 @@ function renderCalendar() {
     state.membros.forEach(m => {
       if (m.nasc) {
         const [, mMonth, mDay] = m.nasc.split('-');
-        if (parseInt(mMonth) === currentMonth + 1 && parseInt(mDay) === day) {
+        if (parseInt(mMonth, 10) === currentMonth + 1 && parseInt(mDay, 10) === day) {
           cell.innerHTML += `<div class="cal-evt-badge niver">🎂 ${m.apelido || m.nome}</div>`;
         }
       }
@@ -981,10 +964,8 @@ function processarImportacaoEmMassa() {
   linhas.forEach((linha, index) => {
     if (!linha.trim()) return;
 
-    // Divide por vírgula, ponto e vírgula ou tabulação
     const colunas = linha.split(/[,;\t]/).map(c => c.trim().replace(/^["']|["']$/g, ''));
     
-    // Ignora cabeçalhos se houver
     if (index === 0 && (colunas[0].toLowerCase().includes('nome') || colunas[0].toLowerCase().includes('name'))) {
       return;
     }
@@ -1001,7 +982,7 @@ function processarImportacaoEmMassa() {
 
     if (nome) {
       state.membros.push({
-        id: 'mem_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+        id: 'mem_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
         nome,
         apelido,
         nasc,
@@ -1238,7 +1219,7 @@ function alterarPerfilUsuario(uid, novoPerfil) {
 }
 
 // ==========================================
-// EXPOSIÇÃO DAS FUNÇÕES GLOBAIS NO WINDOW
+// EXPOSIÇÃO DAS FUNÇÕES GLOBAIS
 // ==========================================
 window.irParaJanela = irParaJanela;
 window.mudarMesCalendario = mudarMesCalendario;
