@@ -1,4 +1,34 @@
 // ==========================================
+// INICIALIZAÇÃO DO FIREBASE (SDK COMPAT)
+// ==========================================
+const firebaseConfig = {
+  apiKey: "AIzaSyCvJVifSO3SjFuVcUdsyWqNtV5oduWOjSk",
+  authDomain: "imuit-169fd.firebaseapp.com",
+  databaseURL: "https://imuit-169fd-default-rtdb.firebaseio.com",
+  projectId: "imuit-169fd",
+  storageBucket: "imuit-169fd.firebasestorage.app",
+  messagingSenderId: "265567395624",
+  appId: "1:265567395624:web:891f0c14dc086cd8f1fa1d",
+  measurementId: "G-YK07KYSXB9"
+};
+
+// Garante que o Firebase é inicializado sem duplicidades
+if (window.firebase && !firebase.apps.length) {
+  firebase.initializeApp(firebaseConfig);
+}
+
+// Provedor interno de instâncias do Firebase
+window.getFirebase = function() {
+  if (window.firebase && firebase.apps.length) {
+    return {
+      auth: firebase.auth(),
+      db: firebase.database()
+    };
+  }
+  return null;
+};
+
+// ==========================================
 // ESTADO GLOBAL DA APLICAÇÃO
 // ==========================================
 let state = {
