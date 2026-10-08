@@ -1030,28 +1030,22 @@ function abrirFichaMembro(id) {
       <div id="formEdicaoMembro" style="display:none; margin-top:10px;">
         <h4 style="margin-bottom:10px;">Editar Membro</h4>
         <label>Nome Completo:</label>
-        <input type="text" id="editMemNome" value="${membro.nome}" style="width:100%; margin-bottom:8px; padding:6px; background:var(--bg-dark); color:var(--text-main); border:1px solid var(--border-color); border-radius:4px;">
-        
+        <input type="text" id="editMemNome" value="${membro.nome}" style="width:100%; margin-bottom:8px; padding:6px; background:var(--bg-dark); color:var(--text-main); border:1px solid var(--border-color); border-radius:6px;">
         <label>Apelido:</label>
-        <input type="text" id="editMemApelido" value="${membro.apelido || ''}" style="width:100%; margin-bottom:8px; padding:6px; background:var(--bg-dark); color:var(--text-main); border:1px solid var(--border-color); border-radius:4px;">
-        
+        <input type="text" id="editMemApelido" value="${membro.apelido || ''}" style="width:100%; margin-bottom:8px; padding:6px; background:var(--bg-dark); color:var(--text-main); border:1px solid var(--border-color); border-radius:6px;">
         <label>Data de Nascimento:</label>
-        <input type="date" id="editMemNasc" value="${membro.nasc || ''}" style="width:100%; margin-bottom:8px; padding:6px; background:var(--bg-dark); color:var(--text-main); border:1px solid var(--border-color); border-radius:4px;">
-        
+        <input type="date" id="editMemNasc" value="${membro.nasc || ''}" style="width:100%; margin-bottom:8px; padding:6px; background:var(--bg-dark); color:var(--text-main); border:1px solid var(--border-color); border-radius:6px;">
         <label>Telefone:</label>
-        <input type="text" id="editMemFone" value="${membro.fone || ''}" oninput="mascaraTelefone(this)" style="width:100%; margin-bottom:8px; padding:6px; background:var(--bg-dark); color:var(--text-main); border:1px solid var(--border-color); border-radius:4px;">
-        
+        <input type="text" id="editMemFone" value="${membro.fone || ''}" oninput="mascaraTelefone(this)" style="width:100%; margin-bottom:8px; padding:6px; background:var(--bg-dark); color:var(--text-main); border:1px solid var(--border-color); border-radius:6px;">
         <label>Nome Responsável:</label>
-        <input type="text" id="editMemRespNome" value="${membro.responsavel?.nome || ''}" style="width:100%; margin-bottom:8px; padding:6px; background:var(--bg-dark); color:var(--text-main); border:1px solid var(--border-color); border-radius:4px;">
-        
+        <input type="text" id="editMemRespNome" value="${membro.responsavel?.nome || ''}" style="width:100%; margin-bottom:8px; padding:6px; background:var(--bg-dark); color:var(--text-main); border:1px solid var(--border-color); border-radius:6px;">
         <label>Telefone Responsável:</label>
-        <input type="text" id="editMemRespFone" value="${membro.responsavel?.fone || ''}" oninput="mascaraTelefone(this)" style="width:100%; margin-bottom:8px; padding:6px; background:var(--bg-dark); color:var(--text-main); border:1px solid var(--border-color); border-radius:4px;">
-        
+        <input type="text" id="editMemRespFone" value="${membro.responsavel?.fone || ''}" oninput="mascaraTelefone(this)" style="width:100%; margin-bottom:8px; padding:6px; background:var(--bg-dark); color:var(--text-main); border:1px solid var(--border-color); border-radius:6px;">
         <label>Ministérios:</label>
         <div id="editBoxMinisterios" style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px;">
           ${(state.ministries || []).map(min => `
             <label style="font-size:0.8rem; display:flex; align-items:center; gap:4px;">
-              <input type="checkbox" class="chk-edit-min" value="${min}" ${(membro.ministerios \vert{}\vert{} []).includes(min) ? 'checked' : ''}>${min}
+              <input type="checkbox" class="chk-edit-min" value="${min}" ${(membro.ministerios || []).includes(min) ? 'checked' : ''}>${min}
             </label>
           `).join('')}
         </div>
@@ -1186,7 +1180,7 @@ function processarImportacaoEmMassa() {
   linhas.forEach((linha, index) => {
     if (!linha.trim()) return;
 
-    const colunas = linha.split(/[,;\t]/).map(c => c.trim().replace(/^["']|["']$/g, ''));
+    const colunas = linha.split(/[,;\t]/).map(c => c.trim().replace(/^['"]|['"]$/g, ''));
     
     if (index === 0 && (colunas[0].toLowerCase().includes('nome') || colunas[0].toLowerCase().includes('name'))) {
       return;
@@ -1325,7 +1319,7 @@ function renderUsersAdminTable() {
 }
 
 function renderUsersRows(container, list) {
-  if (!list.length) {
+  if (!list || !list.length) {
     container.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--text-muted);">Nenhum utilizador encontrado.</td></tr>';
     return;
   }
