@@ -3,421 +3,454 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>App Imuit - Gestão Integrada de Igreja</title>
+  <title>App Imuit - Gestão Integrada</title>
   
-  <!-- Web App Manifest (PWA) -->
-  <link rel="manifest" href="manifest.json">
-  
-  <!-- CSS Principal -->
+  <!-- Estilos Globais -->
   <link rel="stylesheet" href="styles.css">
   
-  <!-- Estilos Customizados -->
-  <style>
-    .ministry-chips-container {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-top: 10px;
-    }
-    .chip-item {
-      display: inline-flex;
-      align-items: center;
-      padding: 6px 14px;
-      border-radius: 20px;
-      background-color: var(--bg-card-secondary, #2a2d3e);
-      border: 1px solid var(--border-color, #3f445e);
-      color: var(--text-color, #e0e0e0);
-      font-size: 0.85rem;
-      cursor: pointer;
-      user-select: none;
-      transition: all 0.2s ease;
-    }
-    .chip-item input[type="checkbox"] {
-      display: none;
-    }
-    .chip-item:has(input[type="checkbox"]:checked) {
-      background-color: var(--accent-blue, #2563eb);
-      border-color: var(--accent-blue, #2563eb);
-      color: #ffffff;
-      font-weight: 600;
-    }
-    .bulk-modal-textarea {
-      width: 100%;
-      height: 180px;
-      background: var(--bg-dark);
-      color: var(--text-main);
-      border: 1px solid var(--border-color);
-      border-radius: 8px;
-      padding: 12px;
-      font-family: monospace;
-      font-size: 0.85rem;
-      resize: vertical;
-    }
-  </style>
-  
-  <!-- Ícones Lucide -->
+  <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
   
-  <!-- Firebase App SDK & Firebase Realtime Database / Auth -->
+  <!-- Firebase SDKs (Compat / v8/v9 compat layer) -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-  
-  <!-- Scripts do App -->
-  <script src="firebase-init.js" defer></script>
-  <script src="script.js" defer></script>
 </head>
 <body>
 
-  <!-- MODAL DE AUTENTICAÇÃO / LOGIN -->
-  <div id="authModal" class="auth-overlay">
+  <!-- ========================================== -->
+  <!-- MODAL DE AUTENTICAÇÃO (LOGIN / REGISTRO)  -->
+  <!-- ========================================== -->
+  <div id="authModal" class="auth-overlay" style="display: flex;">
     <div class="auth-card">
-      <h2 id="authTitle"><i data-lucide="log-in"></i> Aceder ao App Imuit</h2>
-      <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:15px;">
-        Aceda com a sua conta para sincronizar dados em tempo real.
-      </p>
-
-      <div id="authNameGroup" class="form-group" style="display:none;">
-        <label>Nome Completo</label>
-        <input type="text" id="authNome" placeholder="Ex: João da Silva">
+      <h2 id="authTitle"><i data-lucide="lock"></i> Aceder ao App Imuit</h2>
+      
+      <div id="authNameGroup" class="form-group" style="display: none;">
+        <label for="authNome">Nome Completo</label>
+        <input type="text" id="authNome" placeholder="Digite seu nome completo">
       </div>
 
       <div class="form-group">
-        <label>E-mail</label>
+        <label for="authEmail">E-mail</label>
         <input type="email" id="authEmail" placeholder="seuemail@exemplo.com">
       </div>
 
       <div class="form-group">
-        <label>Palavra-passe</label>
+        <label for="authPassword">Palavra-passe / Senha</label>
         <input type="password" id="authPassword" placeholder="••••••••">
       </div>
 
-      <button type="button" id="btnAuthSubmit" class="btn-primary" style="width:100%; margin-top:10px;">
+      <button type="button" id="btnAuthSubmit" class="btn-primary" style="width: 100%; margin-top: 10px;">
         <i data-lucide="log-in"></i> Iniciar Sessão
       </button>
 
-      <div style="text-align:center; margin-top:15px;">
-        <button type="button" id="authToggleBtn" style="background:none; border:none; color:var(--accent-blue); cursor:pointer; font-size:0.85rem;">
-          Não tem conta? Solicitar Acesso
-        </button>
-      </div>
+      <button type="button" id="authToggleBtn" class="auth-toggle-btn">
+        Não tem conta? Solicitar Acesso
+      </button>
     </div>
   </div>
 
-  <!-- MODAL DE APROVAÇÃO PENDENTE -->
-  <div id="pendingApprovalModal" class="auth-overlay" style="display:none;">
-    <div class="auth-card" style="text-align:center;">
-      <i data-lucide="clock" style="width:48px; height:48px; color:var(--accent-yellow); margin-bottom:10px;"></i>
-      <h2>Acesso em Análise</h2>
-      <p style="color:var(--text-muted); margin:15px 0;">
-        A sua conta foi registada com sucesso! Aguarde até que um Administrador aprove o seu acesso.
+  <!-- MODAL DE AGUARDANDO APROVAÇÃO -->
+  <div id="pendingApprovalModal" class="auth-overlay" style="display: none;">
+    <div class="auth-card" style="text-align: center;">
+      <i data-lucide="clock" style="width: 48px; height: 48px; color: var(--accent-yellow); margin-bottom: 15px;"></i>
+      <h2>Acesso Pendente</h2>
+      <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">
+        A sua conta foi registrada com sucesso, mas necessita da aprovação de um Administrador para aceder ao sistema.
       </p>
-      <button type="button" class="btn-secondary" onclick="terminarSessao()">Sair / Trocar Conta</button>
+      <button type="button" class="btn-secondary" onclick="terminarSessao()">
+        <i data-lucide="log-out"></i> Voltar ao Login
+      </button>
     </div>
   </div>
 
-  <!-- CONTEÚDO PRINCIPAL DA APLICAÇÃO -->
-  <div id="appMainContent" style="display:none;">
+  <!-- ========================================== -->
+  <!-- CONTEÚDO PRINCIPAL DA APLICAÇÃO           -->
+  <!-- ========================================== -->
+  <div id="appMainContent" class="container" style="display: none;">
+    
+    <!-- CABEÇALHO DA APLICAÇÃO -->
     <header class="app-header">
       <div class="brand">
-        <div class="logo-img-wrapper" id="logoContainer">
-          <img src="logo.png" alt="Logo App Imuit" id="appLogoImg">
+        <div class="logo-img-wrapper">
+          <i data-lucide="church" style="color: var(--accent-blue); width: 28px; height: 28px;"></i>
         </div>
         <div>
-          <h1>App Imuit - Gestão de Igreja</h1>
-          <span id="userEmailDisplay" style="font-size:0.8rem; color:var(--text-muted);">carregando...</span>
+          <h1>App Imuit</h1>
+          <span id="userRoleBadge" class="tag tag-blue" style="font-size: 0.7rem;">Perfil: ---</span>
         </div>
       </div>
 
-      <div class="header-actions">
-        <span id="userRoleBadge" class="tag tag-blue">Perfil: -</span>
-        <button type="button" class="btn-secondary" id="btnTema" onclick="alternarTema()">🌙 Modo Escuro</button>
+      <div class="header-controls">
         <div id="status" class="status-badge status-offline">
-          <i data-lucide="wifi-off" style="width:14px;"></i> Desconectado
+          <i data-lucide="wifi-off" style="width: 14px;"></i> Desconectado
         </div>
-        <button type="button" class="btn-danger" onclick="terminarSessao()">Sair</button>
+        <button type="button" id="btnTema" class="btn-secondary" onclick="alternarTema()">🌙 Modo Escuro</button>
+        <button type="button" class="btn-danger" onclick="terminarSessao()"><i data-lucide="log-out"></i> Sair</button>
       </div>
     </header>
 
-    <!-- BARRA DE NAVEGAÇÃO SUPERIOR -->
-    <nav class="nav-tabs">
-      <button type="button" class="tab-btn active" onclick="irParaJanela('tabChamada')">1. Chamada e Pastas</button>
-      <button type="button" class="tab-btn" onclick="irParaJanela('tabCalendario')">2. Calendário</button>
-      <button type="button" class="tab-btn" onclick="irParaJanela('tabMembros')">3. Membros & Ministérios</button>
-      <button type="button" class="tab-btn" onclick="irParaJanela('tabTutorial')">4. Tutorial</button>
-      <button type="button" class="tab-btn" id="tabBtnAdmin" style="display:none;" onclick="irParaJanela('tabAdmin')">5. Segurança & Perfis</button>
+    <!-- NAVEGAÇÃO DE ABAS -->
+    <nav class="tabs-nav">
+      <button type="button" class="tab-btn active" onclick="irParaJanela('tabChamada')">
+        <i data-lucide="check-square"></i> Listas & Chamada
+      </button>
+      <button type="button" class="tab-btn" onclick="irParaJanela('tabCalendario')">
+        <i data-lucide="calendar"></i> Calendário
+      </button>
+      <button type="button" class="tab-btn" onclick="irParaJanela('tabMembros')">
+        <i data-lucide="users"></i> Membros & Ministérios
+      </button>
+      <button type="button" class="tab-btn" onclick="irParaJanela('tabTutorial')">
+        <i data-lucide="help-circle"></i> Tutorial
+      </button>
+      <button type="button" id="tabBtnAdmin" class="tab-btn" style="display: none;" onclick="irParaJanela('tabAdmin')">
+        <i data-lucide="shield"></i> Painel Admin
+      </button>
     </nav>
 
-    <main class="main-container">
-
-      <!-- ABA 1: CHAMADA E PASTAS -->
-      <section id="tabChamada" class="tab-content" style="display:block;">
-        <div class="grid-2col">
-          <div class="card">
-            <h3><i data-lucide="folder-plus"></i> Gerir Pastas e Categorias</h3>
-            <div class="form-group" style="display:flex; gap:10px; margin-top:10px;">
-              <input type="text" id="novoNomePastaCat" placeholder="Nome da nova pasta (ex: Culto de Domingo)">
-              <button type="button" class="btn-primary" onclick="criarNovaPasta()">Criar Pasta</button>
-            </div>
-            <div id="listaCategoriasPastas" style="margin-top:15px;"></div>
-          </div>
-
-          <div class="card">
-            <h3><i data-lucide="clipboard-check"></i> Nova Lista de Chamada</h3>
-            <div class="form-group">
-              <label>Pasta de Destino</label>
+    <!-- ========================================== -->
+    <!-- ABA 1: LISTAS & CHAMADA                   -->
+    <!-- ========================================== -->
+    <section id="tabChamada" class="tab-content" style="display: block;">
+      <div class="grid-2">
+        
+        <!-- CARD: CRIAR / REGISTRAR LISTA -->
+        <div class="card">
+          <h3 class="card-title"><i data-lucide="edit-3"></i> Registrar Chamada / Lista</h3>
+          
+          <div class="form-row">
+            <div class="form-group" style="flex: 1;">
+              <label for="selPastaDestino">Pasta de Destino</label>
               <select id="selPastaDestino"></select>
             </div>
-            <div class="form-group">
-              <label>Título do Evento / Reunião</label>
-              <input type="text" id="listaTitulo" placeholder="Ex: Ensaio do Louvor">
-            </div>
-            <div class="form-group">
-              <label>Data</label>
+            <div class="form-group" style="flex: 1;">
+              <label for="listaData">Data da Chamada</label>
               <input type="date" id="listaData">
             </div>
           </div>
-        </div>
 
-        <div class="card" style="margin-top:20px;">
-          <h3><i data-lucide="users"></i> Marcador de Presença</h3>
-          <div class="filter-bar" style="margin:15px 0; display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
-            <input type="text" id="buscaMembroChamada" placeholder="Procurar membro..." oninput="atualizarBuscaChamada()" style="flex:1;">
-            <select id="selOrdenacaoChamada" onchange="alterarOrdenacaoChamada(this.value)" style="width:auto;">
-              <option value="NOME_ASC">Nome (A - Z)</option>
-              <option value="NOME_DESC">Nome (Z - A)</option>
-            </select>
-            <div id="boxFiltrosMinisteriosChamada" style="display:flex; gap:5px; flex-wrap:wrap;"></div>
+          <div class="form-group">
+            <label for="listaTitulo">Título da Lista / Evento</label>
+            <input type="text" id="listaTitulo" placeholder="Ex: Culto de Domingo, Ensaio Louvor...">
           </div>
 
-          <div id="boxMembrosChamada" class="attendance-grid"></div>
-
-          <div style="margin-top:15px; display:flex; gap:10px; justify-content:flex-end;">
-            <button type="button" class="btn-secondary" onclick="exportarListaParaPDF()"><i data-lucide="printer"></i> Imprimir / PDF Futurista</button>
-            <button type="button" class="btn-primary" onclick="salvarListaNaPasta()"><i data-lucide="save"></i> Salvar Chamada</button>
-          </div>
-        </div>
-
-        <div class="card" style="margin-top:20px;">
-          <h3><i data-lucide="folder"></i> Pastas e Listas Salvas</h3>
-          <div id="arvorePastasEListas" style="margin-top:15px;"></div>
-        </div>
-      </section>
-
-      <!-- ABA 2: CALENDÁRIO -->
-      <section id="tabCalendario" class="tab-content" style="display:none;">
-        <div class="grid-2col">
-          <div class="card">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-              <button type="button" class="btn-secondary" onclick="mudarMesCalendario(-1)">❮ Anterior</button>
-              <h2 id="calTituloMes">Mês Ano</h2>
-              <button type="button" class="btn-secondary" onclick="mudarMesCalendario(1)">Seguinte ❯</button>
+          <div class="form-row" style="margin-bottom: 12px;">
+            <div class="form-group" style="flex: 2;">
+              <label for="buscaMembroChamada">Filtrar Membros</label>
+              <input type="text" id="buscaMembroChamada" placeholder="Buscar por nome..." onkeyup="atualizarBuscaChamada()">
             </div>
-            
-            <div class="cal-days-header">
-              <div>Dom</div><div>Seg</div><div>Ter</div><div>Qua</div><div>Qui</div><div>Sex</div><div>Sáb</div>
-            </div>
-            <div id="gridCalendarioDias" class="cal-grid"></div>
-          </div>
-
-          <div class="card">
-            <h3><i data-lucide="calendar-plus"></i> Agendar Evento</h3>
-            <div class="form-group" style="margin-top:10px;">
-              <label>Título do Evento</label>
-              <input type="text" id="evtTitulo" placeholder="Ex: Culto de Jovens">
-            </div>
-            <div class="form-group">
-              <label>Data de Início</label>
-              <input type="date" id="evtData">
-            </div>
-            <div class="form-group">
-              <label>Data de Fim (Opcional)</label>
-              <input type="date" id="evtDataFim">
-            </div>
-            <div class="form-group">
-              <label>Hora de Início</label>
-              <input type="time" id="evtHora" value="19:00">
-            </div>
-            <div class="form-group">
-              <label>Hora de Fim</label>
-              <input type="time" id="evtHoraFim" value="21:00">
-            </div>
-            <div class="form-group">
-              <label>Recorrência</label>
-              <select id="evtRecorrencia">
-                <option value="NENHUMA">Único</option>
-                <option value="SEMANAL">Semanal</option>
-                <option value="MENSAL">Mensal</option>
+            <div class="form-group" style="flex: 1;">
+              <label for="selOrdenacaoChamada">Ordem</label>
+              <select id="selOrdenacaoChamada" onchange="alterarOrdenacaoChamada(this.value)">
+                <option value="NOME_ASC">Nome (A-Z)</option>
+                <option value="NOME_DESC">Nome (Z-A)</option>
               </select>
             </div>
-            <button type="button" class="btn-primary" style="width:100%; margin-top:10px;" onclick="salvarEvento()">Guardar Evento</button>
+          </div>
 
-            <hr style="margin:20px 0; border-color:var(--border-color);">
-            <h4>Próximos Eventos</h4>
-            <div id="listaEventosProximos" style="margin-top:10px;"></div>
+          <div id="boxFiltrosMinisteriosChamada" style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px;"></div>
+
+          <div id="boxMembrosChamada" style="max-height: 380px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 8px; padding: 8px;">
+            <!-- Renderizado via script.js -->
+          </div>
+
+          <div style="display: flex; gap: 10px; margin-top: 15px;">
+            <button type="button" class="btn-primary" style="flex: 1;" onclick="salvarListaNaPasta()">
+              <i data-lucide="save"></i> Salvar Lista
+            </button>
+            <button type="button" class="btn-secondary" onclick="exportarListaParaPDF()">
+              <i data-lucide="printer"></i> Exportar PDF
+            </button>
           </div>
         </div>
-      </section>
 
-      <!-- ABA 3: MEMBROS & MINISTÉRIOS -->
-      <section id="tabMembros" class="tab-content" style="display:none;">
-        <div style="display:flex; justify-content:flex-end; margin-bottom:15px;">
-          <button type="button" class="btn-secondary" onclick="abrirModalImportacaoMassa()">
-            <i data-lucide="file-spreadsheet"></i> Importar Membros em Massa (Planilha/CSV)
+        <!-- CARD: PASTAS E HISTÓRICO -->
+        <div class="card">
+          <h3 class="card-title"><i data-lucide="folder"></i> Gerenciar Pastas & Histórico</h3>
+          
+          <div class="form-row" style="margin-bottom: 15px;">
+            <input type="text" id="novoNomePastaCat" placeholder="Nova pasta (ex: Cultos, Ensaios)" style="flex: 1;">
+            <button type="button" class="btn-primary" onclick="criarNovaPasta()">+ Criar Pasta</button>
+          </div>
+
+          <div id="arvorePastasEListas" style="max-height: 480px; overflow-y: auto;">
+            <!-- Renderizado via script.js -->
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- ABA 2: CALENDÁRIO & EVENTOS               -->
+    <!-- ========================================== -->
+    <section id="tabCalendario" class="tab-content" style="display: none;">
+      <div class="grid-2">
+        
+        <!-- CARD: AGENDAR EVENTO -->
+        <div class="card">
+          <h3 class="card-title"><i data-lucide="plus-circle"></i> Novo Evento / Escala</h3>
+          
+          <div class="form-group">
+            <label for="evtTitulo">Título do Evento</label>
+            <input type="text" id="evtTitulo" placeholder="Ex: Ensaio Geral, Reunião de Líderes">
+          </div>
+
+          <div class="form-row">
+            <div class="form-group" style="flex: 1;">
+              <label for="evtData">Data Inicial</label>
+              <input type="date" id="evtData">
+            </div>
+            <div class="form-group" style="flex: 1;">
+              <label for="evtDataFim">Data Término</label>
+              <input type="date" id="evtDataFim">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group" style="flex: 1;">
+              <label for="evtHora">Hora Início</label>
+              <input type="time" id="evtHora" value="19:30">
+            </div>
+            <div class="form-group" style="flex: 1;">
+              <label for="evtHoraFim">Hora Fim</label>
+              <input type="time" id="evtHoraFim" value="21:00">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="evtRecorrencia">Recorrência</label>
+            <select id="evtRecorrencia">
+              <option value="UNICO">Evento Único</option>
+              <option value="SEMANAL">Semanalmente</option>
+              <option value="MENSAL">Mensalmente</option>
+            </select>
+          </div>
+
+          <button type="button" class="btn-primary" style="width: 100%; margin-top: 10px;" onclick="salvarEvento()">
+            <i data-lucide="calendar-plus"></i> Confirmar Evento
           </button>
         </div>
 
-        <div class="grid-2col">
-          <div class="card">
-            <h3><i data-lucide="user-plus"></i> Cadastrar Novo Membro</h3>
-            <div class="form-group" style="margin-top:10px;">
-              <label>Nome Completo *</label>
-              <input type="text" id="memNome" placeholder="Nome do membro">
+        <!-- CARD: VISUALIZAÇÃO DO CALENDÁRIO -->
+        <div class="card">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <button type="button" class="btn-secondary" onclick="mudarMesCalendario(-1)">◀ Anterior</button>
+            <h3 id="calTituloMes" style="margin: 0; border: none;">---</h3>
+            <button type="button" class="btn-secondary" onclick="mudarMesCalendario(1)">Próximo ▶</button>
+          </div>
+
+          <div class="cal-days-header">
+            <div>DOM</div><div>SEG</div><div>TER</div><div>QUA</div><div>QUI</div><div>SEX</div><div>SÁB</div>
+          </div>
+
+          <div id="gridCalendarioDias" class="cal-grid">
+            <!-- Renderizado via script.js -->
+          </div>
+
+          <h4 style="margin-top: 20px; font-size: 0.9rem; color: var(--text-muted);">Próximos Eventos:</h4>
+          <div id="listaEventosProximos" style="margin-top: 8px;"></div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- ABA 3: MEMBROS & MINISTÉRIOS              -->
+    <!-- ========================================== -->
+    <section id="tabMembros" class="tab-content" style="display: none;">
+      <div class="grid-2">
+        
+        <!-- FORMULÁRIO DE CADASTRO DE MEMBRO -->
+        <div class="card">
+          <h3 class="card-title"><i data-lucide="user-plus"></i> Novo Membro</h3>
+          
+          <div class="form-row">
+            <div class="form-group" style="flex: 2;">
+              <label for="memNome">Nome Completo *</label>
+              <input type="text" id="memNome" placeholder="Ex: João da Silva">
             </div>
-            <div class="form-group">
-              <label>Apelido / Como gosta de ser chamado</label>
-              <input type="text" id="memApelido" placeholder="Ex: Zé">
+            <div class="form-group" style="flex: 1;">
+              <label for="memApelido">Apelido</label>
+              <input type="text" id="memApelido" placeholder="Ex: Joãozinho">
             </div>
-            <div class="form-group">
-              <label>Data de Nascimento</label>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group" style="flex: 1;">
+              <label for="memNasc">Data Nascimento</label>
               <input type="date" id="memNasc">
             </div>
-            <div class="form-group">
-              <label>Telefone / WhatsApp</label>
+            <div class="form-group" style="flex: 1;">
+              <label for="memFone">Telefone / WhatsApp</label>
               <input type="text" id="memFone" placeholder="(00) 00000-0000" oninput="mascaraTelefone(this)">
             </div>
-            
-            <hr style="margin:15px 0; border-color:var(--border-color);">
-            <h4>Responsável (Para menores)</h4>
-            <div class="form-group" style="margin-top:10px;">
-              <label>Nome do Responsável</label>
-              <input type="text" id="memResponsavelNome" placeholder="Ex: Maria (Mãe)">
+          </div>
+
+          <div class="form-row">
+            <div class="form-group" style="flex: 1;">
+              <label for="memResponsavelNome">Nome do Responsável</label>
+              <input type="text" id="memResponsavelNome" placeholder="Para menores">
             </div>
-            <div class="form-group">
-              <label>Telefone do Responsável</label>
+            <div class="form-group" style="flex: 1;">
+              <label for="memResponsavelFone">Fone Responsável</label>
               <input type="text" id="memResponsavelFone" placeholder="(00) 00000-0000" oninput="mascaraTelefone(this)">
             </div>
-
-            <hr style="margin:15px 0; border-color:var(--border-color);">
-            <h4>Ministérios</h4>
-            <div id="boxCheckMinisterios" class="ministry-chips-container"></div>
-
-            <button type="button" class="btn-primary" style="width:100%; margin-top:15px;" onclick="salvarMembro()">Cadastrar Membro</button>
           </div>
 
-          <div class="card">
-            <h3><i data-lucide="award"></i> Gerir Ministérios</h3>
-            <div class="form-group" style="display:flex; gap:10px; margin-top:10px;">
-              <input type="text" id="novoMinNome" placeholder="Novo Ministério (ex: Teatro)">
-              <button type="button" class="btn-primary" onclick="criarMinisterio()">Adicionar</button>
-            </div>
-            <div id="listaMinisteriosCadastrados" style="margin-top:15px;"></div>
+          <div class="form-group">
+            <label>Ministérios / Departamentos</label>
+            <div id="boxCheckMinisterios" style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 5px;"></div>
+          </div>
+
+          <div style="display: flex; gap: 10px; margin-top: 15px;">
+            <button type="button" class="btn-primary" style="flex: 1;" onclick="salvarMembro()">Cadastrar Membro</button>
+            <button type="button" class="btn-secondary" onclick="abrirModalImportacaoMassa()">
+              <i data-lucide="file-spread-sheet"></i> Importar CSV
+            </button>
           </div>
         </div>
 
-        <div class="card" style="margin-top:20px;">
-          <h3><i data-lucide="users"></i> Lista Geral de Membros</h3>
-          <div style="margin:15px 0;">
-            <input type="text" id="buscaMembrosLista" placeholder="Pesquisar por nome ou apelido..." oninput="renderListaMembros()">
-          </div>
-          <div class="table-responsive">
-            <table class="data-table">
-              <thead>
-                <tr>
-                  <th>Nome</th>
-                  <th>Idade</th>
-                  <th>Telefone</th>
-                  <th>Ministérios</th>
-                  <th>Ações</th>
-                </tr>
-              </thead>
-              <tbody id="tbMembrosCorpo"></tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-
-      <!-- ABA 4: TUTORIAL -->
-      <section id="tabTutorial" class="tab-content" style="display:none;">
+        <!-- GERENCIADOR DE MINISTÉRIOS -->
         <div class="card">
-          <h2><i data-lucide="help-circle"></i> Manual do Utilizador & Ajuda</h2>
-          <div style="line-height:1.6; margin-top:15px;">
-            <h4>1. Chamada e Pastas</h4>
-            <p>Crie pastas para organizar as reuniões da igreja. Ao realizar uma chamada, marque a presença dos membros e salve na pasta correspondente.</p>
-            
-            <h4 style="margin-top:15px;">2. Calendário</h4>
-            <p>Acompanhe os eventos da igreja e aniversários dos membros. Eventos adicionados aparecem destacados no calendário.</p>
-
-            <h4 style="margin-top:15px;">3. Importação em Massa</h4>
-            <p>Na aba de Membros, você pode colar os dados da sua planilha Excel/Google Sheets para cadastrar mais de 100 membros de uma só vez.</p>
+          <h3 class="card-title"><i data-lucide="tag"></i> Ministérios Cadastrados</h3>
+          
+          <div class="form-row" style="margin-bottom: 15px;">
+            <input type="text" id="novoMinNome" placeholder="Novo Ministério (ex: Teatro)" style="flex: 1;">
+            <button type="button" class="btn-primary" onclick="criarMinisterio()">+ Criar</button>
           </div>
-        </div>
-      </section>
 
-      <!-- ABA 5: SEGURANÇA E PERFIS -->
-      <section id="tabAdmin" class="tab-content" style="display:none;">
-        <div class="card">
-          <h2><i data-lucide="shield"></i> Painel Administrativo de Utilizadores</h2>
-          <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:15px;">
-            Gira permissões e aprove o acesso de novos membros da liderança.
+          <div id="listaMinisteriosCadastrados"></div>
+        </div>
+
+      </div>
+
+      <!-- TABELA DE CORPO DE MEMBROS -->
+      <div class="card" style="margin-top: 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 15px;">
+          <h3 class="card-title" style="margin: 0; border: none;"><i data-lucide="users"></i> Quadro Geral de Membros</h3>
+          <input type="text" id="buscaMembrosLista" placeholder="Buscar membros..." style="max-width: 300px;" onkeyup="renderListaMembros()">
+        </div>
+
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>Nome / Apelido</th>
+                <th>Idade</th>
+                <th>Telefone</th>
+                <th>Ministérios</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="tbMembrosCorpo">
+              <!-- Renderizado via script.js -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- ABA 4: TUTORIAL                           -->
+    <!-- ========================================== -->
+    <section id="tabTutorial" class="tab-content" style="display: none;">
+      <div class="card">
+        <h3 class="card-title"><i data-lucide="book-open"></i> Guias e Instruções do Sistema</h3>
+        
+        <div style="line-height: 1.6;">
+          <h4>1. Como Fazer Chamadas de Presença</h4>
+          <p style="color: var(--text-muted); margin-bottom: 15px;">
+            Aceda à aba "Listas & Chamada", escolha a pasta de destino, informe o título da reunião e defina o status de cada membro. Ao finalizar, clique em "Salvar Lista" ou "Exportar PDF" para impressão.
           </p>
-          <div class="table-responsive">
-            <table class="data-table">
-              <thead>
-                <tr>
-                  <th>Nome</th>
-                  <th>E-mail</th>
-                  <th>Status</th>
-                  <th>Perfil de Acesso</th>
-                  <th>Ações</th>
-                </tr>
-              </thead>
-              <tbody id="tbPerfisUsuarios"></tbody>
-            </table>
-          </div>
-        </div>
-      </section>
 
-    </main>
+          <h4>2. Importar Membros em Massa</h4>
+          <p style="color: var(--text-muted); margin-bottom: 15px;">
+            Na aba "Membros & Ministérios", clique em "Importar CSV". Copie e cole os dados da sua planilha Excel/Google Sheets para cadastrar vários membros simultaneamente.
+          </p>
+
+          <h4>3. Perfis e Níveis de Permissão</h4>
+          <p style="color: var(--text-muted);">
+            • <b>Líder:</b> Realiza chamadas e visualiza calendários.<br>
+            • <b>Ordem de Culto:</b> Gerencia escalas e programações.<br>
+            • <b>Administrador:</b> Acesso total, incluindo aprovação de novos utilizadores.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- ABA 5: PAINEL ADMINISTRATIVO              -->
+    <!-- ========================================== -->
+    <section id="tabAdmin" class="tab-content" style="display: none;">
+      <div class="card">
+        <h3 class="card-title"><i data-lucide="shield-check"></i> Gestão de Utilizadores & Permissões</h3>
+        
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>Nome</th>
+                <th>E-mail</th>
+                <th>Status</th>
+                <th>Nível de Acesso</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="tbPerfisUsuarios">
+              <!-- Renderizado via script.js -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
   </div>
 
-  <!-- MODAL IMPORTAÇÃO EM MASSA -->
-  <div id="importacaoMassaModal" class="auth-overlay" style="display:none;">
-    <div class="auth-card" style="max-width:600px; text-align:left;">
-      <h3><i data-lucide="upload"></i> Importar Membros em Massa</h3>
-      <p style="font-size:0.85rem; color:var(--text-muted); margin:10px 0;">
-        Cole as linhas da sua planilha abaixo ou envie um arquivo .csv. Cada linha deve conter: <br>
-        <code>Nome, Apelido, DataNasc (AAAA-MM-DD ou DD/MM/AAAA), Telefone</code>
+  <!-- ========================================== -->
+  <!-- MODAIS AUXILIARES                         -->
+  <!-- ========================================== -->
+
+  <!-- MODAL: FICHA DO MEMBRO -->
+  <div id="fichaMembroModal" class="auth-overlay" style="display: none;">
+    <div class="auth-card" style="max-width: 500px;">
+      <h3 style="margin-bottom: 15px; color: var(--accent-blue);"><i data-lucide="user"></i> Ficha Cadastral do Membro</h3>
+      <div id="fichaConteudo" style="margin-bottom: 20px;"></div>
+      <div style="display: flex; gap: 10px;">
+        <button type="button" class="btn-primary" style="flex: 1;" onclick="imprimirFicha()">Imprimir Ficha</button>
+        <button type="button" class="btn-secondary" onclick="fecharFichaMembro()">Fechar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: IMPORTAÇÃO EM MASSA (CSV) -->
+  <div id="importacaoMassaModal" class="auth-overlay" style="display: none;">
+    <div class="auth-card" style="max-width: 600px;">
+      <h3 style="margin-bottom: 12px; color: var(--accent-blue);"><i data-lucide="file-text"></i> Importação em Massa via CSV</h3>
+      <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">
+        Cole o conteúdo CSV ou envie um arquivo (.csv) contendo as colunas: <b>Nome, Apelido, Nascimento (AAAA-MM-DD), Telefone</b>.
       </p>
 
       <div class="form-group">
-        <label>Selecione um Arquivo CSV (Opcional):</label>
-        <input type="file" id="arquivoCsvInput" accept=".csv" onchange="lerArquivoCsv(this)">
+        <label for="arquivoCsvInput">Selecione o arquivo CSV</label>
+        <input type="file" id="arquivoCsvInput" accept=".csv, .txt" onchange="lerArquivoCsv(this)">
       </div>
 
       <div class="form-group">
-        <label>Ou cole o texto da planilha aqui:</label>
-        <textarea id="textoCsvInput" class="bulk-modal-textarea" placeholder="Exemplo:&#10;João da Silva, Zé, 1995-05-20, (73) 99999-8888&#10;Maria Oliveira, Mary, 2002-10-12, 73988887777"></textarea>
+        <label for="textoCsvInput">Ou cole o texto aqui:</label>
+        <textarea id="textoCsvInput" rows="6" placeholder="João da Silva, João, 1995-05-12, (11) 99999-9999&#10;Maria Santos, Maria, 1998-08-20, (11) 88888-8888"></textarea>
       </div>
 
-      <div style="margin-top:20px; display:flex; gap:10px; justify-content:flex-end;">
+      <div style="display: flex; gap: 10px; margin-top: 15px;">
+        <button type="button" class="btn-primary" style="flex: 1;" onclick="processarImportacaoEmMassa()">Importar Dados</button>
         <button type="button" class="btn-secondary" onclick="fecharModalImportacaoMassa()">Cancelar</button>
-        <button type="button" class="btn-primary" onclick="processarImportacaoEmMassa()">Processar e Salvar</button>
       </div>
     </div>
   </div>
 
-  <!-- MODAL FICHA DO MEMBRO -->
-  <div id="fichaMembroModal" class="auth-overlay" style="display:none;">
-    <div class="auth-card" style="max-width:500px; text-align:left;">
-      <h3 style="margin-bottom:15px;"><i data-lucide="user"></i> Ficha Detalhada do Membro</h3>
-      <div id="fichaConteudo"></div>
-      <div style="margin-top:20px; display:flex; gap:10px; justify-content:flex-end;">
-        <button type="button" class="btn-secondary" onclick="imprimirFicha()">Imprimir</button>
-        <button type="button" class="btn-primary" onclick="fecharFichaMembro()">Fechar</button>
-      </div>
-    </div>
-  </div>
+  <!-- Lógica da Aplicação -->
+  <script src="script.js"></script>
 
 </body>
 </html>
