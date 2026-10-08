@@ -12,12 +12,10 @@ const firebaseConfig = {
   measurementId: "G-YK07KYSXB9"
 };
 
-// Garante que o Firebase é inicializado sem duplicidades
 if (window.firebase && !firebase.apps.length) {
   firebase.initializeApp(firebaseConfig);
 }
 
-// Provedor interno de instâncias do Firebase
 window.getFirebase = function() {
   if (window.firebase && firebase.apps.length) {
     return {
@@ -45,8 +43,8 @@ let currentMonth = new Date().getMonth();
 let currentYear = new Date().getFullYear();
 let isRegisterMode = false;
 let isFirebaseListening = false;
+let editingChamadaId = null; // Guarda ID se estiver editando lista existente
 
-// Mapeamento de IDs das abas por índice de navegação
 const TAB_IDS = ['tabChamada', 'tabCalendario', 'tabMembros', 'tabTutorial', 'tabAdmin'];
 
 // ==========================================
@@ -114,25 +112,20 @@ function initDateInputs() {
   const inputEvtData = document.getElementById('evtData');
   const inputEvtDataFim = document.getElementById('evtDataFim');
 
-  if (inputListaData) inputListaData.value = hoje;
-  if (inputEvtData) inputEvtData.value = hoje;
-  if (inputEvtDataFim) inputEvtDataFim.value = hoje;
+  if (inputListaData && !inputListaData.value) inputListaData.value = hoje;
+  if (inputEvtData && !inputEvtData.value) inputEvtData.value = hoje;
+  if (inputEvtDataFim && !inputEvtDataFim.value) inputEvtDataFim.value = hoje;
 }
 
 // ==========================================
-// LÓGICA DE AUTENTICAÇÃO E PERFIS DE UTILIZADOR
+// AUTENTICAÇÃO
 // ==========================================
 function initAuthEventListeners() {
   const btnAuthSubmit = document.getElementById('btnAuthSubmit');
   const authToggleBtn = document.getElementById('authToggleBtn');
 
-  if (btnAuthSubmit) {
-    btnAuthSubmit.addEventListener('click', submeterAutenticacao);
-  }
-
-  if (authToggleBtn) {
-    authToggleBtn.addEventListener('click', alternarModoAutenticacao);
-  }
+  if (btnAuthSubmit) btnAuthSubmit.addEventListener('click', submeterAutenticacao);
+  if (authToggleBtn) authToggleBtn.addEventListener('click', alternarModoAutenticacao);
 }
 
 function alternarModoAutenticacao() {
@@ -439,7 +432,7 @@ function excluirPasta(nome) {
   }
 }
 
-function renderAttendanceListEditor() {
+function renderAttendanceListEditor(loadedStatus = null) {
   const container = document.getElementById('boxMembrosChamada');
   const buscaInput = document.getElementById('buscaMembroChamada');
   const ordenacaoSel = document.getElementById('selOrdenacaoChamada');
@@ -447,7 +440,7 @@ function renderAttendanceListEditor() {
   if (!container) return;
 
   const termo = buscaInput ? buscaInput.value.toLowerCase().trim() : '';
-  const ordenacao = ordenacaoSel ? ordenacaoSel.value : 'NOME_ASC';
+  const ordenacao = ordenacaoSel ? ordenacaoSel.value : 'PENDENTES_FIM';
 
   let membrosFiltrados = state.membros.filter(m => {
     const matchNome = (m.nome || '').toLowerCase().includes(termo);
@@ -455,41 +448,64 @@ function renderAttendanceListEditor() {
     return matchNome || matchApelido;
   });
 
-  if (ordenacao === 'NOME_ASC') {
-    membrosFiltrados.sort((a, b) => (a.nome || '').localeCompare(b.nome || ''));
-  } else if (ordenacao === 'NOME_DESC') {
-    membrosFiltrados.sort((a, b) => (b.nome || '').localeCompare(a.nome || ''));
-  }
+  // Ordenação com Pendentes no Fim por Padrão
+  membrosFiltrados.sort((a, b) => {
+    const selectA = document.querySelector(`.sel-status-presenca[data-id="${a.id}"]`)?.value || (loadedStatus && loadedStatus[a.id]) || 'PENDENTE';
+    const selectB = document.querySelector(`.sel-status-presenca[data-id="${b.id}"]`)?.value || (loadedStatus && loadedStatus[b.id]) || 'PENDENTE';
+
+    if (ordenacao === 'PENDENTES_FIM' || ordenacao === 'NONE') {
+      const isAPendente = selectA === 'PENDENTE';
+      const isBPendente = selectB === 'PENDENTE';
+      if (isAPendente && !isBPendente) return 1;
+      if (!isAPendente && isBPendente) return -1;
+      return (a.nome || '').localeCompare(b.nome || '');
+    } else if (ordenacao === 'NOME_ASC') {
+      return (a.nome || '').localeCompare(b.nome || '');
+    } else if (ordenacao === 'NOME_DESC') {
+      return (b.nome || '').localeCompare(a.nome || '');
+    }
+    return 0;
+  });
 
   if (!membrosFiltrados.length) {
     container.innerHTML = '<p style="color:var(--text-muted); padding:10px;">Nenhum membro encontrado.</p>';
     return;
   }
 
-  container.innerHTML = membrosFiltrados.map(m => `
-    <div class="member-item-row">
-      <div>
-        <strong>${m.nome}</strong> ${m.apelido ? `(${m.apelido})` : ''}
-        <div style="font-size:0.75rem; color:var(--text-muted);">${(m.ministerios || []).join(', ')}</div>
+  container.innerHTML = membrosFiltrados.map(m => {
+    const statusAtual = (loadedStatus && loadedStatus[m.id]) ? loadedStatus[m.id] : 'PENDENTE';
+    return `
+      <div class="member-item-row" id="row_member_${m.id}">
+        <div>
+          <strong>${m.nome}</strong> ${m.apelido ? `(${m.apelido})` : ''}
+          <div style="font-size:0.75rem; color:var(--text-muted);">${(m.ministerios || []).join(', ')}</div>
+        </div>
+        <div>
+          <select class="sel-status-presenca" data-id="${m.id}" onchange="aoMudarStatusPresenca()" style="padding:6px 10px; border-radius:6px; background:var(--bg-dark); color:var(--text-main); border:1px solid var(--border-color);">
+            <option value="PENDENTE" ${statusAtual === 'PENDENTE' ? 'selected' : ''}>⏳ Pendente</option>
+            <option value="PRESENTE" ${statusAtual === 'PRESENTE' ? 'selected' : ''}>✅ Presente</option>
+            <option value="AUSENTE" ${statusAtual === 'AUSENTE' ? 'selected' : ''}>❌ Ausente</option>
+            <option value="JUSTIFICADO" ${statusAtual === 'JUSTIFICADO' ? 'selected' : ''}>📝 Justificado</option>
+            <option value="FALTA" ${statusAtual === 'FALTA' ? 'selected' : ''}>⚠️ Falta</option>
+          </select>
+        </div>
       </div>
-      <div>
-        <select class="sel-status-presenca" data-id="${m.id}" style="padding:6px 10px; border-radius:6px; background:var(--bg-dark); color:var(--text-main); border:1px solid var(--border-color);">
-          <option value="PENDENTE">⏳ Pendente</option>
-          <option value="PRESENTE">✅ Presente</option>
-          <option value="AUSENTE">❌ Ausente</option>
-          <option value="JUSTIFICADO">📝 Justificado</option>
-          <option value="FALTA">⚠️ Falta</option>
-        </select>
-      </div>
-    </div>
-  `).join('');
+    `;
+  }).join('');
+}
+
+function aoMudarStatusPresenca() {
+  const ordenacaoSel = document.getElementById('selOrdenacaoChamada');
+  if (!ordenacaoSel || ordenacaoSel.value === 'PENDENTES_FIM' || ordenacaoSel.value === 'NONE') {
+    renderAttendanceListEditor();
+  }
 }
 
 function atualizarBuscaChamada() {
   renderAttendanceListEditor();
 }
 
-function alterarOrdenacaoChamada(valor) {
+function alterarOrdenacaoChamada() {
   renderAttendanceListEditor();
 }
 
@@ -515,19 +531,53 @@ function salvarListaNaPasta() {
     registrosStatus[memberId] = sel.value;
   });
 
-  const novaChamada = {
-    id: 'chamada_' + Date.now(),
-    pasta: pasta,
-    titulo: titulo,
-    data: data,
-    statusMembros: registrosStatus,
-    totalMembros: state.membros.length
-  };
+  if (editingChamadaId) {
+    const idx = state.chamadas.findIndex(c => c.id === editingChamadaId);
+    if (idx !== -1) {
+      state.chamadas[idx] = {
+        ...state.chamadas[idx],
+        pasta,
+        titulo,
+        data,
+        statusMembros: registrosStatus,
+        totalMembros: state.membros.length
+      };
+    }
+    editingChamadaId = null;
+    alert('✅ Lista atualizada com sucesso!');
+  } else {
+    const novaChamada = {
+      id: 'chamada_' + Date.now(),
+      pasta: pasta,
+      titulo: titulo,
+      data: data,
+      statusMembros: registrosStatus,
+      totalMembros: state.membros.length
+    };
+    state.chamadas.push(novaChamada);
+    alert('✅ Lista salva com sucesso!');
+  }
 
-  state.chamadas.push(novaChamada);
   saveState();
   renderPastasEListasTree();
-  alert('✅ Lista salva com sucesso!');
+}
+
+function carregarChamadaParaEdicao(id) {
+  const chamada = state.chamadas.find(c => c.id === id);
+  if (!chamada) return;
+
+  editingChamadaId = id;
+
+  const selPasta = document.getElementById('selPastaDestino');
+  const inputTitulo = document.getElementById('listaTitulo');
+  const inputData = document.getElementById('listaData');
+
+  if (selPasta) selPasta.value = chamada.pasta;
+  if (inputTitulo) inputTitulo.value = chamada.titulo;
+  if (inputData) inputData.value = chamada.data;
+
+  renderAttendanceListEditor(chamada.statusMembros);
+  irParaJanela('tabChamada');
 }
 
 function renderPastasEListasTree() {
@@ -543,17 +593,20 @@ function renderPastasEListasTree() {
   state.pastas.forEach(pasta => {
     const listasDaPasta = state.chamadas.filter(c => c.pasta === pasta);
     html += `
-      <div class="folder-box">
-        <h4>📁 ${pasta} (${listasDaPasta.length} listas)</h4>
-        <div style="margin-top:10px; padding-left:15px;">
+      <div class="folder-box" style="margin-bottom:15px; border:1px solid var(--border-color); border-radius:8px; padding:12px;">
+        <h4 style="margin-bottom:8px;">📁 ${pasta} (${listasDaPasta.length} listas)</h4>
+        <div style="padding-left:10px;">
           ${listasDaPasta.length === 0 ? '<p style="font-size:0.8rem; color:var(--text-muted);">Nenhuma lista nesta pasta.</p>' : ''}
           ${listasDaPasta.map(l => {
             const statusObj = l.statusMembros || {};
             const numPresentes = Object.values(statusObj).filter(v => v === 'PRESENTE').length;
             return `
-              <div style="display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-bottom:1px solid var(--border-color);">
-                <span>📋 <b>${l.titulo}</b> (${l.data}) - ${numPresentes}/${l.totalMembros} presentes</span>
-                <button type="button" class="btn-danger" style="padding:2px 6px; font-size:0.7rem;" onclick="excluirChamada('${l.id}')">Excluir</button>
+              <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid var(--border-color); gap:10px;">
+                <span style="font-size:0.85rem;">📋 <b>${l.titulo}</b> (${l.data}) - ${numPresentes}/${l.totalMembros || state.membros.length} presentes</span>
+                <div>
+                  <button type="button" class="btn-secondary" style="padding:4px 8px; font-size:0.75rem; margin-right:4px;" onclick="carregarChamadaParaEdicao('${l.id}')">Abrir / Editar</button>
+                  <button type="button" class="btn-danger" style="padding:4px 8px; font-size:0.75rem;" onclick="excluirChamada('${l.id}')">Excluir</button>
+                </div>
               </div>
             `;
           }).join('')}
@@ -568,13 +621,14 @@ function renderPastasEListasTree() {
 function excluirChamada(id) {
   if (confirm('Deseja remover esta lista salva?')) {
     state.chamadas = state.chamadas.filter(c => c.id !== id);
+    if (editingChamadaId === id) editingChamadaId = null;
     saveState();
     renderPastasEListasTree();
   }
 }
 
 // ==========================================
-// IMPRESSÃO E RELATÓRIO PDF
+// IMPRESSÃO E RELATÓRIO PDF (MINIMALISTA / 2 COLUNAS DE 60)
 // ==========================================
 function exportarListaParaPDF() {
   const pasta = document.getElementById('selPastaDestino')?.value || 'Geral';
@@ -594,50 +648,64 @@ function exportarListaParaPDF() {
   let contPresentes = 0;
   let contAusentes = 0;
   let contJustificados = 0;
-  let contPendentes = 0;
 
-  let tabelaHTML = '';
+  let membrosFormatados = [];
 
   rows.forEach(row => {
     const nome = row.querySelector('strong')?.innerText || '';
-    const infoSecundario = row.querySelector('div div')?.innerText || 'Membro';
+    const infoSecundario = row.querySelector('div div')?.innerText || '';
     const select = row.querySelector('select');
     const statusVal = select ? select.value : 'PENDENTE';
 
-    let badgeClass = 'status-pendente';
-    let statusText = 'Pendente';
-
+    let statusText = '[  ]';
     if (statusVal === 'PRESENTE') {
       contPresentes++;
-      badgeClass = 'status-presente';
-      statusText = 'Presente';
+      statusText = ' (P)';
     } else if (statusVal === 'AUSENTE' || statusVal === 'FALTA') {
       contAusentes++;
-      badgeClass = 'status-ausente';
-      statusText = 'Ausente';
+      statusText = ' (A)';
     } else if (statusVal === 'JUSTIFICADO') {
       contJustificados++;
-      badgeClass = 'status-justificado';
-      statusText = 'Justificado';
-    } else {
-      contPendentes++;
+      statusText = ' (J)';
     }
 
-    tabelaHTML += `
+    membrosFormatados.push({
+      nome,
+      info: infoSecundario,
+      status: statusText
+    });
+  });
+
+  const pctPresente = totalMembros > 0 ? Math.round((contPresentes / totalMembros) * 100) : 0;
+
+  // Renderização em 2 colunas ultracompacta e limpa
+  let col1 = '';
+  let col2 = '';
+  const metade = Math.ceil(membrosFormatados.length / 2);
+
+  membrosFormatados.slice(0, metade).forEach((m, idx) => {
+    col1 += `
       <tr>
-        <td>
-          <div class="member-name">${nome}</div>
-          <div class="member-sub">${infoSecundario}</div>
+        <td style="width:25px; text-align:right; color:#666; font-size:10px;">${idx + 1}.</td>
+        <td style="padding: 2px 4px;">
+          <b>${m.nome}</b> <span style="font-size:9px; color:#555;">${m.info ? `(${m.info})` : ''}</span>
         </td>
-        <td>${new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</td>
-        <td style="text-align: right;">
-          <span class="badge ${badgeClass}">${statusText}</span>
-        </td>
+        <td style="width:30px; text-align:center; font-weight:bold; font-size:10px;">${m.status}</td>
       </tr>
     `;
   });
 
-  const pctPresente = totalMembros > 0 ? Math.round((contPresentes / totalMembros) * 100) : 0;
+  membrosFormatados.slice(metade).forEach((m, idx) => {
+    col2 += `
+      <tr>
+        <td style="width:25px; text-align:right; color:#666; font-size:10px;">${metade + idx + 1}.</td>
+        <td style="padding: 2px 4px;">
+          <b>${m.nome}</b> <span style="font-size:9px; color:#555;">${m.info ? `(${m.info})` : ''}</span>
+        </td>
+        <td style="width:30px; text-align:center; font-weight:bold; font-size:10px;">${m.status}</td>
+      </tr>
+    `;
+  });
 
   const janelaImpressao = window.open('', '_blank', 'width=900,height=700');
   
@@ -646,155 +714,92 @@ function exportarListaParaPDF() {
     <html lang="pt-BR">
     <head>
       <meta charset="UTF-8">
-      <title>Relatório - ${titulo}</title>
+      <title>Registro de Presença - ${titulo}</title>
       <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        @page { size: A4 portrait; margin: 10mm; }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { 
-          font-family: 'Inter', -apple-system, sans-serif; 
-          background-color: #0b0f19; 
-          color: #f1f5f9; 
-          padding: 30px;
-          -webkit-print-color-adjust: exact;
+          font-family: Arial, sans-serif; 
+          background-color: #ffffff; 
+          color: #000000; 
+          padding: 10px;
+          font-size: 11px;
         }
         .header {
+          border-bottom: 2px solid #000;
+          padding-bottom: 5px;
+          margin-bottom: 10px;
           display: flex;
           justify-content: space-between;
-          align-items: center;
-          padding-bottom: 20px;
-          border-bottom: 2px solid #1e293b;
-          margin-bottom: 20px;
+          align-items: flex-end;
         }
-        .brand-title {
-          font-size: 1.6rem;
-          font-weight: 700;
-          background: linear-gradient(135deg, #38bdf8, #818cf8);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          letter-spacing: -0.5px;
+        .title { font-size: 16px; font-weight: bold; text-transform: uppercase; }
+        .subtitle { font-size: 12px; }
+        .summary-bar {
+          margin-bottom: 10px;
+          font-size: 10px;
+          border-bottom: 1px solid #ccc;
+          padding-bottom: 4px;
         }
-        .meta-info {
-          font-size: 0.85rem;
-          color: #94a3b8;
-          text-align: right;
+        .columns-container {
+          display: flex;
+          gap: 15px;
         }
-        .metrics-grid {
-          display: grid;
-          grid-template-columns: repeat(4, 1fr);
-          gap: 12px;
-          margin-bottom: 20px;
-        }
-        .metric-card {
-          background: #1e293b;
-          border: 1px solid #334155;
-          border-radius: 8px;
-          padding: 12px;
-          text-align: center;
-        }
-        .metric-card .value {
-          font-size: 1.4rem;
-          font-weight: 700;
-          color: #38bdf8;
-        }
-        .metric-card .label {
-          font-size: 0.75rem;
-          color: #94a3b8;
-          text-transform: uppercase;
-        }
-        .progress-bar-container {
-          background: #1e293b;
-          border-radius: 20px;
-          height: 10px;
-          overflow: hidden;
-          margin-bottom: 25px;
-          border: 1px solid #334155;
-        }
-        .progress-bar-fill {
-          height: 100%;
-          background: linear-gradient(90deg, #38bdf8, #34d399);
-          width: ${pctPresente}%;
+        .column {
+          flex: 1;
         }
         table {
           width: 100%;
           border-collapse: collapse;
-          margin-top: 10px;
-        }
-        th {
-          background: #1e293b;
-          color: #94a3b8;
-          font-size: 0.75rem;
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
-          padding: 10px 12px;
-          text-align: left;
-          border-bottom: 2px solid #334155;
         }
         td {
-          padding: 12px;
-          border-bottom: 1px solid #1e293b;
-          font-size: 0.88rem;
+          border-bottom: 1px solid #eee;
+          height: 18px;
+          vertical-align: middle;
         }
-        .member-name { font-weight: 600; color: #f8fafc; }
-        .member-sub { font-size: 0.75rem; color: #64748b; }
-        .badge {
-          display: inline-block;
-          padding: 4px 10px;
-          border-radius: 12px;
-          font-size: 0.75rem;
-          font-weight: 600;
-        }
-        .status-presente { background: rgba(52, 211, 153, 0.15); color: #34d399; border: 1px solid rgba(52, 211, 153, 0.3); }
-        .status-ausente { background: rgba(248, 113, 113, 0.15); color: #f87171; border: 1px solid rgba(248, 113, 113, 0.3); }
-        .status-justificado { background: rgba(251, 191, 36, 0.15); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.3); }
-        .status-pendente { background: rgba(148, 163, 184, 0.15); color: #94a3b8; border: 1px solid rgba(148, 163, 184, 0.3); }
         .footer {
-          margin-top: 30px;
-          text-align: center;
-          font-size: 0.75rem;
-          color: #64748b;
-          border-top: 1px solid #1e293b;
-          padding-top: 15px;
+          margin-top: 15px;
+          border-top: 1px solid #000;
+          padding-top: 5px;
+          font-size: 9px;
+          text-align: justify;
+          display: flex;
+          justify-content: space-between;
         }
       </style>
     </head>
     <body>
       <div class="header">
         <div>
-          <div class="brand-title">APP IMUIT</div>
-          <div style="font-size:0.9rem; color:#94a3b8; margin-top:2px;">📁 ${pasta} — <b>${titulo}</b></div>
+          <div class="title">${titulo}</div>
+          <div class="subtitle">Pasta: ${pasta}</div>
         </div>
-        <div class="meta-info">
+        <div style="text-align:right;">
           <div><b>Data:</b> ${dataFormatada}</div>
-          <div><b>Gerado por:</b> ${state.currentUser?.nome || 'Sistema'}</div>
+          <div>Impresso em: ${new Date().toLocaleDateString('pt-BR')}</div>
         </div>
       </div>
 
-      <div class="metrics-grid">
-        <div class="metric-card"><div class="value">${totalMembros}</div><div class="label">Total Cadastrados</div></div>
-        <div class="metric-card"><div class="value">${contPresentes}</div><div class="label">Presentes</div></div>
-        <div class="metric-card"><div class="value">${contAusentes}</div><div class="label">Ausentes</div></div>
-        <div class="metric-card"><div class="value">${pctPresente}%</div><div class="label">Frequência</div></div>
+      <div class="summary-bar">
+        <b>Resumo:</b> Total Cadastrados: ${totalMembros} | Presentes: ${contPresentes} | Ausentes: ${contAusentes} | Justificados: ${contJustificados} | Frequência: ${pctPresente}%
       </div>
 
-      <div class="progress-bar-container">
-        <div class="progress-bar-fill"></div>
+      <div class="columns-container">
+        <div class="column">
+          <table>
+            <tbody>${col1}</tbody>
+          </table>
+        </div>
+        <div class="column">
+          <table>
+            <tbody>${col2}</tbody>
+          </table>
+        </div>
       </div>
-
-      <table>
-        <thead>
-          <tr>
-            <th>Membro & Ministério</th>
-            <th>Horário</th>
-            <th style="text-align: right;">Status de Presença</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${tabelaHTML}
-        </tbody>
-      </table>
 
       <div class="footer">
-        Relatório gerado automaticamente via App Imuit · ${new Date().toLocaleString('pt-BR')}
+        <span>App Imuit - Documento Oficial de Registro de Frequência</span>
+        <span>Página 1</span>
       </div>
 
       <script>
@@ -811,30 +816,69 @@ function exportarListaParaPDF() {
 }
 
 // ==========================================
-// ABA 2: CALENDÁRIO E EVENTOS
+// ABA 2: CALENDÁRIO E EVENTOS (COM RECURSÃO E EXCLUSÃO)
 // ==========================================
 function salvarEvento() {
   const titulo = document.getElementById('evtTitulo')?.value.trim();
-  const data = document.getElementById('evtData')?.value;
-  const dataFim = document.getElementById('evtDataFim')?.value;
-  const hora = document.getElementById('evtHora')?.value;
-  const horaFim = document.getElementById('evtHoraFim')?.value;
-  const recorrencia = document.getElementById('evtRecorrencia')?.value;
+  const dataIni = document.getElementById('evtData')?.value;
+  const dataFim = document.getElementById('evtDataFim')?.value || dataIni;
+  const hora = document.getElementById('evtHora')?.value || '19:30';
+  const horaFim = document.getElementById('evtHoraFim')?.value || '21:00';
+  const recorrencia = document.getElementById('evtRecorrencia')?.value || 'UNICO';
 
-  if (!titulo || !data) {
+  if (!titulo || !dataIni) {
     alert('Informe ao menos o título e a data do evento.');
     return;
   }
 
-  const novoEvento = {
-    id: 'evt_' + Date.now(),
-    titulo, data, dataFim, hora, horaFim, recorrencia
-  };
+  const start = new Date(dataIni + 'T00:00:00');
+  const end = new Date(dataFim + 'T00:00:00');
 
-  state.eventos.push(novoEvento);
+  if (start > end) {
+    alert('A data de término precisa ser igual ou posterior à data de início.');
+    return;
+  }
+
+  let datasParaAdicionar = [];
+  let cur = new Date(start);
+
+  if (recorrencia === 'SEMANAL') {
+    while (cur <= end) {
+      datasParaAdicionar.push(cur.toISOString().split('T')[0]);
+      cur.setDate(cur.getDate() + 7);
+    }
+  } else if (recorrencia === 'MENSAL') {
+    while (cur <= end) {
+      datasParaAdicionar.push(cur.toISOString().split('T')[0]);
+      cur.setMonth(cur.getMonth() + 1);
+    }
+  } else {
+    datasParaAdicionar.push(dataIni);
+  }
+
+  datasParaAdicionar.forEach(dt => {
+    state.eventos.push({
+      id: 'evt_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+      titulo,
+      data: dt,
+      dataFim,
+      hora,
+      horaFim,
+      recorrencia
+    });
+  });
+
   saveState();
   renderCalendar();
-  alert('📅 Evento agendado com sucesso!');
+  alert(`📅 ${datasParaAdicionar.length} evento(s) agendado(s) com sucesso!`);
+}
+
+function excluirEvento(id) {
+  if (confirm('Tem certeza de que deseja excluir este evento do calendário?')) {
+    state.eventos = state.eventos.filter(e => e.id !== id);
+    saveState();
+    renderCalendar();
+  }
 }
 
 function mudarMesCalendario(step) {
@@ -903,9 +947,13 @@ function renderCalendar() {
     if (!state.eventos.length) {
       listaProximos.innerHTML = '<p style="color:var(--text-muted);">Nenhum evento agendado.</p>';
     } else {
-      listaProximos.innerHTML = state.eventos.slice(-5).map(e => `
-        <div style="padding:8px; border-bottom:1px solid var(--border-color);">
-          <strong>${e.titulo}</strong> - 📅 ${e.data} às ${e.hora || '19:00'}
+      listaProximos.innerHTML = state.eventos.slice(-10).map(e => `
+        <div style="display:flex; justify-content:space-between; align-items:center; padding:8px; border-bottom:1px solid var(--border-color);">
+          <div>
+            <strong>${e.titulo}</strong> <br>
+            <small style="color:var(--text-muted);">📅 ${e.data} às ${e.hora || '19:30'}</small>
+          </div>
+          <button type="button" class="btn-danger" style="padding:2px 6px; font-size:0.7rem;" onclick="excluirEvento('${e.id}')">Excluir</button>
         </div>
       `).join('');
     }
@@ -913,7 +961,7 @@ function renderCalendar() {
 }
 
 // ==========================================
-// ABA 3: MEMBROS E MINISTÉRIOS
+// ABA 3: MEMBROS E MINISTÉRIOS (COM EDIÇÃO DE MEMBRO)
 // ==========================================
 function salvarMembro() {
   const nome = document.getElementById('memNome')?.value.trim();
@@ -959,7 +1007,151 @@ function limparFormMembro() {
   document.querySelectorAll('.chk-min-item').forEach(c => c.checked = false);
 }
 
-// IMPORTAÇÃO EM MASSA VIA PLANILHA / CSV
+function abrirFichaMembro(id) {
+  const membro = state.membros.find(m => m.id === id);
+  if (!membro) return;
+
+  const modal = document.getElementById('fichaMembroModal');
+  const conteudo = document.getElementById('fichaConteudo');
+
+  if (modal && conteudo) {
+    conteudo.innerHTML = `
+      <div id="visualizacaoFicha">
+        <p><b>Nome Completo:</b> ${membro.nome}</p>
+        <p><b>Apelido:</b> ${membro.apelido || '-'}</p>
+        <p><b>Data de Nascimento:</b> ${membro.nasc || '-'} (${calcularIdade(membro.nasc)} anos)</p>
+        <p><b>Telefone:</b> ${membro.fone || '-'}</p>
+        <hr style="margin:10px 0; border-color:var(--border-color);">
+        <p><b>Responsável:</b> ${membro.responsavel?.nome || '-'}</p>
+        <p><b>Telefone Responsável:</b> ${membro.responsavel?.fone || '-'}</p>
+        <p><b>Ministérios:</b> ${(membro.ministerios || []).join(', ') || 'Nenhum'}</p>
+        <button type="button" class="btn-secondary" style="margin-top:15px;" onclick="habilitarEdicaoMembro('${membro.id}')">✏️ Editar Informações</button>
+      </div>
+      <div id="formEdicaoMembro" style="display:none; margin-top:10px;">
+        <h4 style="margin-bottom:10px;">Editar Membro</h4>
+        <label>Nome Completo:</label>
+        <input type="text" id="editMemNome" value="${membro.nome}" style="width:100%; margin-bottom:8px; padding:6px; background:var(--bg-dark); color:var(--text-main); border:1px solid var(--border-color); border-radius:4px;">
+        
+        <label>Apelido:</label>
+        <input type="text" id="editMemApelido" value="${membro.apelido || ''}" style="width:100%; margin-bottom:8px; padding:6px; background:var(--bg-dark); color:var(--text-main); border:1px solid var(--border-color); border-radius:4px;">
+        
+        <label>Data de Nascimento:</label>
+        <input type="date" id="editMemNasc" value="${membro.nasc || ''}" style="width:100%; margin-bottom:8px; padding:6px; background:var(--bg-dark); color:var(--text-main); border:1px solid var(--border-color); border-radius:4px;">
+        
+        <label>Telefone:</label>
+        <input type="text" id="editMemFone" value="${membro.fone || ''}" oninput="mascaraTelefone(this)" style="width:100%; margin-bottom:8px; padding:6px; background:var(--bg-dark); color:var(--text-main); border:1px solid var(--border-color); border-radius:4px;">
+        
+        <label>Nome Responsável:</label>
+        <input type="text" id="editMemRespNome" value="${membro.responsavel?.nome || ''}" style="width:100%; margin-bottom:8px; padding:6px; background:var(--bg-dark); color:var(--text-main); border:1px solid var(--border-color); border-radius:4px;">
+        
+        <label>Telefone Responsável:</label>
+        <input type="text" id="editMemRespFone" value="${membro.responsavel?.fone || ''}" oninput="mascaraTelefone(this)" style="width:100%; margin-bottom:8px; padding:6px; background:var(--bg-dark); color:var(--text-main); border:1px solid var(--border-color); border-radius:4px;">
+        
+        <label>Ministérios:</label>
+        <div id="editBoxMinisterios" style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px;">
+          ${(state.ministries || []).map(min => `
+            <label style="font-size:0.8rem; display:flex; align-items:center; gap:4px;">
+              <input type="checkbox" class="chk-edit-min" value="${min}" ${(membro.ministerios \vert{}\vert{} []).includes(min) ? 'checked' : ''}>${min}
+            </label>
+          `).join('')}
+        </div>
+
+        <button type="button" class="btn-primary" onclick="salvarEdicaoMembro('${membro.id}')">💾 Salvar Alterações</button>
+      </div>
+    `;
+    modal.style.display = 'flex';
+  }
+}
+
+function habilitarEdicaoMembro(id) {
+  document.getElementById('visualizacaoFicha').style.display = 'none';
+  document.getElementById('formEdicaoMembro').style.display = 'block';
+}
+
+function salvarEdicaoMembro(id) {
+  const mIndex = state.membros.findIndex(m => m.id === id);
+  if (mIndex === -1) return;
+
+  const nome = document.getElementById('editMemNome').value.trim();
+  const apelido = document.getElementById('editMemApelido').value.trim();
+  const nasc = document.getElementById('editMemNasc').value;
+  const fone = document.getElementById('editMemFone').value;
+  const respNome = document.getElementById('editMemRespNome').value;
+  const respFone = document.getElementById('editMemRespFone').value;
+
+  const selectedMin = [];
+  document.querySelectorAll('.chk-edit-min:checked').forEach(c => selectedMin.push(c.value));
+
+  if (!nome) {
+    alert('O nome do membro não pode ficar em branco.');
+    return;
+  }
+
+  state.membros[mIndex] = {
+    ...state.membros[mIndex],
+    nome,
+    apelido,
+    nasc,
+    fone,
+    responsavel: { nome: respNome, fone: respFone },
+    ministerios: selectedMin
+  };
+
+  saveState();
+  renderMembersTable();
+  renderAttendanceListEditor();
+  fecharFichaMembro();
+  alert('✅ Informações do membro atualizadas!');
+}
+
+function fecharFichaMembro() {
+  const modal = document.getElementById('fichaMembroModal');
+  if (modal) modal.style.display = 'none';
+}
+
+function renderMembersTable() {
+  const tbody = document.getElementById('tbMembrosCorpo');
+  const busca = document.getElementById('buscaMembrosLista')?.value.toLowerCase().trim() || '';
+
+  if (!tbody) return;
+
+  const filtrados = state.membros.filter(m => (m.nome || '').toLowerCase().includes(busca) || (m.apelido || '').toLowerCase().includes(busca));
+
+  if (!filtrados.length) {
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--text-muted);">Nenhum membro cadastrado.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = filtrados.map(m => `
+    <tr>
+      <td><b>${m.nome}</b> ${m.apelido ? `<br><small style="color:var(--text-muted);">${m.apelido}</small>` : ''}</td>
+      <td>${calcularIdade(m.nasc)} anos</td>
+      <td>${m.fone || '-'}</td>
+      <td>${(m.ministerios || []).map(min => `<span class="tag tag-blue">${min}</span>`).join(' ')}</td>
+      <td>
+        <button type="button" class="btn-secondary" style="padding:4px 8px; font-size:0.75rem;" onclick="abrirFichaMembro('${m.id}')">Ficha / Editar</button>
+        <button type="button" class="btn-danger" style="padding:4px 8px; font-size:0.75rem;" onclick="excluirMembro('${m.id}')">Excluir</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function renderListaMembros() {
+  renderMembersTable();
+}
+
+function calcularIdade(dataNasc) {
+  if (!dataNasc) return '-';
+  const hoje = new Date();
+  const nasc = new Date(dataNasc);
+  let idade = hoje.getFullYear() - nasc.getFullYear();
+  const m = hoje.getMonth() - nasc.getMonth();
+  if (m < 0 || (m === 0 && hoje.getDate() < nasc.getDate())) {
+    idade--;
+  }
+  return idade;
+}
+
 function abrirModalImportacaoMassa() {
   document.getElementById('importacaoMassaModal').style.display = 'flex';
 }
@@ -1105,80 +1297,6 @@ function renderMinistryCheckboxes() {
   }
 }
 
-function renderMembersTable() {
-  const tbody = document.getElementById('tbMembrosCorpo');
-  const busca = document.getElementById('buscaMembrosLista')?.value.toLowerCase().trim() || '';
-
-  if (!tbody) return;
-
-  const filtrados = state.membros.filter(m => (m.nome || '').toLowerCase().includes(busca) || (m.apelido || '').toLowerCase().includes(busca));
-
-  if (!filtrados.length) {
-    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--text-muted);">Nenhum membro cadastrado.</td></tr>';
-    return;
-  }
-
-  tbody.innerHTML = filtrados.map(m => `
-    <tr>
-      <td><b>${m.nome}</b> ${m.apelido ? `<br><small style="color:var(--text-muted);">${m.apelido}</small>` : ''}</td>
-      <td>${calcularIdade(m.nasc)} anos</td>
-      <td>${m.fone || '-'}</td>
-      <td>${(m.ministerios || []).map(min => `<span class="tag tag-blue">${min}</span>`).join(' ')}</td>
-      <td>
-        <button type="button" class="btn-secondary" style="padding:4px 8px; font-size:0.75rem;" onclick="abrirFichaMembro('${m.id}')">Ficha</button>
-        <button type="button" class="btn-danger" style="padding:4px 8px; font-size:0.75rem;" onclick="excluirMembro('${m.id}')">Excluir</button>
-      </td>
-    </tr>
-  `).join('');
-}
-
-function renderListaMembros() {
-  renderMembersTable();
-}
-
-function calcularIdade(dataNasc) {
-  if (!dataNasc) return '-';
-  const hoje = new Date();
-  const nasc = new Date(dataNasc);
-  let idade = hoje.getFullYear() - nasc.getFullYear();
-  const m = hoje.getMonth() - nasc.getMonth();
-  if (m < 0 || (m === 0 && hoje.getDate() < nasc.getDate())) {
-    idade--;
-  }
-  return idade;
-}
-
-function abrirFichaMembro(id) {
-  const membro = state.membros.find(m => m.id === id);
-  if (!membro) return;
-
-  const modal = document.getElementById('fichaMembroModal');
-  const conteudo = document.getElementById('fichaConteudo');
-
-  if (modal && conteudo) {
-    conteudo.innerHTML = `
-      <p><b>Nome Completo:</b> ${membro.nome}</p>
-      <p><b>Apelido:</b> ${membro.apelido || '-'}</p>
-      <p><b>Data de Nascimento:</b> ${membro.nasc || '-'} (${calcularIdade(membro.nasc)} anos)</p>
-      <p><b>Telefone:</b> ${membro.fone || '-'}</p>
-      <hr style="margin:10px 0; border-color:var(--border-color);">
-      <p><b>Responsável:</b> ${membro.responsavel?.nome || '-'}</p>
-      <p><b>Telefone Responsável:</b> ${membro.responsavel?.fone || '-'}</p>
-      <p><b>Ministérios:</b> ${(membro.ministerios || []).join(', ') || 'Nenhum'}</p>
-    `;
-    modal.style.display = 'flex';
-  }
-}
-
-function fecharFichaMembro() {
-  const modal = document.getElementById('fichaMembroModal');
-  if (modal) modal.style.display = 'none';
-}
-
-function imprimirFicha() {
-  window.print();
-}
-
 function excluirMembro(id) {
   if (confirm('Tem certeza de que deseja remover este membro?')) {
     state.membros = state.membros.filter(m => m.id !== id);
@@ -1189,7 +1307,7 @@ function excluirMembro(id) {
 }
 
 // ==========================================
-// ABA 5: SEGURANÇA E ADMINISTRAÇÃO DE UTILIZADORES
+// ABA 5: SEGURANÇA E ADMINISTRAÇÃO (APROVAR, BLOQUEAR E EXCLUIR)
 // ==========================================
 function renderUsersAdminTable() {
   const tbody = document.getElementById('tbPerfisUsuarios');
@@ -1208,7 +1326,7 @@ function renderUsersAdminTable() {
 
 function renderUsersRows(container, list) {
   if (!list.length) {
-    container.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--text-muted);">Nenhum utilizador para aprovação.</td></tr>';
+    container.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--text-muted);">Nenhum utilizador encontrado.</td></tr>';
     return;
   }
 
@@ -1216,7 +1334,7 @@ function renderUsersRows(container, list) {
     <tr>
       <td>${u.nome || u.email.split('@')[0]}</td>
       <td>${u.email}</td>
-      <td><span class="tag ${u.aprovado ? 'tag-green' : 'tag-yellow'}">${u.aprovado ? 'Aprovado' : 'Pendente'}</span></td>
+      <td><span class="tag ${u.aprovado ? 'tag-green' : 'tag-yellow'}">${u.aprovado ? 'Aprovado' : 'Bloqueado'}</span></td>
       <td>
         <select onchange="alterarPerfilUsuario('${u.uid}', this.value)">
           <option value="L" ${u.perfil === 'L' ? 'selected' : ''}>Líder</option>
@@ -1225,7 +1343,11 @@ function renderUsersRows(container, list) {
         </select>
       </td>
       <td>
-        ${!u.aprovado ? `<button type="button" class="btn-secondary" style="padding:4px 8px; font-size:0.75rem;" onclick="aprovarUsuario('${u.uid}')">Aprovar</button>` : ''}
+        ${!u.aprovado ? 
+          `<button type="button" class="btn-secondary" style="padding:4px 8px; font-size:0.75rem; margin-right:4px;" onclick="aprovarUsuario('${u.uid}')">Aprovar</button>` : 
+          `<button type="button" class="btn-danger" style="padding:4px 8px; font-size:0.75rem; margin-right:4px;" onclick="bloquearUsuario('${u.uid}')">Bloquear</button>`
+        }
+        <button type="button" class="btn-danger" style="padding:4px 8px; font-size:0.75rem;" onclick="excluirUsuarioAdmin('${u.uid}')">Excluir</button>
       </td>
     </tr>
   `).join('');
@@ -1238,6 +1360,30 @@ function aprovarUsuario(uid) {
         alert('Utilizador aprovado!');
         renderUsersAdminTable();
       });
+  }
+}
+
+function bloquearUsuario(uid) {
+  if (confirm('Deseja suspender/bloquear este utilizador?')) {
+    if (window.firebase && firebase.database) {
+      firebase.database().ref('users/' + uid).update({ aprovado: false })
+        .then(() => {
+          alert('Utilizador bloqueado!');
+          renderUsersAdminTable();
+        });
+    }
+  }
+}
+
+function excluirUsuarioAdmin(uid) {
+  if (confirm('Tem certeza de que deseja excluir este utilizador permanentemente?')) {
+    if (window.firebase && firebase.database) {
+      firebase.database().ref('users/' + uid).remove()
+        .then(() => {
+          alert('Utilizador removido com sucesso!');
+          renderUsersAdminTable();
+        });
+    }
   }
 }
 
@@ -1255,24 +1401,30 @@ window.irParaJanela = irParaJanela;
 window.mudarMesCalendario = mudarMesCalendario;
 window.atualizarBuscaChamada = atualizarBuscaChamada;
 window.alterarOrdenacaoChamada = alterarOrdenacaoChamada;
+window.aoMudarStatusPresenca = aoMudarStatusPresenca;
 window.criarMinisterio = criarMinisterio;
 window.excluirMinisterio = excluirMinisterio;
 window.salvarListaNaPasta = salvarListaNaPasta;
+window.carregarChamadaParaEdicao = carregarChamadaParaEdicao;
 window.alternarTema = alternarTema;
 window.mascaraTelefone = mascaraTelefone;
 window.renderListaMembros = renderListaMembros;
 window.criarNovaPasta = criarNovaPasta;
 window.salvarEvento = salvarEvento;
+window.excluirEvento = excluirEvento;
 window.salvarMembro = salvarMembro;
 window.excluirMembro = excluirMembro;
 window.abrirFichaMembro = abrirFichaMembro;
+window.habilitarEdicaoMembro = habilitarEdicaoMembro;
+window.salvarEdicaoMembro = salvarEdicaoMembro;
 window.fecharFichaMembro = fecharFichaMembro;
-window.imprimirFicha = imprimirFicha;
 window.excluirPasta = excluirPasta;
 window.excluirChamada = excluirChamada;
 window.exportarListaParaPDF = exportarListaParaPDF;
 window.terminarSessao = terminarSessao;
 window.aprovarUsuario = aprovarUsuario;
+window.bloquearUsuario = bloquearUsuario;
+window.excluirUsuarioAdmin = excluirUsuarioAdmin;
 window.alterarPerfilUsuario = alterarPerfilUsuario;
 window.abrirModalImportacaoMassa = abrirModalImportacaoMassa;
 window.fecharModalImportacaoMassa = fecharModalImportacaoMassa;
