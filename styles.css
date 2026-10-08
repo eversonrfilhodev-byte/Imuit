@@ -154,54 +154,10 @@ h1 {
 }
 
 /* ESTRUTURA DO CONTEÚDO DAS ABAS */
-.carousel-view {
-  overflow: hidden;
-  width: 100%;
-  position: relative;
-}
-
-.carousel-track {
-  display: flex;
-  transition: transform 0.35s cubic-bezier(0.25, 1, 0.5, 1);
-  width: 100%;
-}
-
 .tab-content {
   width: 100%;
-  flex-shrink: 0;
   padding: 2px;
   box-sizing: border-box;
-}
-
-.nav-arrow {
-  position: fixed;
-  top: 50%;
-  transform: translateY(-50%);
-  background: var(--card-bg);
-  border: 1px solid var(--border-color);
-  color: var(--text-main);
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  z-index: 100;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-  transition: all 0.2s ease;
-}
-
-.nav-arrow:hover {
-  background: var(--accent-blue);
-  color: #fff;
-}
-
-.nav-arrow.left { left: 15px; }
-.nav-arrow.right { right: 15px; }
-
-@media (max-width: 900px) { 
-  .nav-arrow { display: none !important; } 
 }
 
 /* CARDS E GRIDS RESPONSIVOS */
@@ -216,7 +172,7 @@ h1 {
   box-sizing: border-box;
 }
 
-.card-title {
+.card-title, .card h2, .card h3 {
   font-size: 1.15rem;
   color: var(--text-heading);
   margin-bottom: 18px;
@@ -275,7 +231,7 @@ input, select, textarea {
   box-sizing: border-box;
 }
 
-input:focus, select:focus {
+input:focus, select:focus, textarea:focus {
   outline: none;
   border-color: var(--accent-blue);
 }
@@ -316,7 +272,7 @@ table, .data-table {
   width: 100%;
   border-collapse: collapse;
   margin-top: 10px;
-  min-width: 500px; /* Garante usabilidade no scroll lateral no mobile */
+  min-width: 500px;
 }
 
 th, td {
@@ -374,20 +330,10 @@ th {
 }
 
 /* CALENDÁRIO RESPONSIVO */
-.calendar-header-nav {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 15px;
-}
-
-.cal-days-header, .calendar-grid-month {
+.cal-days-header {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: 4px;
-}
-
-.cal-day-name {
   text-align: center;
   font-size: 0.75rem;
   font-weight: 700;
@@ -395,7 +341,7 @@ th {
   padding: 6px 0;
 }
 
-.cal-grid, .calendar-grid-month {
+.cal-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: 4px;
