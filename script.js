@@ -961,7 +961,7 @@ function renderCalendar() {
 }
 
 // ==========================================
-// ABA 3: MEMBROS E MINISTÉRIOS (COM EDIÇÃO DE MEMBRO)
+// ABA 3: MEMBROS E MINISTÉRIOS (COM EDIÇÃO E IMPRESSÃO DE MEMBRO)
 // ==========================================
 function salvarMembro() {
   const nome = document.getElementById('memNome')?.value.trim();
@@ -1045,7 +1045,7 @@ function abrirFichaMembro(id) {
         <div id="editBoxMinisterios" style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px;">
           ${(state.ministries || []).map(min => `
             <label style="font-size:0.8rem; display:flex; align-items:center; gap:4px;">
-              <input type="checkbox" class="chk-edit-min" value="${min}" ${(membro.ministerios || []).includes(min) ? 'checked' : ''}>${min}
+              <input type="checkbox" class="chk-edit-min" value="${min}" ${(membro.ministerios \vert{}\vert{} []).includes(min) ? 'checked' : ''}>${min}
             </label>
           `).join('')}
         </div>
@@ -1055,6 +1055,40 @@ function abrirFichaMembro(id) {
     `;
     modal.style.display = 'flex';
   }
+}
+
+function imprimirFicha() {
+  const conteudoModal = document.getElementById('visualizacaoFicha');
+  if (!conteudoModal) return;
+
+  const janelaImpressao = window.open('', '_blank', 'width=800,height=600');
+  janelaImpressao.document.write(`
+    <!DOCTYPE html>
+    <html lang="pt-BR">
+    <head>
+      <meta charset="UTF-8">
+      <title>Ficha Cadastral do Membro</title>
+      <style>
+        body { font-family: Arial, sans-serif; padding: 30px; color: #000; background: #fff; }
+        h2 { border-bottom: 2px solid #000; padding-bottom: 8px; margin-bottom: 20px; text-transform: uppercase; font-size: 18px; }
+        p { font-size: 14px; margin-bottom: 10px; line-height: 1.5; }
+        hr { margin: 15px 0; border: 0; border-top: 1px solid #ccc; }
+        button, #formEdicaoMembro { display: none !important; }
+      </style>
+    </head>
+    <body>
+      <h2>App Imuit - Ficha Cadastral</h2>
+      ${conteudoModal.innerHTML}
+      <script>
+        window.onload = function() {
+          window.print();
+          window.onafterprint = function() { window.close(); };
+        };
+      <\/script>
+    </body>
+    </html>
+  `);
+  janelaImpressao.document.close();
 }
 
 function habilitarEdicaoMembro(id) {
@@ -1409,6 +1443,7 @@ window.excluirEvento = excluirEvento;
 window.salvarMembro = salvarMembro;
 window.excluirMembro = excluirMembro;
 window.abrirFichaMembro = abrirFichaMembro;
+window.imprimirFicha = imprimirFicha;
 window.habilitarEdicaoMembro = habilitarEdicaoMembro;
 window.salvarEdicaoMembro = salvarEdicaoMembro;
 window.fecharFichaMembro = fecharFichaMembro;
