@@ -43,7 +43,7 @@ let currentMonth = new Date().getMonth();
 let currentYear = new Date().getFullYear();
 let isRegisterMode = false;
 let isFirebaseListening = false;
-let editingChamadaId = null; // Guarda ID se estiver editando lista existente
+let editingChamadaId = null;
 
 const TAB_IDS = ['tabChamada', 'tabCalendario', 'tabMembros', 'tabTutorial', 'tabAdmin'];
 
@@ -448,7 +448,6 @@ function renderAttendanceListEditor(loadedStatus = null) {
     return matchNome || matchApelido;
   });
 
-  // Ordenação com Pendentes no Fim por Padrão
   membrosFiltrados.sort((a, b) => {
     const selectA = document.querySelector(`.sel-status-presenca[data-id="${a.id}"]`)?.value || (loadedStatus && loadedStatus[a.id]) || 'PENDENTE';
     const selectB = document.querySelector(`.sel-status-presenca[data-id="${b.id}"]`)?.value || (loadedStatus && loadedStatus[b.id]) || 'PENDENTE';
@@ -628,7 +627,7 @@ function excluirChamada(id) {
 }
 
 // ==========================================
-// IMPRESSÃO E RELATÓRIO PDF (MINIMALISTA / 2 COLUNAS DE 60)
+// IMPRESSÃO E RELATÓRIO PDF
 // ==========================================
 function exportarListaParaPDF() {
   const pasta = document.getElementById('selPastaDestino')?.value || 'Geral';
@@ -678,7 +677,6 @@ function exportarListaParaPDF() {
 
   const pctPresente = totalMembros > 0 ? Math.round((contPresentes / totalMembros) * 100) : 0;
 
-  // Renderização em 2 colunas ultracompacta e limpa
   let col1 = '';
   let col2 = '';
   const metade = Math.ceil(membrosFormatados.length / 2);
@@ -816,7 +814,7 @@ function exportarListaParaPDF() {
 }
 
 // ==========================================
-// ABA 2: CALENDÁRIO E EVENTOS (COM RECURSÃO E EXCLUSÃO)
+// ABA 2: CALENDÁRIO E EVENTOS
 // ==========================================
 function salvarEvento() {
   const titulo = document.getElementById('evtTitulo')?.value.trim();
@@ -961,7 +959,7 @@ function renderCalendar() {
 }
 
 // ==========================================
-// ABA 3: MEMBROS E MINISTÉRIOS (COM EDIÇÃO E IMPRESSÃO DE MEMBRO)
+// ABA 3: MEMBROS E MINISTÉRIOS
 // ==========================================
 function salvarMembro() {
   const nome = document.getElementById('memNome')?.value.trim();
@@ -1335,7 +1333,7 @@ function excluirMembro(id) {
 }
 
 // ==========================================
-// ABA 5: SEGURANÇA E ADMINISTRAÇÃO (APROVAR, BLOQUEAR E EXCLUIR)
+// ABA 5: SEGURANÇA E ADMINISTRAÇÃO
 // ==========================================
 function renderUsersAdminTable() {
   const tbody = document.getElementById('tbPerfisUsuarios');
