@@ -442,6 +442,14 @@ function renderAttendanceListEditor(loadedStatus = null) {
   const termo = buscaInput ? buscaInput.value.toLowerCase().trim() : '';
   const ordenacao = ordenacaoSel ? ordenacaoSel.value : 'PENDENTES_FIM';
 
+  const statusAtuaisNoDOM = {};
+  container.querySelectorAll('.sel-status-presenca').forEach(sel => {
+    const memberId = sel.getAttribute('data-id');
+    if (memberId) {
+      statusAtuaisNoDOM[memberId] = sel.value;
+    }
+  });
+
   let membrosFiltrados = state.membros.filter(m => {
     const matchNome = (m.nome || '').toLowerCase().includes(termo);
     const matchApelido = (m.apelido || '').toLowerCase().includes(termo);
@@ -449,12 +457,12 @@ function renderAttendanceListEditor(loadedStatus = null) {
   });
 
   membrosFiltrados.sort((a, b) => {
-    const selectA = document.querySelector(`.sel-status-presenca[data-id="${a.id}"]`)?.value || (loadedStatus && loadedStatus[a.id]) || 'PENDENTE';
-    const selectB = document.querySelector(`.sel-status-presenca[data-id="${b.id}"]`)?.value || (loadedStatus && loadedStatus[b.id]) || 'PENDENTE';
+    const statusA = statusAtuaisNoDOM[a.id] || (loadedStatus && loadedStatus[a.id]) || 'PENDENTE';
+    const statusB = statusAtuaisNoDOM[b.id] || (loadedStatus && loadedStatus[b.id]) || 'PENDENTE';
 
     if (ordenacao === 'PENDENTES_FIM' || ordenacao === 'NONE') {
-      const isAPendente = selectA === 'PENDENTE';
-      const isBPendente = selectB === 'PENDENTE';
+      const isAPendente = statusA === 'PENDENTE';
+      const isBPendente = statusB === 'PENDENTE';
       if (isAPendente && !isBPendente) return 1;
       if (!isAPendente && isBPendente) return -1;
       return (a.nome || '').localeCompare(b.nome || '');
@@ -472,7 +480,7 @@ function renderAttendanceListEditor(loadedStatus = null) {
   }
 
   container.innerHTML = membrosFiltrados.map(m => {
-    const statusAtual = (loadedStatus && loadedStatus[m.id]) ? loadedStatus[m.id] : 'PENDENTE';
+    const statusAtual = statusAtuaisNoDOM[m.id] || (loadedStatus && loadedStatus[m.id]) || 'PENDENTE';
     return `
       <div class="member-item-row" id="row_member_${m.id}">
         <div>
@@ -1043,7 +1051,7 @@ function abrirFichaMembro(id) {
         <div id="editBoxMinisterios" style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px;">
           ${(state.ministries || []).map(min => `
             <label style="font-size:0.8rem; display:flex; align-items:center; gap:4px;">
-              <input type="checkbox" class="chk-edit-min" value="${min}" ${(membro.ministerios || []).includes(min) ? 'checked' : ''}>${min}
+              <input type="checkbox" class="chk-edit-min" value="${min}" ${(membro.ministerios \vert{}\vert{} []).includes(min) ? 'checked' : ''}>${min}
             </label>
           `).join('')}
         </div>
@@ -1457,3 +1465,4 @@ window.abrirModalImportacaoMassa = abrirModalImportacaoMassa;
 window.fecharModalImportacaoMassa = fecharModalImportacaoMassa;
 window.lerArquivoCsv = lerArquivoCsv;
 window.processarImportacaoEmMassa = processarImportacaoEmMassa;
+
