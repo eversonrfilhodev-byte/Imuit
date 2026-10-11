@@ -1465,4 +1465,3 @@ window.abrirModalImportacaoMassa = abrirModalImportacaoMassa;
 window.fecharModalImportacaoMassa = fecharModalImportacaoMassa;
 window.lerArquivoCsv = lerArquivoCsv;
 window.processarImportacaoEmMassa = processarImportacaoEmMassa;
-
