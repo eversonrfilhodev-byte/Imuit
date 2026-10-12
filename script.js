@@ -589,18 +589,23 @@ function carregarChamadaParaEdicao(id) {
   if (inputTitulo) inputTitulo.value = chamada.titulo;
   if (inputData) inputData.value = chamada.data;
 
-  // LOG DE DEPURAÇÃO: Veja o que está guardado nesta lista no Console (F12)
-  console.log("Dados brutos da chamada carregada:", chamada);
-  console.log("Status salvos (statusMembros):", chamada.statusMembros);
-  console.log("Membros atuais cadastrados:", state.membros);
-
   let statusMapeados = {};
   const statusSalvos = chamada.statusMembros || {};
 
+  // Cria um dicionário auxiliar com os status salvos indexados pelo nome do membro em minúsculas
+  const statusPorNome = {};
+  Object.keys(statusSalvos).forEach(key => {
+    // Se a chave parecer um ID mas o valor estiver associado, tentamos descobrir o nome ou mapear diretamente
+    statusPorNome[key.toLowerCase().trim()] = statusSalvos[key];
+  });
+
   state.membros.forEach((m, index) => {
+    const nomeLower = (m.nome || '').toLowerCase().trim();
+    
+    // Tenta encontrar o status pelo nome exato, pelo ID antigo, ou pela posição na lista
     let statusEncontrado = 
       statusSalvos[m.id] || 
-      statusSalvos[m.nome] || 
+      statusPorNome[nomeLower] || 
       statusSalvos[index] || 
       statusSalvos[String(index)];
 
@@ -608,8 +613,6 @@ function carregarChamadaParaEdicao(id) {
       statusMapeados[m.id] = statusEncontrado;
     }
   });
-
-  console.log("Status mapeados finais para a tela:", statusMapeados);
 
   renderAttendanceListEditor(statusMapeados);
   irParaJanela('tabChamada');
