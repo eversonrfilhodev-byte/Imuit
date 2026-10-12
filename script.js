@@ -583,7 +583,7 @@ function carregarChamadaParaEdicao(id) {
   if (inputTitulo) inputTitulo.value = chamada.titulo;
   if (inputData) inputData.value = chamada.data;
 
-  renderAttendanceListEditor(chamada.statusMembros);
+  renderAttendanceListEditor(chamada.statusMembros || {});
   irParaJanela('tabChamada');
 }
 
@@ -1051,7 +1051,7 @@ function abrirFichaMembro(id) {
         <div id="editBoxMinisterios" style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px;">
           ${(state.ministries || []).map(min => `
             <label style="font-size:0.8rem; display:flex; align-items:center; gap:4px;">
-              <input type="checkbox" class="chk-edit-min" value="${min}" ${(membro.ministerios || []).includes(min) ? 'checked' : ''}>${min}
+              <input type="checkbox" class="chk-edit-min" value="${min}" ${(membro.ministerios \vert{}\vert{} []).includes(min) ? 'checked' : ''}>${min}
             </label>
           `).join('')}
         </div>
