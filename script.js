@@ -500,7 +500,6 @@ function renderAttendanceListEditor(loadedStatus = null) {
     `;
   }).join('');
 }
-
 function aoMudarStatusPresenca() {
   const ordenacaoSel = document.getElementById('selOrdenacaoChamada');
   if (!ordenacaoSel || ordenacaoSel.value === 'PENDENTES_FIM' || ordenacaoSel.value === 'NONE') {
@@ -583,6 +582,7 @@ function carregarChamadaParaEdicao(id) {
   if (inputTitulo) inputTitulo.value = chamada.titulo;
   if (inputData) inputData.value = chamada.data;
 
+  // Carrega os status salvos desta lista específica para dentro do editor
   renderAttendanceListEditor(chamada.statusMembros || {});
   irParaJanela('tabChamada');
 }
