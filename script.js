@@ -442,26 +442,28 @@ function renderAttendanceListEditor(loadedStatus = null) {
   const termo = buscaInput ? buscaInput.value.toLowerCase().trim() : '';
   const ordenacao = ordenacaoSel ? ordenacaoSel.value : 'PENDENTES_FIM';
 
-  const statusAtuaisNoDOM = {};
-  container.querySelectorAll('.sel-status-presenca').forEach(sel => {
-    const memberId = sel.getAttribute('data-id');
-    if (memberId) {
-      statusAtuaisNoDOM[memberId] = sel.value;
-    }
-  });
-
   let membrosFiltrados = state.membros.filter(m => {
     const matchNome = (m.nome || '').toLowerCase().includes(termo);
     const matchApelido = (m.apelido || '').toLowerCase().includes(termo);
     return matchNome || matchApelido;
   });
 
-  membrosFiltrados.sort((a, b) => {
-    const nomeChaveA = (a.nome || '').toLowerCase().trim();
-    const nomeChaveB = (b.nome || '').toLowerCase().trim();
+  // Mapeia os status garantindo que o loadedStatus seja consultado corretamente por ID ou por índice
+  membrosFiltrados.forEach((m, index) => {
+    const nomeChave = (m.nome || '').toLowerCase().trim();
+    let s = 'PENDENTE';
+    
+    if (loadedStatus) {
+      if (typeof loadedStatus === 'object' && loadedStatus !== null) {
+        s = loadedStatus[m.id] || loadedStatus[nomeChave] || loadedStatus[`idx_${index}`] || 'PENDENTE';
+      }
+    }
+    m._tempStatus = (typeof s === 'object') ? (s.status || 'PENDENTE') : s;
+  });
 
-    const statusA = statusAtuaisNoDOM[a.id] || (loadedStatus && (loadedStatus[a.id] || loadedStatus[nomeChaveA])) || 'PENDENTE';
-    const statusB = statusAtuaisNoDOM[b.id] || (loadedStatus && (loadedStatus[b.id] || loadedStatus[nomeChaveB])) || 'PENDENTE';
+  membrosFiltrados.sort((a, b) => {
+    const statusA = a._tempStatus;
+    const statusB = b._tempStatus;
 
     if (ordenacao === 'PENDENTES_FIM' || ordenacao === 'NONE') {
       const isAPendente = statusA === 'PENDENTE';
@@ -483,13 +485,7 @@ function renderAttendanceListEditor(loadedStatus = null) {
   }
 
   container.innerHTML = membrosFiltrados.map(m => {
-    const nomeChave = (m.nome || '').toLowerCase().trim();
-    let statusSalvo = loadedStatus ? (loadedStatus[m.id] || loadedStatus[nomeChave]) : 'PENDENTE';
-    if (typeof statusSalvo === 'object' && statusSalvo !== null) {
-      statusSalvo = statusSalvo.status || 'PENDENTE';
-    }
-    const statusAtual = statusAtuaisNoDOM[m.id] || statusSalvo || 'PENDENTE';
-
+    const statusAtual = m._tempStatus;
     return `
       <div class="member-item-row" id="row_member_${m.id}">
         <div>
@@ -605,27 +601,8 @@ function carregarChamadaParaEdicao(id) {
   if (inputTitulo) inputTitulo.value = chamada.titulo;
   if (inputData) inputData.value = chamada.data;
 
-  let statusMapeados = {};
-  const statusSalvos = chamada.statusMembros || {};
-
-  state.membros.forEach((m, index) => {
-    const nomeChave = (m.nome || '').toLowerCase().trim();
-    
-    // Tenta encontrar o status por ID, por nome ou por índice da linha
-    let status = statusSalvos[m.id] || statusSalvos[nomeChave] || statusSalvos[`idx_${index}`];
-
-    if (status) {
-      if (typeof status === 'object' && status !== null) {
-        statusMapeados[m.id] = status.status || 'PENDENTE';
-      } else {
-        statusMapeados[m.id] = status;
-      }
-    } else {
-      statusMapeados[m.id] = 'PENDENTE';
-    }
-  });
-
-  renderAttendanceListEditor(statusMapeados);
+  // Passa o dicionário de status guardado diretamente
+  renderAttendanceListEditor(chamada.statusMembros || {});
   irParaJanela('tabChamada');
 }
 
