@@ -457,8 +457,11 @@ function renderAttendanceListEditor(loadedStatus = null) {
   });
 
   membrosFiltrados.sort((a, b) => {
-    const statusA = statusAtuaisNoDOM[a.id] || (loadedStatus && loadedStatus[a.id]) || 'PENDENTE';
-    const statusB = statusAtuaisNoDOM[b.id] || (loadedStatus && loadedStatus[b.id]) || 'PENDENTE';
+    const nomeChaveA = (a.nome || '').toLowerCase().trim();
+    const nomeChaveB = (b.nome || '').toLowerCase().trim();
+
+    const statusA = statusAtuaisNoDOM[a.id] || (loadedStatus && (loadedStatus[a.id] || loadedStatus[nomeChaveA])) || 'PENDENTE';
+    const statusB = statusAtuaisNoDOM[b.id] || (loadedStatus && (loadedStatus[b.id] || loadedStatus[nomeChaveB])) || 'PENDENTE';
 
     if (ordenacao === 'PENDENTES_FIM' || ordenacao === 'NONE') {
       const isAPendente = statusA === 'PENDENTE';
@@ -480,7 +483,13 @@ function renderAttendanceListEditor(loadedStatus = null) {
   }
 
   container.innerHTML = membrosFiltrados.map(m => {
-    const statusAtual = statusAtuaisNoDOM[m.id] || (loadedStatus && loadedStatus[m.id]) || 'PENDENTE';
+    const nomeChave = (m.nome || '').toLowerCase().trim();
+    let statusSalvo = loadedStatus ? (loadedStatus[m.id] || loadedStatus[nomeChave]) : 'PENDENTE';
+    if (typeof statusSalvo === 'object' && statusSalvo !== null) {
+      statusSalvo = statusSalvo.status || 'PENDENTE';
+    }
+    const statusAtual = statusAtuaisNoDOM[m.id] || statusSalvo || 'PENDENTE';
+
     return `
       <div class="member-item-row" id="row_member_${m.id}">
         <div>
@@ -538,7 +547,6 @@ function salvarListaNaPasta() {
     if (memberId) {
       const membroObj = state.membros.find(m => m.id === memberId);
       if (membroObj && membroObj.nome) {
-        // Salva utilizando tanto o ID quanto o nome normalizado como chave para garantir compatibilidade total
         const nomeChave = membroObj.nome.toLowerCase().trim();
         registrosStatus[memberId] = sel.value;
         registrosStatus[nomeChave] = sel.value;
@@ -594,7 +602,6 @@ function carregarChamadaParaEdicao(id) {
   let statusMapeados = {};
   const statusSalvos = chamada.statusMembros || {};
 
-  // Mapeia cruzando o ID atual ou o nome exato do membro gravado na lista
   state.membros.forEach(m => {
     const nomeChave = (m.nome || '').toLowerCase().trim();
     let status = statusSalvos[m.id] || statusSalvos[nomeChave];
@@ -611,6 +618,7 @@ function carregarChamadaParaEdicao(id) {
   renderAttendanceListEditor(statusMapeados);
   irParaJanela('tabChamada');
 }
+
 function renderPastasEListasTree() {
   const container = document.getElementById('arvorePastasEListas');
   if (!container) return;
