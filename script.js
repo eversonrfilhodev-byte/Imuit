@@ -536,11 +536,13 @@ function salvarListaNaPasta() {
   selects.forEach(sel => {
     const memberId = sel.getAttribute('data-id');
     if (memberId) {
-      // Guarda o status referenciando o ID único da ficha do membro
-      registrosStatus[memberId] = {
-        status: sel.value,
-        idMembro: memberId
-      };
+      const membroObj = state.membros.find(m => m.id === memberId);
+      if (membroObj && membroObj.nome) {
+        // Salva utilizando tanto o ID quanto o nome normalizado como chave para garantir compatibilidade total
+        const nomeChave = membroObj.nome.toLowerCase().trim();
+        registrosStatus[memberId] = sel.value;
+        registrosStatus[nomeChave] = sel.value;
+      }
     }
   });
 
@@ -592,13 +594,17 @@ function carregarChamadaParaEdicao(id) {
   let statusMapeados = {};
   const statusSalvos = chamada.statusMembros || {};
 
-  // Busca o status referente a cada ficha/membro salvo na chamada
+  // Mapeia cruzando o ID atual ou o nome exato do membro gravado na lista
   state.membros.forEach(m => {
-    const registroFicha = statusSalvos[m.id];
-    
-    if (registroFicha) {
-      // Suporta tanto o formato novo (objeto com .status) quanto o formato antigo (string direta)
-      statusMapeados[m.id] = typeof registroFicha === 'object' ? registroFicha.status : registroFicha;
+    const nomeChave = (m.nome || '').toLowerCase().trim();
+    let status = statusSalvos[m.id] || statusSalvos[nomeChave];
+
+    if (status) {
+      if (typeof status === 'object') {
+        statusMapeados[m.id] = status.status;
+      } else {
+        statusMapeados[m.id] = status;
+      }
     }
   });
 
