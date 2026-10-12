@@ -542,15 +542,21 @@ function salvarListaNaPasta() {
   const selects = document.querySelectorAll('.sel-status-presenca');
   const registrosStatus = {};
 
-  selects.forEach(sel => {
+  selects.forEach((sel, index) => {
     const memberId = sel.getAttribute('data-id');
+    const valorStatus = sel.value;
+    
+    // Salva usando múltiplas chaves para garantir 100% de compatibilidade na leitura
     if (memberId) {
-      const membroObj = state.membros.find(m => m.id === memberId);
-      if (membroObj && membroObj.nome) {
-        const nomeChave = membroObj.nome.toLowerCase().trim();
-        registrosStatus[memberId] = sel.value;
-        registrosStatus[nomeChave] = sel.value;
-      }
+      registrosStatus[memberId] = valorStatus;
+    }
+    // Salva também pelo índice da linha, caso o ID mude ou venha de dados antigos
+    registrosStatus[`idx_${index}`] = valorStatus;
+    
+    const membroObj = state.membros.find(m => m.id === memberId);
+    if (membroObj && membroObj.nome) {
+      const nomeChave = membroObj.nome.toLowerCase().trim();
+      registrosStatus[nomeChave] = valorStatus;
     }
   });
 
@@ -602,16 +608,20 @@ function carregarChamadaParaEdicao(id) {
   let statusMapeados = {};
   const statusSalvos = chamada.statusMembros || {};
 
-  state.membros.forEach(m => {
+  state.membros.forEach((m, index) => {
     const nomeChave = (m.nome || '').toLowerCase().trim();
-    let status = statusSalvos[m.id] || statusSalvos[nomeChave];
+    
+    // Tenta encontrar o status por ID, por nome ou por índice da linha
+    let status = statusSalvos[m.id] || statusSalvos[nomeChave] || statusSalvos[`idx_${index}`];
 
     if (status) {
-      if (typeof status === 'object') {
-        statusMapeados[m.id] = status.status;
+      if (typeof status === 'object' && status !== null) {
+        statusMapeados[m.id] = status.status || 'PENDENTE';
       } else {
         statusMapeados[m.id] = status;
       }
+    } else {
+      statusMapeados[m.id] = 'PENDENTE';
     }
   });
 
