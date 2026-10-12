@@ -536,11 +536,11 @@ function salvarListaNaPasta() {
   selects.forEach(sel => {
     const memberId = sel.getAttribute('data-id');
     if (memberId) {
-      registrosStatus[memberId] = sel.value;
-      const membroObj = state.membros.find(m => m.id === memberId);
-      if (membroObj && membroObj.nome) {
-        registrosStatus[membroObj.nome] = sel.value;
-      }
+      // Guarda o status referenciando o ID único da ficha do membro
+      registrosStatus[memberId] = {
+        status: sel.value,
+        idMembro: memberId
+      };
     }
   });
 
@@ -592,32 +592,13 @@ function carregarChamadaParaEdicao(id) {
   let statusMapeados = {};
   const statusSalvos = chamada.statusMembros || {};
 
-  // Cria um mapa auxiliar normalizando os nomes dos membros salvos ou encontrados
-  // Como no objeto salvo temos chaves que são IDs antigos, vamos mapear também pelo índice ou ordem se necessário
-  const chavesStatus = Object.keys(statusSalvos);
-  
-  state.membros.forEach((m, index) => {
-    // 1. Tenta achar pelo ID direto
-    let status = statusSalvos[m.id];
-
-    // 2. Se não achou, tenta achar pelo nome exato do membro no objeto salvo
-    if (!status) {
-      for (let k of chavesStatus) {
-        // Se a chave for parecida com um nome ou se o registro mapeado tiver o nome
-        if (k.toLowerCase().trim() === (m.nome || '').toLowerCase().trim()) {
-          status = statusSalvos[k];
-          break;
-        }
-      }
-    }
-
-    // 3. Se ainda não achou, tenta pegar pela posição ordinal (índice) na lista salva
-    if (!status && chavesStatus[index]) {
-      status = statusSalvos[chavesStatus[index]];
-    }
-
-    if (status) {
-      statusMapeados[m.id] = status;
+  // Busca o status referente a cada ficha/membro salvo na chamada
+  state.membros.forEach(m => {
+    const registroFicha = statusSalvos[m.id];
+    
+    if (registroFicha) {
+      // Suporta tanto o formato novo (objeto com .status) quanto o formato antigo (string direta)
+      statusMapeados[m.id] = typeof registroFicha === 'object' ? registroFicha.status : registroFicha;
     }
   });
 
