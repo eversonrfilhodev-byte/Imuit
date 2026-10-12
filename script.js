@@ -582,8 +582,22 @@ function carregarChamadaParaEdicao(id) {
   if (inputTitulo) inputTitulo.value = chamada.titulo;
   if (inputData) inputData.value = chamada.data;
 
-  // Carrega os status salvos desta lista específica para dentro do editor
-  renderAttendanceListEditor(chamada.statusMembros || {});
+  // Prepara o mapa de status garantindo compatibilidade com IDs ou Nomes salvos anteriormente
+  let statusMapeados = {};
+  if (chamada.statusMembros) {
+    // Mapeia tanto por ID quanto por Nome para garantir que listas antigas funcionem
+    state.membros.forEach(m => {
+      let st = chamada.statusMembros[m.id];
+      if (!st && chamada.statusMembros[m.nome]) {
+        st = chamada.statusMembros[m.nome];
+      }
+      if (st) {
+        statusMapeados[m.id] = st;
+      }
+    });
+  }
+
+  renderAttendanceListEditor(statusMapeados);
   irParaJanela('tabChamada');
 }
 
