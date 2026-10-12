@@ -1021,6 +1021,16 @@ function abrirFichaMembro(id) {
   const conteudo = document.getElementById('fichaConteudo');
 
   if (modal && conteudo) {
+    let ministeriosHtml = '';
+    const listaMin = state.ministries || [];
+    const membroMin = membro.ministerios || [];
+
+    for (let i = 0; i < listaMin.length; i++) {
+      const min = listaMin[i];
+      const isChecked = membroMin.includes(min) ? 'checked' : '';
+      ministeriosHtml += '<label style="font-size:0.8rem; display:flex; align-items:center; gap:4px;"><input type="checkbox" class="chk-edit-min" value="' + min + '" ' + isChecked + '>' + min + '</label>';
+    }
+
     conteudo.innerHTML = `
       <div id="visualizacaoFicha">
         <p><b>Nome Completo:</b> ${membro.nome}</p>
@@ -1049,11 +1059,7 @@ function abrirFichaMembro(id) {
         <input type="text" id="editMemRespFone" value="${membro.responsavel?.fone || ''}" oninput="mascaraTelefone(this)" style="width:100%; margin-bottom:8px; padding:6px; background:var(--bg-dark); color:var(--text-main); border:1px solid var(--border-color); border-radius:6px;">
         <label>Ministérios:</label>
         <div id="editBoxMinisterios" style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px;">
-          ${(state.ministries || []).map(min => `
-            <label style="font-size:0.8rem; display:flex; align-items:center; gap:4px;">
-            <input type="checkbox" class="chk-edit-min" value="${min}" ${(membro.ministerios || []).includes(min) ? 'checked' : ''}>${min}
-            </label>
-          `).join('')}
+          ${ministeriosHtml}
         </div>
 
         <button type="button" class="btn-primary" onclick="salvarEdicaoMembro('${membro.id}')">💾 Salvar Alterações</button>
