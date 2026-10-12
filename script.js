@@ -500,6 +500,7 @@ function renderAttendanceListEditor(loadedStatus = null) {
     `;
   }).join('');
 }
+
 function aoMudarStatusPresenca() {
   const ordenacaoSel = document.getElementById('selOrdenacaoChamada');
   if (!ordenacaoSel || ordenacaoSel.value === 'PENDENTES_FIM' || ordenacaoSel.value === 'NONE') {
@@ -534,7 +535,13 @@ function salvarListaNaPasta() {
 
   selects.forEach(sel => {
     const memberId = sel.getAttribute('data-id');
-    registrosStatus[memberId] = sel.value;
+    if (memberId) {
+      registrosStatus[memberId] = sel.value;
+      const membroObj = state.membros.find(m => m.id === memberId);
+      if (membroObj && membroObj.nome) {
+        registrosStatus[membroObj.nome] = sel.value;
+      }
+    }
   });
 
   if (editingChamadaId) {
@@ -582,16 +589,21 @@ function carregarChamadaParaEdicao(id) {
   if (inputTitulo) inputTitulo.value = chamada.titulo;
   if (inputData) inputData.value = chamada.data;
 
-  // Compatibilidade total para resgatar status antigos por ID ou por Nome
+  // Mapeamento flexível blindado para listas antigas e novas
   let statusMapeados = {};
-  if (chamada.statusMembros) {
-    state.membros.forEach(m => {
-      let st = chamada.statusMembros[m.id] || chamada.statusMembros[m.nome];
-      if (st) {
-        statusMapeados[m.id] = st;
-      }
-    });
-  }
+  const statusSalvos = chamada.statusMembros || {};
+
+  state.membros.forEach((m, index) => {
+    let statusEncontrado = 
+      statusSalvos[m.id] || 
+      statusSalvos[m.nome] || 
+      statusSalvos[index] || 
+      statusSalvos[String(index)];
+
+    if (statusEncontrado) {
+      statusMapeados[m.id] = statusEncontrado;
+    }
+  });
 
   renderAttendanceListEditor(statusMapeados);
   irParaJanela('tabChamada');
