@@ -592,32 +592,38 @@ function carregarChamadaParaEdicao(id) {
   let statusMapeados = {};
   const statusSalvos = chamada.statusMembros || {};
 
-  // Cria um dicionário auxiliar com os status salvos indexados pelo nome do membro em minúsculas
-  const statusPorNome = {};
-  Object.keys(statusSalvos).forEach(key => {
-    // Se a chave parecer um ID mas o valor estiver associado, tentamos descobrir o nome ou mapear diretamente
-    statusPorNome[key.toLowerCase().trim()] = statusSalvos[key];
-  });
-
+  // Cria um mapa auxiliar normalizando os nomes dos membros salvos ou encontrados
+  // Como no objeto salvo temos chaves que são IDs antigos, vamos mapear também pelo índice ou ordem se necessário
+  const chavesStatus = Object.keys(statusSalvos);
+  
   state.membros.forEach((m, index) => {
-    const nomeLower = (m.nome || '').toLowerCase().trim();
-    
-    // Tenta encontrar o status pelo nome exato, pelo ID antigo, ou pela posição na lista
-    let statusEncontrado = 
-      statusSalvos[m.id] || 
-      statusPorNome[nomeLower] || 
-      statusSalvos[index] || 
-      statusSalvos[String(index)];
+    // 1. Tenta achar pelo ID direto
+    let status = statusSalvos[m.id];
 
-    if (statusEncontrado) {
-      statusMapeados[m.id] = statusEncontrado;
+    // 2. Se não achou, tenta achar pelo nome exato do membro no objeto salvo
+    if (!status) {
+      for (let k of chavesStatus) {
+        // Se a chave for parecida com um nome ou se o registro mapeado tiver o nome
+        if (k.toLowerCase().trim() === (m.nome || '').toLowerCase().trim()) {
+          status = statusSalvos[k];
+          break;
+        }
+      }
+    }
+
+    // 3. Se ainda não achou, tenta pegar pela posição ordinal (índice) na lista salva
+    if (!status && chavesStatus[index]) {
+      status = statusSalvos[chavesStatus[index]];
+    }
+
+    if (status) {
+      statusMapeados[m.id] = status;
     }
   });
 
   renderAttendanceListEditor(statusMapeados);
   irParaJanela('tabChamada');
 }
-
 function renderPastasEListasTree() {
   const container = document.getElementById('arvorePastasEListas');
   if (!container) return;
