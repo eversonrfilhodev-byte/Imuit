@@ -589,7 +589,11 @@ function carregarChamadaParaEdicao(id) {
   if (inputTitulo) inputTitulo.value = chamada.titulo;
   if (inputData) inputData.value = chamada.data;
 
-  // Mapeamento flexível blindado para listas antigas e novas
+  // LOG DE DEPURAÇÃO: Veja o que está guardado nesta lista no Console (F12)
+  console.log("Dados brutos da chamada carregada:", chamada);
+  console.log("Status salvos (statusMembros):", chamada.statusMembros);
+  console.log("Membros atuais cadastrados:", state.membros);
+
   let statusMapeados = {};
   const statusSalvos = chamada.statusMembros || {};
 
@@ -604,6 +608,8 @@ function carregarChamadaParaEdicao(id) {
       statusMapeados[m.id] = statusEncontrado;
     }
   });
+
+  console.log("Status mapeados finais para a tela:", statusMapeados);
 
   renderAttendanceListEditor(statusMapeados);
   irParaJanela('tabChamada');
