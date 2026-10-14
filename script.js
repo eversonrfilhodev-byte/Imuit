@@ -442,23 +442,37 @@ function renderAttendanceListEditor(loadedStatus = null) {
   const termo = buscaInput ? buscaInput.value.toLowerCase().trim() : '';
   const ordenacao = ordenacaoSel ? ordenacaoSel.value : 'PENDENTES_FIM';
 
+  // Captura o estado atual de todos os selects já renderizados no DOM para preservar alterações do utilizador
+  const statusAtuaisNoDOM = {};
+  container.querySelectorAll('.sel-status-presenca').forEach(sel => {
+    const memberId = sel.getAttribute('data-id');
+    if (memberId) {
+      statusAtuaisNoDOM[memberId] = sel.value;
+    }
+  });
+
   let membrosFiltrados = state.membros.filter(m => {
     const matchNome = (m.nome || '').toLowerCase().includes(termo);
     const matchApelido = (m.apelido || '').toLowerCase().includes(termo);
     return matchNome || matchApelido;
   });
 
-  // Mapeia os status garantindo que o loadedStatus seja consultado corretamente por ID ou por índice
+  // Atribui o status correto priorizando o DOM atual, depois os dados carregados da lista, e por fim PENDENTE
   membrosFiltrados.forEach((m, index) => {
     const nomeChave = (m.nome || '').toLowerCase().trim();
     let s = 'PENDENTE';
     
-    if (loadedStatus) {
+    if (statusAtuaisNoDOM[m.id]) {
+      s = statusAtuaisNoDOM[m.id];
+    } else if (loadedStatus) {
       if (typeof loadedStatus === 'object' && loadedStatus !== null) {
-        s = loadedStatus[m.id] || loadedStatus[nomeChave] || loadedStatus[`idx_${index}`] || 'PENDENTE';
+        let val = loadedStatus[m.id] || loadedStatus[nomeChave] || loadedStatus[`idx_${index}`];
+        if (val) {
+          s = (typeof val === 'object') ? (val.status || 'PENDENTE') : val;
+        }
       }
     }
-    m._tempStatus = (typeof s === 'object') ? (s.status || 'PENDENTE') : s;
+    m._tempStatus = s;
   });
 
   membrosFiltrados.sort((a, b) => {
@@ -508,83 +522,10 @@ function renderAttendanceListEditor(loadedStatus = null) {
 
 function aoMudarStatusPresenca() {
   const ordenacaoSel = document.getElementById('selOrdenacaoChamada');
-  if (!ordenacaoSel || ordenacaoSel.value === 'PENDENTES_FIM' || ordenacaoSel.value === 'NONE') {
+  // Reorganiza a lista dinamicamente apenas se a ordenação depender de pendentes, sem perder as alterações feitas nos selects
+  if (ordenacaoSel && (ordenacaoSel.value === 'PENDENTES_FIM' || ordenacaoSel.value === 'NONE')) {
     renderAttendanceListEditor();
   }
-}
-
-function atualizarBuscaChamada() {
-  renderAttendanceListEditor();
-}
-
-function alterarOrdenacaoChamada() {
-  renderAttendanceListEditor();
-}
-
-function salvarListaNaPasta() {
-  const pasta = document.getElementById('selPastaDestino')?.value;
-  const titulo = document.getElementById('listaTitulo')?.value.trim();
-  const data = document.getElementById('listaData')?.value;
-
-  if (!pasta) {
-    alert('Selecione ou crie uma pasta antes de salvar.');
-    return;
-  }
-  if (!titulo) {
-    alert('Informe o título do evento / lista.');
-    return;
-  }
-
-  const selects = document.querySelectorAll('.sel-status-presenca');
-  const registrosStatus = {};
-
-  selects.forEach((sel, index) => {
-    const memberId = sel.getAttribute('data-id');
-    const valorStatus = sel.value;
-    
-    // Salva usando múltiplas chaves para garantir 100% de compatibilidade na leitura
-    if (memberId) {
-      registrosStatus[memberId] = valorStatus;
-    }
-    // Salva também pelo índice da linha, caso o ID mude ou venha de dados antigos
-    registrosStatus[`idx_${index}`] = valorStatus;
-    
-    const membroObj = state.membros.find(m => m.id === memberId);
-    if (membroObj && membroObj.nome) {
-      const nomeChave = membroObj.nome.toLowerCase().trim();
-      registrosStatus[nomeChave] = valorStatus;
-    }
-  });
-
-  if (editingChamadaId) {
-    const idx = state.chamadas.findIndex(c => c.id === editingChamadaId);
-    if (idx !== -1) {
-      state.chamadas[idx] = {
-        ...state.chamadas[idx],
-        pasta,
-        titulo,
-        data,
-        statusMembros: registrosStatus,
-        totalMembros: state.membros.length
-      };
-    }
-    editingChamadaId = null;
-    alert('✅ Lista atualizada com sucesso!');
-  } else {
-    const novaChamada = {
-      id: 'chamada_' + Date.now(),
-      pasta: pasta,
-      titulo: titulo,
-      data: data,
-      statusMembros: registrosStatus,
-      totalMembros: state.membros.length
-    };
-    state.chamadas.push(novaChamada);
-    alert('✅ Lista salva com sucesso!');
-  }
-
-  saveState();
-  renderPastasEListasTree();
 }
 
 function carregarChamadaParaEdicao(id) {
@@ -601,7 +542,7 @@ function carregarChamadaParaEdicao(id) {
   if (inputTitulo) inputTitulo.value = chamada.titulo;
   if (inputData) inputData.value = chamada.data;
 
-  // Passa o dicionário de status guardado diretamente
+  // Passa diretamente os status guardados para preencher os campos corretamente
   renderAttendanceListEditor(chamada.statusMembros || {});
   irParaJanela('tabChamada');
 }
