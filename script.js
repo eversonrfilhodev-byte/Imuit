@@ -528,6 +528,7 @@ function aoMudarStatusPresenca() {
     return;
   }
 }
+
 function carregarChamadaParaEdicao(id) {
   const chamada = state.chamadas.find(c => c.id === id);
   if (!chamada) return;
@@ -538,12 +539,44 @@ function carregarChamadaParaEdicao(id) {
   const inputTitulo = document.getElementById('listaTitulo');
   const inputData = document.getElementById('listaData');
 
-  if (selPasta) selPasta.value = chamada.pasta;
-  if (inputTitulo) inputTitulo.value = chamada.titulo;
-  if (inputData) inputData.value = chamada.data;
+  if (selPasta) selPasta.value = chamada.pasta || '';
+  if (inputTitulo) inputTitulo.value = chamada.titulo || '';
+  if (inputData) inputData.value = chamada.data || '';
 
-  // Passa diretamente os status guardados para preencher os campos corretamente
-  renderAttendanceListEditor(chamada.statusMembros || {});
+  const statusSalvos = chamada.statusMembros || {};
+  let statusMapeadosParaCarregar = {};
+
+  // Mapeia inteligentemente procurando por ID, por índice da linha ou pelo nome do membro em minúsculas
+  state.membros.forEach((m, index) => {
+    const nomeChave = (m.nome || '').toLowerCase().trim();
+    
+    // Tenta encontrar o valor salvo em qualquer uma das chaves possíveis
+    let valorEncontrado = 
+      statusSalvos[m.id] || 
+      statusSalvos[nomeChave] || 
+      statusSalvos[`idx_${index}`];
+
+    if (!valorEncontrado) {
+      // Procura varredura caso o nome salvo tenha pequenas variações de acentuação ou espaços
+      const chaveEncontrada = Object.keys(statusSalvos).find(k => k.toLowerCase().includes(nomeChave));
+      if (chaveEncontrada) {
+        valorEncontrado = statusSalvos[chaveEncontrada];
+      }
+    }
+
+    if (valorEncontrado) {
+      if (typeof valorEncontrado === 'object' && valorEncontrado !== null) {
+        statusMapeadosParaCarregar[m.id] = valorEncontrado.status || 'PENDENTE';
+      } else {
+        statusMapeadosParaCarregar[m.id] = valorEncontrado;
+      }
+    } else {
+      statusMapeadosParaCarregar[m.id] = 'PENDENTE';
+    }
+  });
+
+  // Renderiza a lista injetando os status antigos mapeados com sucesso
+  renderAttendanceListEditor(statusMapeadosParaCarregar);
   irParaJanela('tabChamada');
 }
 
