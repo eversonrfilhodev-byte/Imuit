@@ -442,7 +442,7 @@ function renderAttendanceListEditor(loadedStatus = null) {
   const termo = buscaInput ? buscaInput.value.toLowerCase().trim() : '';
   const ordenacao = ordenacaoSel ? ordenacaoSel.value : 'PENDENTES_FIM';
 
-  // Captura o estado atual de todos os selects já renderizados no DOM para preservar alterações do utilizador
+  // 1. Captura o estado atual dos selects que já estão na tela para não perder alterações do utilizador
   const statusAtuaisNoDOM = {};
   container.querySelectorAll('.sel-status-presenca').forEach(sel => {
     const memberId = sel.getAttribute('data-id');
@@ -457,7 +457,7 @@ function renderAttendanceListEditor(loadedStatus = null) {
     return matchNome || matchApelido;
   });
 
-  // Atribui o status correto priorizando o DOM atual, depois os dados carregados da lista, e por fim PENDENTE
+  // 2. Define o status priorizando: O que está na tela > O que veio salvo na lista > Padrão PENDENTE
   membrosFiltrados.forEach((m, index) => {
     const nomeChave = (m.nome || '').toLowerCase().trim();
     let s = 'PENDENTE';
@@ -475,6 +475,7 @@ function renderAttendanceListEditor(loadedStatus = null) {
     m._tempStatus = s;
   });
 
+  // 3. Aplica a ordenação
   membrosFiltrados.sort((a, b) => {
     const statusA = a._tempStatus;
     const statusB = b._tempStatus;
@@ -522,12 +523,11 @@ function renderAttendanceListEditor(loadedStatus = null) {
 
 function aoMudarStatusPresenca() {
   const ordenacaoSel = document.getElementById('selOrdenacaoChamada');
-  // Reorganiza a lista dinamicamente apenas se a ordenação depender de pendentes, sem perder as alterações feitas nos selects
-  if (ordenacaoSel && (ordenacaoSel.value === 'PENDENTES_FIM' || ordenacaoSel.value === 'NONE')) {
-    renderAttendanceListEditor();
+  // Evita re-renderizações destrutivas se o usuário estiver apenas selecionando os status
+  if (ordenacaoSel && ordenacaoSel.value === 'NONE') {
+    return;
   }
 }
-
 function carregarChamadaParaEdicao(id) {
   const chamada = state.chamadas.find(c => c.id === id);
   if (!chamada) return;
