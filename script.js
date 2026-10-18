@@ -43,6 +43,7 @@ let currentMonth = new Date().getMonth();
 let currentYear = new Date().getFullYear();
 let isRegisterMode = false;
 let isFirebaseListening = false;
+let editingChamadaId = null;
 
 const TAB_IDS = ['tabChamada', 'tabCalendario', 'tabMembros', 'tabTutorial', 'tabAdmin'];
 
@@ -560,6 +561,38 @@ function salvarListaNaPasta() {
   alert('✅ Lista salva com sucesso na pasta!');
 }
 
+function carregarChamadaParaEdicao(id) {
+  const chamada = (state.chamadas || []).find(c => c.id === id);
+  if (!chamada) return;
+
+  editingChamadaId = id;
+
+  const selPasta = document.getElementById('selPastaDestino');
+  const inputTitulo = document.getElementById('listaTitulo');
+  const inputData = document.getElementById('listaData');
+
+  if (selPasta) selPasta.value = chamada.pasta || '';
+  if (inputTitulo) inputTitulo.value = chamada.titulo || '';
+  if (inputData) inputData.value = chamada.data || '';
+
+  const statusSalvos = chamada.statusMembros || {};
+
+  const container = document.getElementById('boxMembrosChamada');
+  if (container) {
+    const selects = container.querySelectorAll('.sel-status-presenca');
+    selects.forEach(sel => {
+      const memberId = sel.getAttribute('data-id');
+      if (memberId && statusSalvos[memberId]) {
+        sel.value = statusSalvos[memberId];
+      } else {
+        sel.value = 'PENDENTE';
+      }
+    });
+  }
+
+  irParaJanela('tabChamada');
+}
+
 function renderPastasEListasTree() {
   const container = document.getElementById('arvorePastasEListas');
   if (!container) return;
@@ -584,6 +617,7 @@ function renderPastasEListasTree() {
               <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid var(--border-color); gap:10px;">
                 <span style="font-size:0.85rem;">📋 <b>${l.titulo}</b> (${l.data}) - ${numPresentes}/${l.totalMembros || state.membros.length} presentes</span>
                 <div>
+                  <button type="button" class="btn-secondary" style="padding:4px 8px; font-size:0.75rem; margin-right:4px;" onclick="carregarChamadaParaEdicao('${l.id}')">Abrir</button>
                   <button type="button" class="btn-danger" style="padding:4px 8px; font-size:0.75rem;" onclick="excluirChamada('${l.id}')">Excluir</button>
                 </div>
               </div>
@@ -1423,6 +1457,7 @@ window.aoMudarStatusPresenca = aoMudarStatusPresenca;
 window.criarMinisterio = criarMinisterio;
 window.excluirMinisterio = excluirMinisterio;
 window.salvarListaNaPasta = salvarListaNaPasta;
+window.carregarChamadaParaEdicao = carregarChamadaParaEdicao;
 window.alternarTema = alternarTema;
 window.mascaraTelefone = mascaraTelefone;
 window.renderListaMembros = renderListaMembros;
