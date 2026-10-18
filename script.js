@@ -523,10 +523,17 @@ function renderAttendanceListEditor(loadedStatus = null) {
 
 function aoMudarStatusPresenca() {
   const ordenacaoSel = document.getElementById('selOrdenacaoChamada');
-  // Evita re-renderizações destrutivas se o usuário estiver apenas selecionando os status
-  if (ordenacaoSel && ordenacaoSel.value === 'NONE') {
-    return;
+  if (ordenacaoSel && (ordenacaoSel.value === 'PENDENTES_FIM' || ordenacaoSel.value === 'NONE')) {
+    renderAttendanceListEditor();
   }
+}
+
+function atualizarBuscaChamada() {
+  renderAttendanceListEditor();
+}
+
+function alterarOrdenacaoChamada() {
+  renderAttendanceListEditor();
 }
 
 function carregarChamadaParaEdicao(id) {
