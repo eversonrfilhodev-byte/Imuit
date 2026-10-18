@@ -536,7 +536,7 @@ function salvarListaNaPasta() {
   const selects = document.querySelectorAll('.sel-status-presenca');
   const registrosStatus = {};
 
-  selects.forEach((sel, index) => {
+  selects.forEach((sel) => {
     const memberId = sel.getAttribute('data-id');
     const valorStatus = sel.value;
     if (memberId) {
@@ -610,8 +610,10 @@ function excluirChamada(id) {
 // ==========================================
 function exportarListaParaPDF() {
   const pasta = document.getElementById('selPastaDestino')?.value || 'Geral';
-  const titulo = document.getElementById('listaTitulo')?.value.trim() || 'Chamada Geral';
+  const inputTitulo = document.getElementById('listaTitulo')?.value.trim();
+  const titulo = inputTitulo || 'Chamada Geral';
   const dataRaw = document.getElementById('listaData')?.value || new Date().toISOString().split('T')[0];
+  
   const [ano, mes, dia] = dataRaw.split('-');
   const dataFormatada = `${dia}/${mes}/${ano}`;
 
@@ -686,6 +688,11 @@ function exportarListaParaPDF() {
 
   const janelaImpressao = window.open('', '_blank', 'width=900,height=700');
   
+  if (!janelaImpressao) {
+    alert('A janela de impressão foi bloqueada pelo navegador. Por favor, permita pop-ups para este site na barra de endereço.');
+    return;
+  }
+
   janelaImpressao.document.write(`
     <!DOCTYPE html>
     <html lang="pt-BR">
