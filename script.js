@@ -33,6 +33,7 @@ let state = {
   membros: [],
   ministries: ['Louvor', 'Infantil', 'Jovens', 'Mídia', 'Recepção'],
   pastas: [],
+  chamadas: [],
   eventos: [],
   usuarios: [],
   currentUser: null
@@ -76,6 +77,7 @@ function saveState() {
         membros: state.membros || [],
         ministries: state.ministries || [],
         pastas: state.pastas || [],
+        chamadas: state.chamadas || [],
         eventos: state.eventos || []
       }).catch(err => console.warn('Aviso ao sincronizar dados com o Firebase:', err));
     }
@@ -95,6 +97,7 @@ function iniciarOuvinteFirebaseGlobal() {
       state.membros = val.membros || [];
       state.ministries = val.ministries || ['Louvor', 'Infantil', 'Jovens', 'Mídia', 'Recepção'];
       state.pastas = val.pastas || [];
+      state.chamadas = val.chamadas || [];
       state.eventos = val.eventos || [];
       localStorage.setItem('app_imuit_state', JSON.stringify(state));
       renderAll();
@@ -293,6 +296,7 @@ function renderAll() {
   renderMinistryCheckboxes();
   renderPastasOptions();
   renderAttendanceListEditor();
+  renderPastasEListasTree();
   renderCalendar();
   renderMembersTable();
   renderUsersAdminTable();
@@ -385,6 +389,7 @@ function criarNovaPasta() {
     state.pastas.push(nome);
     saveState();
     renderPastasOptions();
+    renderPastasEListasTree();
     input.value = '';
     alert('✅ Pasta criada com sucesso!');
   } else {
@@ -422,6 +427,7 @@ function excluirPasta(nome) {
     state.pastas = state.pastas.filter(p => p !== nome);
     saveState();
     renderPastasOptions();
+    renderPastasEListasTree();
   }
 }
 
@@ -435,7 +441,6 @@ function renderAttendanceListEditor() {
   const termo = buscaInput ? buscaInput.value.toLowerCase().trim() : '';
   const ordenacao = ordenacaoSel ? ordenacaoSel.value : 'PENDENTES_FIM';
 
-  // Captura o estado atual dos selects para não perder alterações ao reordenar
   const statusAtuaisNoDOM = {};
   container.querySelectorAll('.sel-status-presenca').forEach(sel => {
     const memberId = sel.getAttribute('data-id');
@@ -512,6 +517,92 @@ function atualizarBuscaChamada() {
 
 function alterarOrdenacaoChamada() {
   renderAttendanceListEditor();
+}
+
+function salvarListaNaPasta() {
+  const pasta = document.getElementById('selPastaDestino')?.value;
+  const titulo = document.getElementById('listaTitulo')?.value.trim();
+  const data = document.getElementById('listaData')?.value;
+
+  if (!pasta) {
+    alert('Selecione ou crie uma pasta antes de salvar.');
+    return;
+  }
+  if (!titulo) {
+    alert('Informe o título do evento / lista.');
+    return;
+  }
+
+  const selects = document.querySelectorAll('.sel-status-presenca');
+  const registrosStatus = {};
+
+  selects.forEach((sel, index) => {
+    const memberId = sel.getAttribute('data-id');
+    const valorStatus = sel.value;
+    if (memberId) {
+      registrosStatus[memberId] = valorStatus;
+    }
+  });
+
+  const novaChamada = {
+    id: 'chamada_' + Date.now(),
+    pasta: pasta,
+    titulo: titulo,
+    data: data,
+    statusMembros: registrosStatus,
+    totalMembros: state.membros.length
+  };
+
+  state.chamadas = state.chamadas || [];
+  state.chamadas.push(novaChamada);
+  saveState();
+  renderPastasEListasTree();
+  alert('✅ Lista salva com sucesso na pasta!');
+}
+
+function renderPastasEListasTree() {
+  const container = document.getElementById('arvorePastasEListas');
+  if (!container) return;
+
+  if (!state.pastas.length && !state.chamadas.length) {
+    container.innerHTML = '<p style="color:var(--text-muted);">Nenhuma pasta ou lista salva.</p>';
+    return;
+  }
+
+  let html = '';
+  state.pastas.forEach(pasta => {
+    const listasDaPasta = (state.chamadas || []).filter(c => c.pasta === pasta);
+    html += `
+      <div class="folder-box" style="margin-bottom:15px; border:1px solid var(--border-color); border-radius:8px; padding:12px;">
+        <h4 style="margin-bottom:8px;">📁 ${pasta} (${listasDaPasta.length} listas)</h4>
+        <div style="padding-left:10px;">
+          ${listasDaPasta.length === 0 ? '<p style="font-size:0.8rem; color:var(--text-muted);">Nenhuma lista nesta pasta.</p>' : ''}
+          ${listasDaPasta.map(l => {
+            const statusObj = l.statusMembros || {};
+            const numPresentes = Object.values(statusObj).filter(v => v === 'PRESENTE').length;
+            return `
+              <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid var(--border-color); gap:10px;">
+                <span style="font-size:0.85rem;">📋 <b>${l.titulo}</b> (${l.data}) - ${numPresentes}/${l.totalMembros || state.membros.length} presentes</span>
+                <div>
+                  <button type="button" class="btn-danger" style="padding:4px 8px; font-size:0.75rem;" onclick="excluirChamada('${l.id}')">Excluir</button>
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+    `;
+  });
+
+  container.innerHTML = html;
+}
+
+function excluirChamada(id) {
+  if (confirm('Deseja remover esta lista salva?')) {
+    state.chamadas = (state.chamadas || []).filter(c => c.id !== id);
+    saveState();
+    renderPastasEListasTree();
+  }
 }
 
 // ==========================================
@@ -1324,6 +1415,7 @@ window.alterarOrdenacaoChamada = alterarOrdenacaoChamada;
 window.aoMudarStatusPresenca = aoMudarStatusPresenca;
 window.criarMinisterio = criarMinisterio;
 window.excluirMinisterio = excluirMinisterio;
+window.salvarListaNaPasta = salvarListaNaPasta;
 window.alternarTema = alternarTema;
 window.mascaraTelefone = mascaraTelefone;
 window.renderListaMembros = renderListaMembros;
@@ -1338,9 +1430,9 @@ window.habilitarEdicaoMembro = habilitarEdicaoMembro;
 window.salvarEdicaoMembro = salvarEdicaoMembro;
 window.fecharFichaMembro = fecharFichaMembro;
 window.excluirPasta = excluirPasta;
+window.excluirChamada = excluirChamada;
 window.exportarListaParaPDF = exportarListaParaPDF;
 window.terminarSessao = terminarSessao;
-window.aprovarUtils = aprovarUsuario;
 window.aprovarUsuario = aprovarUsuario;
 window.bloquearUsuario = bloquearUsuario;
 window.excluirUsuarioAdmin = excluirUsuarioAdmin;
