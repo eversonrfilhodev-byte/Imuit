@@ -33,7 +33,6 @@ let state = {
   membros: [],
   ministries: ['Louvor', 'Infantil', 'Jovens', 'Mídia', 'Recepção'],
   pastas: [],
-  chamadas: [],
   eventos: [],
   usuarios: [],
   currentUser: null
@@ -43,7 +42,6 @@ let currentMonth = new Date().getMonth();
 let currentYear = new Date().getFullYear();
 let isRegisterMode = false;
 let isFirebaseListening = false;
-let editingChamadaId = null;
 
 const TAB_IDS = ['tabChamada', 'tabCalendario', 'tabMembros', 'tabTutorial', 'tabAdmin'];
 
@@ -78,7 +76,6 @@ function saveState() {
         membros: state.membros || [],
         ministries: state.ministries || [],
         pastas: state.pastas || [],
-        chamadas: state.chamadas || [],
         eventos: state.eventos || []
       }).catch(err => console.warn('Aviso ao sincronizar dados com o Firebase:', err));
     }
@@ -98,7 +95,6 @@ function iniciarOuvinteFirebaseGlobal() {
       state.membros = val.membros || [];
       state.ministries = val.ministries || ['Louvor', 'Infantil', 'Jovens', 'Mídia', 'Recepção'];
       state.pastas = val.pastas || [];
-      state.chamadas = val.chamadas || [];
       state.eventos = val.eventos || [];
       localStorage.setItem('app_imuit_state', JSON.stringify(state));
       renderAll();
@@ -297,7 +293,6 @@ function renderAll() {
   renderMinistryCheckboxes();
   renderPastasOptions();
   renderAttendanceListEditor();
-  renderPastasEListasTree();
   renderCalendar();
   renderMembersTable();
   renderUsersAdminTable();
@@ -390,7 +385,6 @@ function criarNovaPasta() {
     state.pastas.push(nome);
     saveState();
     renderPastasOptions();
-    renderPastasEListasTree();
     input.value = '';
     alert('✅ Pasta criada com sucesso!');
   } else {
@@ -428,11 +422,10 @@ function excluirPasta(nome) {
     state.pastas = state.pastas.filter(p => p !== nome);
     saveState();
     renderPastasOptions();
-    renderPastasEListasTree();
   }
 }
 
-function renderAttendanceListEditor(loadedStatus = null) {
+function renderAttendanceListEditor() {
   const container = document.getElementById('boxMembrosChamada');
   const buscaInput = document.getElementById('buscaMembroChamada');
   const ordenacaoSel = document.getElementById('selOrdenacaoChamada');
@@ -442,7 +435,7 @@ function renderAttendanceListEditor(loadedStatus = null) {
   const termo = buscaInput ? buscaInput.value.toLowerCase().trim() : '';
   const ordenacao = ordenacaoSel ? ordenacaoSel.value : 'PENDENTES_FIM';
 
-  // 1. Captura o estado atual dos selects que já estão na tela para não perder alterações do utilizador
+  // Captura o estado atual dos selects para não perder alterações ao reordenar
   const statusAtuaisNoDOM = {};
   container.querySelectorAll('.sel-status-presenca').forEach(sel => {
     const memberId = sel.getAttribute('data-id');
@@ -457,25 +450,10 @@ function renderAttendanceListEditor(loadedStatus = null) {
     return matchNome || matchApelido;
   });
 
-  // 2. Define o status priorizando: O que está na tela > O que veio salvo na lista > Padrão PENDENTE
-  membrosFiltrados.forEach((m, index) => {
-    const nomeChave = (m.nome || '').toLowerCase().trim();
-    let s = 'PENDENTE';
-    
-    if (statusAtuaisNoDOM[m.id]) {
-      s = statusAtuaisNoDOM[m.id];
-    } else if (loadedStatus) {
-      if (typeof loadedStatus === 'object' && loadedStatus !== null) {
-        let val = loadedStatus[m.id] || loadedStatus[nomeChave] || loadedStatus[`idx_${index}`];
-        if (val) {
-          s = (typeof val === 'object') ? (val.status || 'PENDENTE') : val;
-        }
-      }
-    }
-    m._tempStatus = s;
+  membrosFiltrados.forEach(m => {
+    m._tempStatus = statusAtuaisNoDOM[m.id] || 'PENDENTE';
   });
 
-  // 3. Aplica a ordenação
   membrosFiltrados.sort((a, b) => {
     const statusA = a._tempStatus;
     const statusB = b._tempStatus;
@@ -536,106 +514,8 @@ function alterarOrdenacaoChamada() {
   renderAttendanceListEditor();
 }
 
-function carregarChamadaParaEdicao(id) {
-  const chamada = state.chamadas.find(c => c.id === id);
-  if (!chamada) return;
-
-  editingChamadaId = id;
-
-  const selPasta = document.getElementById('selPastaDestino');
-  const inputTitulo = document.getElementById('listaTitulo');
-  const inputData = document.getElementById('listaData');
-
-  if (selPasta) selPasta.value = chamada.pasta || '';
-  if (inputTitulo) inputTitulo.value = chamada.titulo || '';
-  if (inputData) inputData.value = chamada.data || '';
-
-  const statusSalvos = chamada.statusMembros || {};
-  let statusMapeadosParaCarregar = {};
-
-  // Mapeia inteligentemente procurando por ID, por índice da linha ou pelo nome do membro em minúsculas
-  state.membros.forEach((m, index) => {
-    const nomeChave = (m.nome || '').toLowerCase().trim();
-    
-    // Tenta encontrar o valor salvo em qualquer uma das chaves possíveis
-    let valorEncontrado = 
-      statusSalvos[m.id] || 
-      statusSalvos[nomeChave] || 
-      statusSalvos[`idx_${index}`];
-
-    if (!valorEncontrado) {
-      // Procura varredura caso o nome salvo tenha pequenas variações de acentuação ou espaços
-      const chaveEncontrada = Object.keys(statusSalvos).find(k => k.toLowerCase().includes(nomeChave));
-      if (chaveEncontrada) {
-        valorEncontrado = statusSalvos[chaveEncontrada];
-      }
-    }
-
-    if (valorEncontrado) {
-      if (typeof valorEncontrado === 'object' && valorEncontrado !== null) {
-        statusMapeadosParaCarregar[m.id] = valorEncontrado.status || 'PENDENTE';
-      } else {
-        statusMapeadosParaCarregar[m.id] = valorEncontrado;
-      }
-    } else {
-      statusMapeadosParaCarregar[m.id] = 'PENDENTE';
-    }
-  });
-
-  // Renderiza a lista injetando os status antigos mapeados com sucesso
-  renderAttendanceListEditor(statusMapeadosParaCarregar);
-  irParaJanela('tabChamada');
-}
-
-function renderPastasEListasTree() {
-  const container = document.getElementById('arvorePastasEListas');
-  if (!container) return;
-
-  if (!state.pastas.length && !state.chamadas.length) {
-    container.innerHTML = '<p style="color:var(--text-muted);">Nenhuma pasta ou lista salva.</p>';
-    return;
-  }
-
-  let html = '';
-  state.pastas.forEach(pasta => {
-    const listasDaPasta = state.chamadas.filter(c => c.pasta === pasta);
-    html += `
-      <div class="folder-box" style="margin-bottom:15px; border:1px solid var(--border-color); border-radius:8px; padding:12px;">
-        <h4 style="margin-bottom:8px;">📁 ${pasta} (${listasDaPasta.length} listas)</h4>
-        <div style="padding-left:10px;">
-          ${listasDaPasta.length === 0 ? '<p style="font-size:0.8rem; color:var(--text-muted);">Nenhuma lista nesta pasta.</p>' : ''}
-          ${listasDaPasta.map(l => {
-            const statusObj = l.statusMembros || {};
-            const numPresentes = Object.values(statusObj).filter(v => v === 'PRESENTE').length;
-            return `
-              <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid var(--border-color); gap:10px;">
-                <span style="font-size:0.85rem;">📋 <b>${l.titulo}</b> (${l.data}) - ${numPresentes}/${l.totalMembros || state.membros.length} presentes</span>
-                <div>
-                  <button type="button" class="btn-secondary" style="padding:4px 8px; font-size:0.75rem; margin-right:4px;" onclick="carregarChamadaParaEdicao('${l.id}')">Abrir / Editar</button>
-                  <button type="button" class="btn-danger" style="padding:4px 8px; font-size:0.75rem;" onclick="excluirChamada('${l.id}')">Excluir</button>
-                </div>
-              </div>
-            `;
-          }).join('')}
-        </div>
-      </div>
-    `;
-  });
-
-  container.innerHTML = html;
-}
-
-function excluirChamada(id) {
-  if (confirm('Deseja remover esta lista salva?')) {
-    state.chamadas = state.chamadas.filter(c => c.id !== id);
-    if (editingChamadaId === id) editingChamadaId = null;
-    saveState();
-    renderPastasEListasTree();
-  }
-}
-
 // ==========================================
-// IMPRESSÃO E RELATÓRIO PDF
+// IMPRESSÃO E RELATÓRIO PDF DIRETO
 // ==========================================
 function exportarListaParaPDF() {
   const pasta = document.getElementById('selPastaDestino')?.value || 'Geral';
@@ -1444,8 +1324,6 @@ window.alterarOrdenacaoChamada = alterarOrdenacaoChamada;
 window.aoMudarStatusPresenca = aoMudarStatusPresenca;
 window.criarMinisterio = criarMinisterio;
 window.excluirMinisterio = excluirMinisterio;
-window.salvarListaNaPasta = salvarListaNaPasta;
-window.carregarChamadaParaEdicao = carregarChamadaParaEdicao;
 window.alternarTema = alternarTema;
 window.mascaraTelefone = mascaraTelefone;
 window.renderListaMembros = renderListaMembros;
@@ -1460,9 +1338,9 @@ window.habilitarEdicaoMembro = habilitarEdicaoMembro;
 window.salvarEdicaoMembro = salvarEdicaoMembro;
 window.fecharFichaMembro = fecharFichaMembro;
 window.excluirPasta = excluirPasta;
-window.excluirChamada = excluirChamada;
 window.exportarListaParaPDF = exportarListaParaPDF;
 window.terminarSessao = terminarSessao;
+window.aprovarUtils = aprovarUsuario;
 window.aprovarUsuario = aprovarUsuario;
 window.bloquearUsuario = bloquearUsuario;
 window.excluirUsuarioAdmin = excluirUsuarioAdmin;
