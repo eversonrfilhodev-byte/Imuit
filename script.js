@@ -624,7 +624,7 @@ function renderPastasEListasTree() {
   state.pastas.forEach(pasta => {
     const listasDaPasta = (state.chamadas || []).filter(c => c.pasta === pasta);
     html += `
-      <div class="folder-box" style="margin-bottom:15px; border:1px solid var(--border-color); border-radius:8px; padding:12px;">
+      <div class="folder-box glass-card" style="margin-bottom:15px; padding:16px;">
         <h4 style="margin-bottom:8px;">📁 ${pasta} (${listasDaPasta.length} listas)</h4>
         <div style="padding-left:10px;">
           ${listasDaPasta.length === 0 ? '<p style="font-size:0.8rem; color:var(--text-muted);">Nenhuma lista nesta pasta.</p>' : ''}
@@ -683,20 +683,20 @@ function abrirRelatorioMensal() {
       <h3>📊 Relatório Mensal (${currentMonth + 1}/${currentYear})</h3>
       <p style="margin-top:8px; color:var(--text-muted);">Métricas calculadas com base nas listas salvas neste mês.</p>
       
-      <div style="margin-top:15px; background:var(--bg-dark); padding:12px; border-radius:12px; border:1px solid var(--border-color);">
+      <div style="margin-top:15px; background:rgba(255,255,255,0.1); padding:14px; border-radius:14px; border:1px solid var(--border-color);">
         <p><b>Listas Realizadas:</b> ${chamadasDoMes.length}</p>
         <p><b>Presenças Confirmadas:</b> ${totalPresencasMes}</p>
         <p><b>Faltas Registradas:</b> ${totalAusenciasMes}</p>
       </div>
 
-      <h4 style="margin-top:15px; margin-bottom:8px;">Gráfico de Frequência do Mês</h4>
-      <div style="width:100%; background:rgba(255,255,255,0.1); border-radius:10px; height:24px; overflow:hidden; display:flex;">
-        <div style="width:${pctPresenca}%; background:#10b981; height:100%; text-align:center; color:#fff; font-size:0.75rem; line-height:24px; font-weight:bold;">
+      <h4 style="margin-top:18px; margin-bottom:8px;">Gráfico de Frequência do Mês</h4>
+      <div style="width:100%; background:rgba(255,255,255,0.15); border-radius:12px; height:26px; overflow:hidden; display:flex;">
+        <div style="width:${pctPresenca}%; background:linear-gradient(135deg, #10b981, #34d399); height:100%; text-align:center; color:#fff; font-size:0.75rem; line-height:26px; font-weight:bold;">
           ${pctPresenca}%
         </div>
-        <div style="width:${100 - pctPresenca}%; background:#f43f5e; height:100%;"></div>
+        <div style="width:${100 - pctPresenca}%; background:linear-gradient(135deg, #f43f5e, #fb7185); height:100%;"></div>
       </div>
-      <div style="display:flex; justify-space-between:space-between; font-size:0.75rem; margin-top:4px; color:var(--text-muted);">
+      <div style="display:flex; justify-content:space-between; font-size:0.78rem; margin-top:6px; color:var(--text-muted);">
         <span>🟢 Presenças (${pctPresenca}%)</span>
         <span>🔴 Ausências (${100 - pctPresenca}%)</span>
       </div>
