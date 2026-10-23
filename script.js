@@ -241,14 +241,9 @@ function entrarNoApp() {
   document.getElementById('pendingApprovalModal').style.display = 'none';
   document.getElementById('appMainContent').style.display = 'block';
 
-  const userEmailDisplay = document.getElementById('userEmailDisplay');
   const userRoleBadge = document.getElementById('userRoleBadge');
   const tabBtnAdmin = document.getElementById('tabBtnAdmin');
   const statusDiv = document.getElementById('status');
-
-  if (userEmailDisplay && state.currentUser) {
-    userEmailDisplay.innerText = state.currentUser.nome || state.currentUser.email;
-  }
 
   if (userRoleBadge && state.currentUser) {
     const p = state.currentUser.perfil || 'L';
@@ -401,25 +396,10 @@ function criarNovaPasta() {
 
 function renderPastasOptions() {
   const sel = document.getElementById('selPastaDestino');
-  const container = document.getElementById('listaCategoriasPastas');
-
   if (sel) {
     sel.innerHTML = state.pastas.map(p => `<option value="${p}">${p}</option>`).join('');
     if (!state.pastas.length) {
       sel.innerHTML = '<option value="">Nenhuma pasta disponível</option>';
-    }
-  }
-
-  if (container) {
-    if (!state.pastas.length) {
-      container.innerHTML = '<p style="color:var(--text-muted);">Nenhuma pasta criada.</p>';
-    } else {
-      container.innerHTML = state.pastas.map(p => `
-        <div style="display:flex; justify-content:space-between; align-items:center; padding:8px; border-bottom:1px solid var(--border-color);">
-          <span>📁 ${p}</span>
-          <button type="button" class="btn-danger" style="padding:4px 8px; font-size:0.75rem;" onclick="excluirPasta('${p}')">Remover</button>
-        </div>
-      `).join('');
     }
   }
 }
@@ -510,7 +490,7 @@ function renderAttendanceListEditor() {
     const faltasAcumuladas = calcularFaltasTotaisPorMembro(m.id);
     const temMuitasFaltas = faltasAcumuladas >= 4;
     const corNomeEstilo = temMuitasFaltas ? 'color: #f43f5e; font-weight: bold;' : '';
-    const avisoFaltas = temMuitasFaltas ? ` <span style="font-size:0.7rem; background:rgba(244,63,94,0.2); color:#f43f5e; padding:2px 6px; border-radius:4px;">⚠️ ${faltasAcumuladas} Faltas</span>` : '';
+    const avisoFaltas = temMuitasFaltas ? ` <span style="font-size:0.7rem; background:rgba(244,63,94,0.2); color:#f43f5e; padding:2px 6px; border-radius:4px; font-weight:bold;">⚠️ ${faltasAcumuladas} Faltas</span>` : '';
 
     return `
       <div class="member-item-row" id="row_member_${m.id}">
@@ -574,7 +554,7 @@ function salvarListaNaPasta() {
   });
 
   const novaChamada = {
-    id: 'chamada_' + Date.now(),
+    id: editingChamadaId || ('chamada_' + Date.now()),
     pasta: pasta,
     eventoId: eventoId,
     titulo: titulo,
@@ -583,11 +563,18 @@ function salvarListaNaPasta() {
     totalMembros: state.membros.length
   };
 
-  state.chamadas = state.chamadas || [];
-  state.chamadas.push(novaChamada);
+  if (editingChamadaId) {
+    const idx = state.chamadas.findIndex(c => c.id === editingChamadaId);
+    if (idx !== -1) state.chamadas[idx] = novaChamada;
+    editingChamadaId = null;
+  } else {
+    state.chamadas = state.chamadas || [];
+    state.chamadas.push(novaChamada);
+  }
+
   saveState();
   renderPastasEListasTree();
-  alert('✅ Lista salva com sucesso na pasta e vinculada!');
+  alert('✅ Lista salva com sucesso!');
 }
 
 function carregarChamadaParaEdicao(id) {
@@ -667,6 +654,54 @@ function excluirChamada(id) {
     state.chamadas = (state.chamadas || []).filter(c => c.id !== id);
     saveState();
     renderPastasEListasTree();
+  }
+}
+
+function abrirRelatorioMensal() {
+  const mesAtualStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}`;
+  
+  const chamadasDoMes = (state.chamadas || []).filter(c => c.data && c.data.startsWith(mesAtualStr));
+  
+  let totalPresencasMes = 0;
+  let totalAusenciasMes = 0;
+
+  chamadasDoMes.forEach(c => {
+    Object.values(c.statusMembros || {}).forEach(status => {
+      if (status === 'PRESENTE') totalPresencasMes++;
+      else if (status === 'AUSENTE' || status === 'FALTA') totalAusenciasMes++;
+    });
+  });
+
+  const totalGeral = totalPresencasMes + totalAusenciasMes;
+  const pctPresenca = totalGeral > 0 ? Math.round((totalPresencasMes / totalGeral) * 100) : 0;
+
+  const modal = document.getElementById('fichaMembroModal');
+  const conteudo = document.getElementById('fichaConteudo');
+
+  if (modal && conteudo) {
+    conteudo.innerHTML = `
+      <h3>📊 Relatório Mensal (${currentMonth + 1}/${currentYear})</h3>
+      <p style="margin-top:8px; color:var(--text-muted);">Métricas calculadas com base nas listas salvas neste mês.</p>
+      
+      <div style="margin-top:15px; background:var(--bg-dark); padding:12px; border-radius:12px; border:1px solid var(--border-color);">
+        <p><b>Listas Realizadas:</b> ${chamadasDoMes.length}</p>
+        <p><b>Presenças Confirmadas:</b> ${totalPresencasMes}</p>
+        <p><b>Faltas Registradas:</b> ${totalAusenciasMes}</p>
+      </div>
+
+      <h4 style="margin-top:15px; margin-bottom:8px;">Gráfico de Frequência do Mês</h4>
+      <div style="width:100%; background:rgba(255,255,255,0.1); border-radius:10px; height:24px; overflow:hidden; display:flex;">
+        <div style="width:${pctPresenca}%; background:#10b981; height:100%; text-align:center; color:#fff; font-size:0.75rem; line-height:24px; font-weight:bold;">
+          ${pctPresenca}%
+        </div>
+        <div style="width:${100 - pctPresenca}%; background:#f43f5e; height:100%;"></div>
+      </div>
+      <div style="display:flex; justify-space-between:space-between; font-size:0.75rem; margin-top:4px; color:var(--text-muted);">
+        <span>🟢 Presenças (${pctPresenca}%)</span>
+        <span>🔴 Ausências (${100 - pctPresenca}%)</span>
+      </div>
+    `;
+    modal.style.display = 'flex';
   }
 }
 
@@ -931,11 +966,10 @@ function abrirDetalhesEvento(id) {
   const evt = (state.eventos || []).find(e => e.id === id);
   if (!evt) return;
 
-  // Procura se há uma chamada vinculada a este evento
   const chamadaVinculada = (state.chamadas || []).find(c => c.eventoId === id);
 
   let acaoListaHtml = chamadaVinculada ? 
-    `<button type="button" class="btn-primary" style="margin-top:10px; width:100%;" onclick="carregarChamadaParaEdicao('${chamadaVinculada.id}')">📋 Ver Lista de Chamada Vinculada</button>` :
+    `<button type="button" class="btn-primary" style="margin-top:10px; width:100%;" onclick="carregarChamadaParaEdicao('${chamadaVinculada.id}'); fecharFichaMembro();">📋 Ver Lista de Chamada Vinculada</button>` :
     `<p style="margin-top:10px; font-size:0.85rem; color:var(--text-muted);">Nenhuma lista de chamada registrada para este evento ainda.</p>`;
 
   const modal = document.getElementById('fichaMembroModal');
@@ -943,17 +977,73 @@ function abrirDetalhesEvento(id) {
 
   if (modal && conteudo) {
     conteudo.innerHTML = `
-      <h3>📅 ${evt.titulo}</h3>
-      <p style="margin-top:8px;"><b>Data:</b> ${evt.data} ${evt.dataFim && evt.dataFim !== evt.data ? 'até ' + evt.dataFim : ''}</p>
-      <p><b>Horário:</b> ${evt.hora || '-'} às ${evt.horaFim || '-'}</p>
-      <p><b>Local:</b> ${evt.local || '-'}</p>
-      <p><b>Descrição:</b> ${evt.descricao || 'Nenhuma descrição informada.'}</p>
-      <hr style="margin:12px 0; border-color:var(--border-color);">
-      ${acaoListaHtml}
-      <button type="button" class="btn-danger" style="margin-top:10px; width:100%;" onclick="excluirEvento('${evt.id}'); fecharFichaMembro();">🗑️ Excluir Evento</button>
+      <div id="viewEvento">
+        <h3>📅 ${evt.titulo}</h3>
+        <p style="margin-top:8px;"><b>Data:</b> ${evt.data} ${evt.dataFim && evt.dataFim !== evt.data ? 'até ' + evt.dataFim : ''}</p>
+        <p><b>Horário:</b> ${evt.hora || '-'} às ${evt.horaFim || '-'}</p>
+        <p><b>Local:</b> ${evt.local || '-'}</p>
+        <p><b>Descrição:</b> ${evt.descricao || 'Nenhuma descrição informada.'}</p>
+        <hr style="margin:12px 0; border-color:var(--border-color);">
+        ${acaoListaHtml}
+        <div style="display:flex; gap:8px; margin-top:10px;">
+          <button type="button" class="btn-secondary" style="flex:1;" onclick="habilitarEdicaoEvento('${evt.id}')">✏️ Editar Evento</button>
+          <button type="button" class="btn-danger" style="flex:1;" onclick="excluirEvento('${evt.id}'); fecharFichaMembro();">🗑️ Excluir</button>
+        </div>
+      </div>
+      <div id="formEdicaoEvento" style="display:none; margin-top:10px;">
+        <h4>Editar Evento</h4>
+        <label style="margin-top:8px;">Título:</label>
+        <input type="text" id="editEvtTitulo" value="${evt.titulo}">
+        <div style="display:flex; gap:8px; margin-top:8px;">
+          <div style="flex:1;"><label>Data Início:</label><input type="date" id="editEvtData" value="${evt.data}"></div>
+          <div style="flex:1;"><label>Data Fim:</label><input type="date" id="editEvtDataFim" value="${evt.dataFim || evt.data}"></div>
+        </div>
+        <div style="display:flex; gap:8px; margin-top:8px;">
+          <div style="flex:1;"><label>Hora Início:</label><input type="time" id="editEvtHora" value="${evt.hora || '19:30'}"></div>
+          <div style="flex:1;"><label>Hora Fim:</label><input type="time" id="editEvtHoraFim" value="${evt.horaFim || '21:00'}"></div>
+        </div>
+        <label style="margin-top:8px;">Local:</label>
+        <input type="text" id="editEvtLocal" value="${evt.local || ''}">
+        <label style="margin-top:8px;">Descrição:</label>
+        <textarea id="editEvtDescricao" rows="2">${evt.descricao || ''}</textarea>
+        <button type="button" class="btn-primary" style="width:100%; margin-top:12px;" onclick="salvarEdicaoEvento('${evt.id}')">💾 Salvar Alterações</button>
+      </div>
     `;
     modal.style.display = 'flex';
   }
+}
+
+function habilitarEdicaoEvento(id) {
+  document.getElementById('viewEvento').style.display = 'none';
+  document.getElementById('formEdicaoEvento').style.display = 'block';
+}
+
+function salvarEdicaoEvento(id) {
+  const index = (state.eventos || []).findIndex(e => e.id === id);
+  if (index === -1) return;
+
+  const titulo = document.getElementById('editEvtTitulo').value.trim();
+  if (!titulo) {
+    alert('O título não pode ficar em branco.');
+    return;
+  }
+
+  state.eventos[index] = {
+    ...state.eventos[index],
+    titulo: titulo,
+    data: document.getElementById('editEvtData').value,
+    dataFim: document.getElementById('editEvtDataFim').value,
+    hora: document.getElementById('editEvtHora').value,
+    horaFim: document.getElementById('editEvtHoraFim').value,
+    local: document.getElementById('editEvtLocal').value.trim(),
+    descricao: document.getElementById('editEvtDescricao').value.trim()
+  };
+
+  saveState();
+  renderCalendar();
+  renderEventosOptionsInChamada();
+  fecharFichaMembro();
+  alert('✅ Evento atualizado com sucesso!');
 }
 
 function excluirEvento(id) {
@@ -1047,6 +1137,24 @@ function renderCalendar() {
 // ==========================================
 // ABA 3: MEMBROS E MINISTÉRIOS
 // ==========================================
+function obterHistoricoPresencaMembro(membroId) {
+  let presentes = 0;
+  let ausentes = 0;
+  let justificativas = 0;
+
+  (state.chamadas || []).forEach(c => {
+    const statusObj = c.statusMembros || {};
+    const status = statusObj[membroId];
+    if (status) {
+      if (status === 'PRESENTE') presentes++;
+      else if (status === 'AUSENTE' || status === 'FALTA') ausentes++;
+      else if (status === 'JUSTIFICADO') justificativas++;
+    }
+  });
+
+  return { presentes, ausentes, justificativas };
+}
+
 function salvarMembro() {
   const nome = document.getElementById('memNome')?.value.trim();
   const apelido = document.getElementById('memApelido')?.value.trim();
@@ -1099,6 +1207,10 @@ function abrirFichaMembro(id) {
   const conteudo = document.getElementById('fichaConteudo');
 
   if (modal && conteudo) {
+    const stats = obterHistoricoPresencaMembro(membro.id);
+    const totalListas = stats.presentes + stats.ausentes + stats.justificativas;
+    const pctFrequencia = totalListas > 0 ? Math.round((stats.presentes / totalListas) * 100) : 0;
+
     let ministeriosHtml = '';
     const listaMin = state.ministries || [];
     const membroMin = membro.ministerios || [];
@@ -1111,36 +1223,44 @@ function abrirFichaMembro(id) {
 
     conteudo.innerHTML = `
       <div id="visualizacaoFicha">
-        <p><b>Nome Completo:</b> ${membro.nome}</p>
-        <p><b>Apelido:</b> ${membro.apelido || '-'}</p>
-        <p><b>Data de Nascimento:</b> ${membro.nasc || '-'} (${calcularIdade(membro.nasc)} anos)</p>
+        <h3>👤 ${membro.nome} ${membro.apelido ? `(${membro.apelido})` : ''}</h3>
+        <p style="margin-top:6px;"><b>Nascimento:</b> ${membro.nasc || '-'} (${calcularIdade(membro.nasc)} anos)</p>
         <p><b>Telefone:</b> ${membro.fone || '-'}</p>
-        <hr style="margin:10px 0; border-color:var(--border-color);">
-        <p><b>Responsável:</b> ${membro.responsavel?.nome || '-'}</p>
-        <p><b>Telefone Responsável:</b> ${membro.responsavel?.fone || '-'}</p>
+        <p><b>Responsável:</b> ${membro.responsavel?.nome || '-'} ${membro.responsavel?.fone ? `(${membro.responsavel.fone})` : ''}</p>
         <p><b>Ministérios:</b> ${(membro.ministerios || []).join(', ') || 'Nenhum'}</p>
-        <button type="button" class="btn-secondary" style="margin-top:15px;" onclick="habilitarEdicaoMembro('${membro.id}')">✏️ Editar Informações</button>
+
+        <hr style="margin:12px 0; border-color:var(--border-color);">
+        <h4 style="margin-bottom:8px;">📊 Histórico de Frequência</h4>
+        <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:8px; text-align:center; margin-bottom:10px;">
+          <div style="background:rgba(16,185,129,0.15); padding:8px; border-radius:8px;"><b style="color:#10b981;">${stats.presentes}</b><br><small>Presenças</small></div>
+          <div style="background:rgba(244,63,94,0.15); padding:8px; border-radius:8px;"><b style="color:#f43f5e;">${stats.ausentes}</b><br><small>Faltas</small></div>
+          <div style="background:rgba(245,158,11,0.15); padding:8px; border-radius:8px;"><b style="color:#f59e0b;">${stats.justificativas}</b><br><small>Justificativas</small></div>
+        </div>
+        <p style="font-size:0.85rem; font-weight:bold; text-align:center;">Assiduidade Geral: ${pctFrequencia}%</p>
+
+        <button type="button" class="btn-secondary" style="margin-top:15px; width:100%;" onclick="habilitarEdicaoMembro('${membro.id}')">✏️ Editar Informações Cadastrais</button>
       </div>
+
       <div id="formEdicaoMembro" style="display:none; margin-top:10px;">
         <h4 style="margin-bottom:10px;">Editar Membro</h4>
         <label>Nome Completo:</label>
-        <input type="text" id="editMemNome" value="${membro.nome}" style="width:100%; margin-bottom:8px; padding:6px; background:var(--bg-dark); color:var(--text-main); border:1px solid var(--border-color); border-radius:6px;">
+        <input type="text" id="editMemNome" value="${membro.nome}" style="width:100%; margin-bottom:8px;">
         <label>Apelido:</label>
-        <input type="text" id="editMemApelido" value="${membro.apelido || ''}" style="width:100%; margin-bottom:8px; padding:6px; background:var(--bg-dark); color:var(--text-main); border:1px solid var(--border-color); border-radius:6px;">
+        <input type="text" id="editMemApelido" value="${membro.apelido || ''}" style="width:100%; margin-bottom:8px;">
         <label>Data de Nascimento:</label>
-        <input type="date" id="editMemNasc" value="${membro.nasc || ''}" style="width:100%; margin-bottom:8px; padding:6px; background:var(--bg-dark); color:var(--text-main); border:1px solid var(--border-color); border-radius:6px;">
+        <input type="date" id="editMemNasc" value="${membro.nasc || ''}" style="width:100%; margin-bottom:8px;">
         <label>Telefone:</label>
-        <input type="text" id="editMemFone" value="${membro.fone || ''}" oninput="mascaraTelefone(this)" style="width:100%; margin-bottom:8px; padding:6px; background:var(--bg-dark); color:var(--text-main); border:1px solid var(--border-color); border-radius:6px;">
+        <input type="text" id="editMemFone" value="${membro.fone || ''}" oninput="mascaraTelefone(this)" style="width:100%; margin-bottom:8px;">
         <label>Nome Responsável:</label>
-        <input type="text" id="editMemRespNome" value="${membro.responsavel?.nome || ''}" style="width:100%; margin-bottom:8px; padding:6px; background:var(--bg-dark); color:var(--text-main); border:1px solid var(--border-color); border-radius:6px;">
+        <input type="text" id="editMemRespNome" value="${membro.responsavel?.nome || ''}" style="width:100%; margin-bottom:8px;">
         <label>Telefone Responsável:</label>
-        <input type="text" id="editMemRespFone" value="${membro.responsavel?.fone || ''}" oninput="mascaraTelefone(this)" style="width:100%; margin-bottom:8px; padding:6px; background:var(--bg-dark); color:var(--text-main); border:1px solid var(--border-color); border-radius:6px;">
+        <input type="text" id="editMemRespFone" value="${membro.responsavel?.fone || ''}" oninput="mascaraTelefone(this)" style="width:100%; margin-bottom:8px;">
         <label>Ministérios:</label>
         <div id="editBoxMinisterios" style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px;">
           ${ministeriosHtml}
         </div>
 
-        <button type="button" class="btn-primary" onclick="salvarEdicaoMembro('${membro.id}')">💾 Salvar Alterações</button>
+        <button type="button" class="btn-primary" style="width:100%;" onclick="salvarEdicaoMembro('${membro.id}')">💾 Salvar Alterações</button>
       </div>
     `;
     modal.style.display = 'flex';
@@ -1525,6 +1645,9 @@ window.excluirMinisterio = excluirMinisterio;
 window.salvarListaNaPasta = salvarListaNaPasta;
 window.carregarChamadaParaEdicao = carregarChamadaParaEdicao;
 window.abrirDetalhesEvento = abrirDetalhesEvento;
+window.habilitarEdicaoEvento = habilitarEdicaoEvento;
+window.salvarEdicaoEvento = salvarEdicaoEvento;
+window.abrirRelatorioMensal = abrirRelatorioMensal;
 window.alternarTema = alternarTema;
 window.mascaraTelefone = mascaraTelefone;
 window.renderListaMembros = renderListaMembros;
