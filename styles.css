@@ -1,5 +1,5 @@
 /* ==========================================
-   SISTEMA DE DESIGN: NEO-APPLE GLASSMORPHISM 3D (COMPACT & CENTERED)
+   SISTEMA DE DESIGN: NEO-APPLE GLASSMORPHISM 3D (ULTRA-COMPACTO)
    ========================================== */
 
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
@@ -11,8 +11,8 @@
   --glass-border: rgba(255, 255, 255, 0.85);
   --glass-border-subtle: rgba(255, 255, 255, 0.45);
 
-  --glass-shadow: 0 15px 35px rgba(31, 38, 135, 0.08), inset 0 1px 2px rgba(255, 255, 255, 0.95);
-  --glass-shadow-hover: 0 20px 45px rgba(99, 102, 241, 0.18), inset 0 1px 3px rgba(255, 255, 255, 1);
+  --glass-shadow: 0 10px 25px rgba(31, 38, 135, 0.06), inset 0 1px 2px rgba(255, 255, 255, 0.95);
+  --glass-shadow-hover: 0 15px 35px rgba(99, 102, 241, 0.15), inset 0 1px 3px rgba(255, 255, 255, 1);
 
   --grad-primary: linear-gradient(135deg, #4f46e5 0%, #6366f1 50%, #8b5cf6 100%);
   --grad-blue: linear-gradient(135deg, #38bdf8 0%, #3b82f6 100%);
@@ -27,9 +27,9 @@
   --text-heading: #020617;
   --text-muted: #64748b;
 
-  --radius-xl: 20px;
-  --radius-lg: 14px;
-  --radius-md: 10px;
+  --radius-xl: 16px;
+  --radius-lg: 10px;
+  --radius-md: 8px;
   --radius-pill: 999px;
 
   --transition-spring: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -38,13 +38,13 @@
 
 [data-theme="dark"] {
   --bg-gradient: radial-gradient(circle at 15% 15%, #0f172a 0%, #1e1b4b 50%, #090d16 100%);
-  --glass-bg: rgba(15, 23, 42, 0.68);
-  --glass-bg-hover: rgba(30, 41, 59, 0.82);
-  --glass-border: rgba(255, 255, 255, 0.18);
-  --glass-border-subtle: rgba(255, 255, 255, 0.08);
+  --glass-bg: rgba(15, 23, 42, 0.72);
+  --glass-bg-hover: rgba(30, 41, 59, 0.88);
+  --glass-border: rgba(255, 255, 255, 0.15);
+  --glass-border-subtle: rgba(255, 255, 255, 0.06);
 
-  --glass-shadow: 0 15px 35px rgba(0, 0, 0, 0.45), inset 0 1px 1px rgba(255, 255, 255, 0.2);
-  --glass-shadow-hover: 0 20px 45px rgba(99, 102, 241, 0.3), inset 0 1px 2px rgba(255, 255, 255, 0.3);
+  --glass-shadow: 0 10px 25px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.15);
+  --glass-shadow-hover: 0 15px 35px rgba(99, 102, 241, 0.25), inset 0 1px 2px rgba(255, 255, 255, 0.25);
 
   --text-main: #f8fafc;
   --text-heading: #ffffff;
@@ -62,7 +62,7 @@ body {
   background: var(--bg-gradient);
   background-attachment: fixed;
   color: var(--text-main);
-  padding: 16px;
+  padding: 10px 16px;
   overflow-x: hidden;
   width: 100%;
   min-height: 100vh;
@@ -75,16 +75,16 @@ body {
   filter: blur(90px);
   z-index: -1;
   pointer-events: none;
-  opacity: 0.45;
+  opacity: 0.35;
 }
 
-.mesh-1 { top: -10%; left: -5%; width: 400px; height: 400px; background: radial-gradient(circle, rgba(99, 102, 241, 0.4) 0%, transparent 70%); }
-.mesh-2 { bottom: -10%; right: -5%; width: 450px; height: 450px; background: radial-gradient(circle, rgba(56, 189, 248, 0.35) 0%, transparent 70%); }
-.mesh-3 { top: 40%; right: 30%; width: 300px; height: 300px; background: radial-gradient(circle, rgba(244, 63, 94, 0.25) 0%, transparent 70%); }
+.mesh-1 { top: -10%; left: -5%; width: 350px; height: 350px; background: radial-gradient(circle, rgba(99, 102, 241, 0.4) 0%, transparent 70%); }
+.mesh-2 { bottom: -10%; right: -5%; width: 400px; height: 400px; background: radial-gradient(circle, rgba(56, 189, 248, 0.35) 0%, transparent 70%); }
+.mesh-3 { top: 40%; right: 30%; width: 250px; height: 250px; background: radial-gradient(circle, rgba(244, 63, 94, 0.25) 0%, transparent 70%); }
 
 .container {
   width: 100%;
-  max-width: 1280px;
+  max-width: 1320px;
   margin: 0 auto;
 }
 
@@ -92,7 +92,7 @@ body {
 .grid-2 {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 16px;
+  gap: 12px;
 }
 
 @media (max-width: 900px) {
@@ -101,16 +101,16 @@ body {
   }
 }
 
-/* CARTÕES GLASSMORPHISM */
+/* CARTÕES GLASSMORPHISM ULTRA-COMPACTOS */
 .glass-card, .card {
   background: var(--glass-bg);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border: 1px solid var(--glass-border);
   box-shadow: var(--glass-shadow);
   border-radius: var(--radius-xl);
-  padding: 18px;
-  margin-bottom: 16px;
+  padding: 12px 16px;
+  margin-bottom: 10px;
   transition: var(--transition-spring);
 }
 
@@ -124,22 +124,22 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 20px;
-  margin-bottom: 16px;
+  padding: 8px 16px;
+  margin-bottom: 10px;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 8px;
 }
 
 .brand {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 
 .glass-icon-3d {
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -149,7 +149,7 @@ body {
 }
 
 h1 {
-  font-size: 1.35rem;
+  font-size: 1.2rem;
   font-weight: 800;
   background: var(--grad-primary);
   -webkit-background-clip: text;
@@ -159,25 +159,25 @@ h1 {
 /* NAVEGAÇÃO DE ABAS */
 .tabs-nav {
   display: flex;
-  gap: 8px;
-  padding: 6px;
+  gap: 6px;
+  padding: 4px;
   border-radius: var(--radius-pill);
-  margin-bottom: 18px;
+  margin-bottom: 10px;
   overflow-x: auto;
 }
 
 .tab-btn {
-  padding: 10px 18px;
+  padding: 7px 14px;
   border-radius: var(--radius-pill);
   border: none;
   background: transparent;
   color: var(--text-muted);
-  font-size: 0.88rem;
+  font-size: 0.82rem;
   font-weight: 700;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   transition: var(--transition-spring);
   white-space: nowrap;
 }
@@ -190,15 +190,15 @@ h1 {
 .tab-btn.active {
   background: var(--grad-primary);
   color: #ffffff;
-  box-shadow: 0 6px 18px rgba(99, 102, 241, 0.35);
+  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
 }
 
 /* FORMULÁRIOS & INPUTS COMPACTOS */
 .form-group {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  margin-bottom: 10px;
+  gap: 3px;
+  margin-bottom: 8px;
   width: 100%;
 }
 
@@ -211,19 +211,19 @@ h1 {
 }
 
 label {
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   color: var(--text-muted);
   font-weight: 700;
 }
 
 input, select, textarea {
-  padding: 9px 12px;
-  border-radius: var(--radius-lg);
+  padding: 7px 10px;
+  border-radius: var(--radius-md);
   border: 1px solid var(--glass-border-subtle);
   background: rgba(255, 255, 255, 0.4);
   backdrop-filter: blur(10px);
   color: var(--text-main);
-  font-size: 0.88rem;
+  font-size: 0.82rem;
   font-weight: 600;
   width: 100%;
   outline: none;
@@ -236,24 +236,24 @@ input:focus, select:focus, textarea:focus {
 }
 
 button, .btn-primary {
-  padding: 9px 18px;
+  padding: 7px 14px;
   border-radius: var(--radius-pill);
   background: var(--grad-primary);
   color: #fff;
   font-weight: 700;
-  font-size: 0.88rem;
+  font-size: 0.82rem;
   cursor: pointer;
   border: none;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 5px;
   transition: var(--transition-spring);
 }
 
 button:hover, .btn-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(99, 102, 241, 0.35);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(99, 102, 241, 0.3);
 }
 
 button.btn-danger { background: var(--grad-pink); }
@@ -263,20 +263,31 @@ button.btn-secondary {
   border: 1px solid var(--glass-border);
 }
 
-/* ITEM DA LISTA DE CHAMADA COMPACTO */
+/* LISTA DE CHAMADA OTIMIZADA */
 .member-item-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 8px 12px;
+  padding: 5px 10px;
   border-radius: var(--radius-md);
-  margin-bottom: 6px;
-  background: rgba(255, 255, 255, 0.3);
+  margin-bottom: 4px;
+  background: rgba(255, 255, 255, 0.25);
   border: 1px solid var(--glass-border-subtle);
   gap: 8px;
 }
 
-/* AUTENTICAÇÃO CENTRALIZADA (100% CORRIGIDA & ALINHADA AO CENTRO) */
+#boxMembrosChamada {
+  max-height: 210px !important;
+  overflow-y: auto;
+  padding: 2px;
+}
+
+#arvorePastasEListas {
+  max-height: 290px !important;
+  overflow-y: auto;
+}
+
+/* AUTENTICAÇÃO CENTRALIZADA */
 .auth-overlay {
   position: fixed;
   top: 0; left: 0;
@@ -292,11 +303,12 @@ button.btn-secondary {
 
 .auth-card {
   width: 100%;
-  max-width: 420px;
+  max-width: 400px;
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
+  padding: 20px;
 }
 
 .auth-header-center {
@@ -306,13 +318,13 @@ button.btn-secondary {
   justify-content: center;
   text-align: center;
   width: 100%;
-  margin-bottom: 18px;
+  margin-bottom: 14px;
 }
 
 .logo-auth-center {
-  width: 64px;
-  height: 64px;
-  margin: 0 auto 12px auto;
+  width: 56px;
+  height: 56px;
+  margin: 0 auto 10px auto;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
@@ -331,7 +343,7 @@ button.btn-secondary {
   background: transparent;
   border: none;
   color: var(--accent-blue);
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   font-weight: 700;
   cursor: pointer;
   text-decoration: underline;
@@ -350,9 +362,9 @@ button.btn-secondary {
 .cal-days-header {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 4px;
+  gap: 3px;
   text-align: center;
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   font-weight: 800;
   color: var(--text-muted);
 }
@@ -360,14 +372,20 @@ button.btn-secondary {
 .cal-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 4px;
+  gap: 3px;
 }
 
 .cal-day-cell {
-  min-height: 58px;
-  background: rgba(255, 255, 255, 0.3);
+  min-height: 48px;
+  background: rgba(255, 255, 255, 0.25);
   border: 1px solid var(--glass-border-subtle);
-  border-radius: var(--radius-md);
-  padding: 4px;
-  font-size: 0.75rem;
+  border-radius: 6px;
+  padding: 3px;
+  font-size: 0.7rem;
+}
+
+.table-responsive table th, 
+.table-responsive table td {
+  padding: 6px 10px;
+  font-size: 0.8rem;
 }
