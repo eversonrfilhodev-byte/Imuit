@@ -296,6 +296,7 @@ function processLogoutUI() {
 function renderAll() {
   renderMinistryCheckboxes();
   renderPastasOptions();
+  renderEventosOptionsInChamada();
   renderAttendanceListEditor();
   renderPastasEListasTree();
   renderCalendar();
@@ -375,7 +376,7 @@ function mascaraTelefone(input) {
 }
 
 // ==========================================
-// ABA 1: GERENCIADOR DE PASTAS E CHAMADA
+// ABA 1: GERENCIADOR DE PASTAS, EVENTOS E CHAMADA
 // ==========================================
 function criarNovaPasta() {
   const input = document.getElementById('novoNomePastaCat');
@@ -423,6 +424,15 @@ function renderPastasOptions() {
   }
 }
 
+function renderEventosOptionsInChamada() {
+  const sel = document.getElementById('selEventoVinculado');
+  if (!sel) return;
+
+  const eventosValidos = (state.eventos || []);
+  sel.innerHTML = '<option value="">Nenhum (Lista Avulsa)</option>' + 
+    eventosValidos.map(e => `<option value="${e.id}">${e.titulo} (${e.data})</option>`).join('');
+}
+
 function excluirPasta(nome) {
   if (confirm(`Deseja excluir a pasta "${nome}"?`)) {
     state.pastas = state.pastas.filter(p => p !== nome);
@@ -430,6 +440,18 @@ function excluirPasta(nome) {
     renderPastasOptions();
     renderPastasEListasTree();
   }
+}
+
+function calcularFaltasTotaisPorMembro(memberId) {
+  let totalFaltas = 0;
+  (state.chamadas || []).forEach(c => {
+    const statusObj = c.statusMembros || {};
+    const val = statusObj[memberId];
+    if (val === 'AUSENTE' || val === 'FALTA') {
+      totalFaltas++;
+    }
+  });
+  return totalFaltas;
 }
 
 function renderAttendanceListEditor() {
@@ -485,10 +507,15 @@ function renderAttendanceListEditor() {
 
   container.innerHTML = membrosFiltrados.map(m => {
     const statusAtual = m._tempStatus;
+    const faltasAcumuladas = calcularFaltasTotaisPorMembro(m.id);
+    const temMuitasFaltas = faltasAcumuladas >= 4;
+    const corNomeEstilo = temMuitasFaltas ? 'color: #f43f5e; font-weight: bold;' : '';
+    const avisoFaltas = temMuitasFaltas ? ` <span style="font-size:0.7rem; background:rgba(244,63,94,0.2); color:#f43f5e; padding:2px 6px; border-radius:4px;">⚠️ ${faltasAcumuladas} Faltas</span>` : '';
+
     return `
       <div class="member-item-row" id="row_member_${m.id}">
         <div>
-          <strong>${m.nome}</strong> ${m.apelido ? `(${m.apelido})` : ''}
+          <strong style="${corNomeEstilo}">${m.nome}</strong> ${m.apelido ? `(${m.apelido})` : ''} ${avisoFaltas}
           <div style="font-size:0.75rem; color:var(--text-muted);">${(m.ministerios || []).join(', ')}</div>
         </div>
         <div>
@@ -522,6 +549,7 @@ function alterarOrdenacaoChamada() {
 
 function salvarListaNaPasta() {
   const pasta = document.getElementById('selPastaDestino')?.value;
+  const eventoId = document.getElementById('selEventoVinculado')?.value || '';
   const titulo = document.getElementById('listaTitulo')?.value.trim();
   const data = document.getElementById('listaData')?.value;
 
@@ -548,6 +576,7 @@ function salvarListaNaPasta() {
   const novaChamada = {
     id: 'chamada_' + Date.now(),
     pasta: pasta,
+    eventoId: eventoId,
     titulo: titulo,
     data: data,
     statusMembros: registrosStatus,
@@ -558,7 +587,7 @@ function salvarListaNaPasta() {
   state.chamadas.push(novaChamada);
   saveState();
   renderPastasEListasTree();
-  alert('✅ Lista salva com sucesso na pasta!');
+  alert('✅ Lista salva com sucesso na pasta e vinculada!');
 }
 
 function carregarChamadaParaEdicao(id) {
@@ -568,10 +597,12 @@ function carregarChamadaParaEdicao(id) {
   editingChamadaId = id;
 
   const selPasta = document.getElementById('selPastaDestino');
+  const selEvento = document.getElementById('selEventoVinculado');
   const inputTitulo = document.getElementById('listaTitulo');
   const inputData = document.getElementById('listaData');
 
   if (selPasta) selPasta.value = chamada.pasta || '';
+  if (selEvento) selEvento.value = chamada.eventoId || '';
   if (inputTitulo) inputTitulo.value = chamada.titulo || '';
   if (inputData) inputData.value = chamada.data || '';
 
@@ -834,7 +865,7 @@ function exportarListaParaPDF() {
 }
 
 // ==========================================
-// ABA 2: CALENDÁRIO E EVENTOS
+// ABA 2: CALENDÁRIO E EVENTOS EXPANDIDOS
 // ==========================================
 function salvarEvento() {
   const titulo = document.getElementById('evtTitulo')?.value.trim();
@@ -842,6 +873,8 @@ function salvarEvento() {
   const dataFim = document.getElementById('evtDataFim')?.value || dataIni;
   const hora = document.getElementById('evtHora')?.value || '19:30';
   const horaFim = document.getElementById('evtHoraFim')?.value || '21:00';
+  const local = document.getElementById('evtLocal')?.value.trim() || 'Igreja';
+  const descricao = document.getElementById('evtDescricao')?.value.trim() || '';
   const recorrencia = document.getElementById('evtRecorrencia')?.value || 'UNICO';
 
   if (!titulo || !dataIni) {
@@ -882,13 +915,45 @@ function salvarEvento() {
       dataFim,
       hora,
       horaFim,
+      local,
+      descricao,
       recorrencia
     });
   });
 
   saveState();
   renderCalendar();
+  renderEventosOptionsInChamada();
   alert(`📅 ${datasParaAdicionar.length} evento(s) agendado(s) com sucesso!`);
+}
+
+function abrirDetalhesEvento(id) {
+  const evt = (state.eventos || []).find(e => e.id === id);
+  if (!evt) return;
+
+  // Procura se há uma chamada vinculada a este evento
+  const chamadaVinculada = (state.chamadas || []).find(c => c.eventoId === id);
+
+  let acaoListaHtml = chamadaVinculada ? 
+    `<button type="button" class="btn-primary" style="margin-top:10px; width:100%;" onclick="carregarChamadaParaEdicao('${chamadaVinculada.id}')">📋 Ver Lista de Chamada Vinculada</button>` :
+    `<p style="margin-top:10px; font-size:0.85rem; color:var(--text-muted);">Nenhuma lista de chamada registrada para este evento ainda.</p>`;
+
+  const modal = document.getElementById('fichaMembroModal');
+  const conteudo = document.getElementById('fichaConteudo');
+
+  if (modal && conteudo) {
+    conteudo.innerHTML = `
+      <h3>📅 ${evt.titulo}</h3>
+      <p style="margin-top:8px;"><b>Data:</b> ${evt.data} ${evt.dataFim && evt.dataFim !== evt.data ? 'até ' + evt.dataFim : ''}</p>
+      <p><b>Horário:</b> ${evt.hora || '-'} às ${evt.horaFim || '-'}</p>
+      <p><b>Local:</b> ${evt.local || '-'}</p>
+      <p><b>Descrição:</b> ${evt.descricao || 'Nenhuma descrição informada.'}</p>
+      <hr style="margin:12px 0; border-color:var(--border-color);">
+      ${acaoListaHtml}
+      <button type="button" class="btn-danger" style="margin-top:10px; width:100%;" onclick="excluirEvento('${evt.id}'); fecharFichaMembro();">🗑️ Excluir Evento</button>
+    `;
+    modal.style.display = 'flex';
+  }
 }
 
 function excluirEvento(id) {
@@ -896,6 +961,7 @@ function excluirEvento(id) {
     state.eventos = state.eventos.filter(e => e.id !== id);
     saveState();
     renderCalendar();
+    renderEventosOptionsInChamada();
   }
 }
 
@@ -946,7 +1012,7 @@ function renderCalendar() {
     const evtsDoDia = state.eventos.filter(e => e.data === dataFormatada);
 
     evtsDoDia.forEach(e => {
-      cell.innerHTML += `<div class="cal-evt-badge">${e.hora || ''} ${e.titulo}</div>`;
+      cell.innerHTML += `<div class="cal-evt-badge" onclick="abrirDetalhesEvento('${e.id}')" style="cursor:pointer;" title="Clique para ver detalhes">${e.hora || ''} ${e.titulo}</div>`;
     });
 
     state.membros.forEach(m => {
@@ -966,12 +1032,12 @@ function renderCalendar() {
       listaProximos.innerHTML = '<p style="color:var(--text-muted);">Nenhum evento agendado.</p>';
     } else {
       listaProximos.innerHTML = state.eventos.slice(-10).map(e => `
-        <div style="display:flex; justify-content:space-between; align-items:center; padding:8px; border-bottom:1px solid var(--border-color);">
+        <div style="display:flex; justify-content:space-between; align-items:center; padding:8px; border-bottom:1px solid var(--border-color); cursor:pointer;" onclick="abrirDetalhesEvento('${e.id}')">
           <div>
             <strong>${e.titulo}</strong> <br>
-            <small style="color:var(--text-muted);">📅 ${e.data} às ${e.hora || '19:30'}</small>
+            <small style="color:var(--text-muted);">📅 ${e.data} às ${e.hora || '19:30'} (${e.local || 'Igreja'})</small>
           </div>
-          <button type="button" class="btn-danger" style="padding:2px 6px; font-size:0.7rem;" onclick="excluirEvento('${e.id}')">Excluir</button>
+          <button type="button" class="btn-danger" style="padding:2px 6px; font-size:0.7rem;" onclick="event.stopPropagation(); excluirEvento('${e.id}')">Excluir</button>
         </div>
       `).join('');
     }
@@ -1458,6 +1524,7 @@ window.criarMinisterio = criarMinisterio;
 window.excluirMinisterio = excluirMinisterio;
 window.salvarListaNaPasta = salvarListaNaPasta;
 window.carregarChamadaParaEdicao = carregarChamadaParaEdicao;
+window.abrirDetalhesEvento = abrirDetalhesEvento;
 window.alternarTema = alternarTema;
 window.mascaraTelefone = mascaraTelefone;
 window.renderListaMembros = renderListaMembros;
