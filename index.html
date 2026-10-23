@@ -11,7 +11,7 @@
   <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
   
-  <!-- Firebase SDKs (Compat / v8/v9 compat layer) -->
+  <!-- Firebase SDKs (Compat layer) -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -28,7 +28,15 @@
   <!-- ========================================== -->
   <div id="authModal" class="auth-overlay" style="display: flex;">
     <div class="auth-card glass-card">
-      <h2 id="authTitle"><i data-lucide="lock"></i> Aceder ao App Imuit</h2>
+      
+      <!-- LOGO E TÍTULO CENTRALIZADOS -->
+      <div class="auth-header-center">
+        <div class="logo-img-wrapper glass-icon-3d logo-auth-center">
+          <img src="logo.png" alt="Logo App Imuit" onerror="this.style.display='none'; document.getElementById('fallbackAuthIcon').style.display='inline-block';">
+          <i id="fallbackAuthIcon" data-lucide="church" style="display: none; color: var(--accent-blue); width: 32px; height: 32px;"></i>
+        </div>
+        <h2 id="authTitle"><i data-lucide="lock"></i> Aceder ao App Imuit</h2>
+      </div>
       
       <div id="authNameGroup" class="form-group" style="display: none;">
         <label for="authNome">Nome Completo</label>
@@ -49,9 +57,13 @@
         <i data-lucide="log-in"></i> Iniciar Sessão
       </button>
 
-      <button type="button" id="authToggleBtn" class="auth-toggle-btn">
-        Não tem conta? Solicitar Acesso
-      </button>
+      <!-- BOTÃO ALTERNAR MODO CENTRALIZADO -->
+      <div style="text-align: center; margin-top: 15px;">
+        <button type="button" id="authToggleBtn" class="auth-toggle-btn">
+          Não tem conta? Solicitar Acesso
+        </button>
+      </div>
+
     </div>
   </div>
 
@@ -74,12 +86,12 @@
   <!-- ========================================== -->
   <div id="appMainContent" class="container" style="display: none;">
     
-    <!-- CABEÇALHO DA APLICAÇÃO EM VIDRO FLUTUANTE -->
+    <!-- CABEÇALHO DA APLICAÇÃO -->
     <header class="app-header glass-card">
       <div class="brand">
         <div class="logo-img-wrapper glass-icon-3d">
           <img src="logo.png" alt="Logo App Imuit" onerror="this.style.display='none'; document.getElementById('fallbackLogoIcon').style.display='inline-block';">
-          <i id="fallbackLogoIcon" data-lucide="church" style="display: none; color: var(--accent-blue); width: 28px; height: 28px;"></i>
+          <i id="fallbackLogoIcon" data-lucide="church" style="display: none; color: var(--accent-blue); width: 26px; height: 26px;"></i>
         </div>
         <div>
           <h1>App Imuit</h1>
@@ -96,7 +108,7 @@
       </div>
     </header>
 
-    <!-- NAVEGAÇÃO DE ABAS FLUTUANTES EM CÁPSULA (NEO-APPLE NAV) -->
+    <!-- NAVEGAÇÃO DE ABAS FLUTUANTES -->
     <nav class="tabs-nav glass-card">
       <button type="button" class="tab-btn active" onclick="irParaJanela('tabChamada')">
         <i data-lucide="check-square"></i> Listas & Chamada
@@ -123,9 +135,9 @@
         
         <!-- CARD: CRIAR / REGISTRAR LISTA -->
         <div class="card glass-card">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; border-bottom: 1px solid var(--border-color-subtle); padding-bottom: 10px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid var(--glass-border-subtle); padding-bottom: 8px;">
             <h3 class="card-title" style="margin: 0; border: none;"><i data-lucide="edit-3"></i> Registrar Chamada / Lista</h3>
-            <button type="button" class="btn-secondary" style="font-size: 0.8rem; padding: 6px 12px;" onclick="abrirRelatorioMensal()">
+            <button type="button" class="btn-secondary" style="font-size: 0.8rem; padding: 5px 10px;" onclick="abrirRelatorioMensal()">
               📊 Relatório Mensal
             </button>
           </div>
@@ -152,7 +164,7 @@
             <input type="text" id="listaTitulo" placeholder="Ex: Culto de Domingo, Ensaio Louvor...">
           </div>
 
-          <div class="form-row" style="margin-bottom: 12px;">
+          <div class="form-row" style="margin-bottom: 8px;">
             <div class="form-group" style="flex: 2;">
               <label for="buscaMembroChamada">Filtrar Membros</label>
               <input type="text" id="buscaMembroChamada" placeholder="Buscar por nome..." onkeyup="atualizarBuscaChamada()">
@@ -167,13 +179,13 @@
             </div>
           </div>
 
-          <div id="boxFiltrosMinisteriosChamada" style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px;"></div>
+          <div id="boxFiltrosMinisteriosChamada" style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px;"></div>
 
-          <div id="boxMembrosChamada" style="max-height: 380px; overflow-y: auto; padding: 8px;">
+          <div id="boxMembrosChamada" style="max-height: 280px; overflow-y: auto; padding: 4px;">
             <!-- Renderizado via script.js -->
           </div>
 
-          <div style="display: flex; gap: 10px; margin-top: 15px;">
+          <div style="display: flex; gap: 10px; margin-top: 12px;">
             <button type="button" class="btn-primary" style="flex: 1;" onclick="salvarListaNaPasta()">
               <i data-lucide="save"></i> Salvar Lista
             </button>
@@ -187,12 +199,12 @@
         <div class="card glass-card">
           <h3 class="card-title"><i data-lucide="folder"></i> Gerenciar Pastas & Histórico</h3>
           
-          <div class="form-row" style="margin-bottom: 15px;">
+          <div class="form-row" style="margin-bottom: 12px;">
             <input type="text" id="novoNomePastaCat" placeholder="Nova pasta (ex: Cultos, Ensaios)" style="flex: 1;">
             <button type="button" class="btn-primary" onclick="criarNovaPasta()">+ Criar Pasta</button>
           </div>
 
-          <div id="arvorePastasEListas" style="max-height: 480px; overflow-y: auto;">
+          <div id="arvorePastasEListas" style="max-height: 420px; overflow-y: auto;">
             <!-- Renderizado via script.js -->
           </div>
         </div>
@@ -205,8 +217,6 @@
     <!-- ========================================== -->
     <section id="tabCalendario" class="tab-content" style="display: none;">
       <div class="grid-2">
-        
-        <!-- CARD: AGENDAR EVENTO -->
         <div class="card glass-card">
           <h3 class="card-title"><i data-lucide="plus-circle"></i> Novo Evento / Escala</h3>
           
@@ -262,9 +272,8 @@
           </button>
         </div>
 
-        <!-- CARD: VISUALIZAÇÃO DO CALENDÁRIO GLASS -->
         <div class="card glass-card">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
             <button type="button" class="btn-secondary" onclick="mudarMesCalendario(-1)">◀ Anterior</button>
             <h3 id="calTituloMes" style="margin: 0; border: none;">---</h3>
             <button type="button" class="btn-secondary" onclick="mudarMesCalendario(1)">Próximo ▶</button>
@@ -278,10 +287,9 @@
             <!-- Renderizado via script.js -->
           </div>
 
-          <h4 style="margin-top: 20px; font-size: 0.9rem; color: var(--text-muted);">Próximos Eventos:</h4>
-          <div id="listaEventosProximos" style="margin-top: 8px;"></div>
+          <h4 style="margin-top: 15px; font-size: 0.85rem; color: var(--text-muted);">Próximos Eventos:</h4>
+          <div id="listaEventosProximos" style="margin-top: 6px;"></div>
         </div>
-
       </div>
     </section>
 
@@ -290,8 +298,6 @@
     <!-- ========================================== -->
     <section id="tabMembros" class="tab-content" style="display: none;">
       <div class="grid-2">
-        
-        <!-- FORMULÁRIO DE CADASTRO DE MEMBRO -->
         <div class="card glass-card">
           <h3 class="card-title"><i data-lucide="user-plus"></i> Novo Membro</h3>
           
@@ -330,10 +336,10 @@
 
           <div class="form-group">
             <label>Ministérios / Departamentos</label>
-            <div id="boxCheckMinisterios" style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 5px;"></div>
+            <div id="boxCheckMinisterios" style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px;"></div>
           </div>
 
-          <div style="display: flex; gap: 10px; margin-top: 15px;">
+          <div style="display: flex; gap: 10px; margin-top: 12px;">
             <button type="button" class="btn-primary" style="flex: 1;" onclick="salvarMembro()">Cadastrar Membro</button>
             <button type="button" class="btn-secondary" onclick="abrirModalImportacaoMassa()">
               <i data-lucide="file-spreadsheet"></i> Importar CSV
@@ -341,25 +347,22 @@
           </div>
         </div>
 
-        <!-- GERENCIADOR DE MINISTÉRIOS -->
         <div class="card glass-card">
           <h3 class="card-title"><i data-lucide="tag"></i> Ministérios Cadastrados</h3>
           
-          <div class="form-row" style="margin-bottom: 15px;">
+          <div class="form-row" style="margin-bottom: 12px;">
             <input type="text" id="novoMinNome" placeholder="Novo Ministério (ex: Teatro)" style="flex: 1;">
             <button type="button" class="btn-primary" onclick="criarMinisterio()">+ Criar</button>
           </div>
 
           <div id="listaMinisteriosCadastrados"></div>
         </div>
-
       </div>
 
-      <!-- TABELA DE CORPO DE MEMBROS -->
-      <div class="card glass-card" style="margin-top: 20px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 15px;">
+      <div class="card glass-card" style="margin-top: 16px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 12px;">
           <h3 class="card-title" style="margin: 0; border: none;"><i data-lucide="users"></i> Quadro Geral de Membros</h3>
-          <input type="text" id="buscaMembrosLista" placeholder="Buscar membros..." style="max-width: 300px;" onkeyup="renderListaMembros()">
+          <input type="text" id="buscaMembrosLista" placeholder="Buscar membros..." style="max-width: 280px;" onkeyup="renderListaMembros()">
         </div>
 
         <div class="table-responsive">
@@ -381,39 +384,27 @@
       </div>
     </section>
 
-    <!-- ========================================== -->
-    <!-- ABA 4: TUTORIAL                           -->
-    <!-- ========================================== -->
+    <!-- ABA TUTORIAL -->
     <section id="tabTutorial" class="tab-content" style="display: none;">
       <div class="card glass-card">
         <h3 class="card-title"><i data-lucide="book-open"></i> Guias e Instruções do Sistema</h3>
-        
         <div style="line-height: 1.6;">
           <h4>1. Como Fazer Chamadas de Presença</h4>
           <p style="color: var(--text-muted); margin-bottom: 15px;">
-            Aceda à aba "Listas & Chamada", escolha a pasta de destino, selecione o evento relacionado (se houver), informe o título da reunião e defina o status de cada membro. Membros com 4 ou mais faltas acumuladas serão automaticamente destacados em vermelho.
+            Aceda à aba "Listas & Chamada", escolha a pasta de destino, selecione o evento relacionado (se houver), informe o título da reunião e defina o status de cada membro. Membros com 4 ou mais faltas acumuladas serão automaticamente destacados.
           </p>
-
           <h4>2. Eventos e Interligação com o Calendário</h4>
           <p style="color: var(--text-muted); margin-bottom: 15px;">
-            Ao agendar um evento no Calendário com data, horário, local e descrição, poderá vinculá-lo diretamente à chamada. Clicar no evento no calendário mostrará os detalhes e permitirá editar o evento ou aceder à lista salva.
-          </p>
-
-          <h4>3. Importar Membros em Massa</h4>
-          <p style="color: var(--text-muted); margin-bottom: 15px;">
-            Na aba "Membros & Ministérios", clique em "Importar CSV". Copie e cole os dados da sua planilha Excel/Google Sheets para cadastrar vários membros simultaneamente.
+            Ao agendar um evento no Calendário com data, horário, local e descrição, poderá vinculá-lo diretamente à chamada. Clicar no evento no calendário mostrará os detalhes.
           </p>
         </div>
       </div>
     </section>
 
-    <!-- ========================================== -->
-    <!-- ABA 5: PAINEL ADMINISTRATIVO              -->
-    <!-- ========================================== -->
+    <!-- ABA ADMIN -->
     <section id="tabAdmin" class="tab-content" style="display: none;">
       <div class="card glass-card">
         <h3 class="card-title"><i data-lucide="shield-check"></i> Gestão de Utilizadores & Permissões</h3>
-        
         <div class="table-responsive">
           <table>
             <thead>
@@ -435,14 +426,10 @@
 
   </div>
 
-  <!-- ========================================== -->
-  <!-- MODAIS AUXILIARES EM GLASS                -->
-  <!-- ========================================== -->
-
-  <!-- MODAL: FICHA DO MEMBRO E DETALHES DE EVENTO -->
+  <!-- MODAIS AUXILIARES -->
   <div id="fichaMembroModal" class="auth-overlay" style="display: none;">
-    <div class="auth-card glass-card" style="max-width: 520px;">
-      <div id="fichaConteudo" style="margin-bottom: 20px;"></div>
+    <div class="auth-card glass-card" style="max-width: 500px;">
+      <div id="fichaConteudo" style="margin-bottom: 15px;"></div>
       <div style="display: flex; gap: 10px;">
         <button type="button" class="btn-primary" style="flex: 1;" onclick="imprimirFicha()">Imprimir / Exportar</button>
         <button type="button" class="btn-secondary" onclick="fecharFichaMembro()">Fechar</button>
@@ -450,12 +437,11 @@
     </div>
   </div>
 
-  <!-- MODAL: IMPORTAÇÃO EM MASSA (CSV) -->
   <div id="importacaoMassaModal" class="auth-overlay" style="display: none;">
-    <div class="auth-card glass-card" style="max-width: 600px;">
-      <h3 style="margin-bottom: 12px; color: var(--accent-blue);"><i data-lucide="file-text"></i> Importação em Massa via CSV</h3>
-      <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">
-        Cole o conteúdo CSV ou envie um arquivo (.csv) contendo as colunas: <b>Nome, Apelido, Nascimento (AAAA-MM-DD), Telefone</b>.
+    <div class="auth-card glass-card" style="max-width: 580px;">
+      <h3 style="margin-bottom: 10px; color: var(--accent-blue);"><i data-lucide="file-text"></i> Importação em Massa via CSV</h3>
+      <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 10px;">
+        Cole o conteúdo CSV ou envie um arquivo (.csv) contendo as colunas: <b>Nome, Apelido, Nascimento, Telefone</b>.
       </p>
 
       <div class="form-group">
@@ -465,17 +451,16 @@
 
       <div class="form-group">
         <label for="textoCsvInput">Ou cole o texto aqui:</label>
-        <textarea id="textoCsvInput" rows="6" placeholder="João da Silva, João, 1995-05-12, (11) 99999-9999&#10;Maria Santos, Maria, 1998-08-20, (11) 88888-8888"></textarea>
+        <textarea id="textoCsvInput" rows="5" placeholder="João da Silva, João, 1995-05-12, (11) 99999-9999"></textarea>
       </div>
 
-      <div style="display: flex; gap: 10px; margin-top: 15px;">
+      <div style="display: flex; gap: 10px; margin-top: 12px;">
         <button type="button" class="btn-primary" style="flex: 1;" onclick="processarImportacaoEmMassa()">Importar Dados</button>
         <button type="button" class="btn-secondary" onclick="fecharModalImportacaoMassa()">Cancelar</button>
       </div>
     </div>
   </div>
 
-  <!-- Lógica da Aplicação -->
   <script src="script.js"></script>
 
 </body>
