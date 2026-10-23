@@ -706,7 +706,7 @@ function abrirRelatorioMensal() {
 }
 
 // ==========================================
-// IMPRESSÃO E RELATÓRIO PDF DIRETO
+// IMPRESSÃO E RELATÓRIO PDF ULTRA-ECONÔMICO
 // ==========================================
 function exportarListaParaPDF() {
   const pasta = document.getElementById('selPastaDestino')?.value || 'Geral';
@@ -758,38 +758,27 @@ function exportarListaParaPDF() {
 
   const pctPresente = totalMembros > 0 ? Math.round((contPresentes / totalMembros) * 100) : 0;
 
-  let col1 = '';
-  let col2 = '';
-  const metade = Math.ceil(membrosFormatados.length / 2);
+  // DIVISÃO EM 3 COLUNAS PARA ECONOMIA MÁXIMA DE FOLHAS
+  let col1 = '', col2 = '', col3 = '';
+  const terco = Math.ceil(membrosFormatados.length / 3);
 
-  membrosFormatados.slice(0, metade).forEach((m, idx) => {
-    col1 += `
-      <tr>
-        <td style="width:25px; text-align:right; color:#666; font-size:10px;">${idx + 1}.</td>
-        <td style="padding: 2px 4px;">
-          <b>${m.nome}</b> <span style="font-size:9px; color:#555;">${m.info ? `(${m.info})` : ''}</span>
-        </td>
-        <td style="width:30px; text-align:center; font-weight:bold; font-size:10px;">${m.status}</td>
-      </tr>
-    `;
-  });
+  const renderRow = (m, idx) => `
+    <tr>
+      <td style="width:18px; text-align:right; color:#888; font-size:9px;">${idx + 1}.</td>
+      <td style="padding: 1px 3px;">
+        <b>${m.nome}</b>
+      </td>
+      <td style="width:24px; text-align:center; font-weight:bold; font-size:9px;">${m.status}</td>
+    </tr>
+  `;
 
-  membrosFormatados.slice(metade).forEach((m, idx) => {
-    col2 += `
-      <tr>
-        <td style="width:25px; text-align:right; color:#666; font-size:10px;">${metade + idx + 1}.</td>
-        <td style="padding: 2px 4px;">
-          <b>${m.nome}</b> <span style="font-size:9px; color:#555;">${m.info ? `(${m.info})` : ''}</span>
-        </td>
-        <td style="width:30px; text-align:center; font-weight:bold; font-size:10px;">${m.status}</td>
-      </tr>
-    `;
-  });
+  membrosFormatados.slice(0, terco).forEach((m, idx) => { col1 += renderRow(m, idx); });
+  membrosFormatados.slice(terco, terco * 2).forEach((m, idx) => { col2 += renderRow(m, terco + idx); });
+  membrosFormatados.slice(terco * 2).forEach((m, idx) => { col3 += renderRow(m, terco * 2 + idx); });
 
   const janelaImpressao = window.open('', '_blank', 'width=900,height=700');
-  
   if (!janelaImpressao) {
-    alert('A janela de impressão foi bloqueada pelo navegador. Por favor, permita pop-ups para este site na barra de endereço.');
+    alert('A janela de impressão foi bloqueada pelo navegador. Permita pop-ups para este site.');
     return;
   }
 
@@ -800,34 +789,36 @@ function exportarListaParaPDF() {
       <meta charset="UTF-8">
       <title>Registro de Presença - ${titulo}</title>
       <style>
-        @page { size: A4 portrait; margin: 10mm; }
+        @page { size: A4 portrait; margin: 8mm; }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { 
-          font-family: Arial, sans-serif; 
+          font-family: 'Helvetica Neue', Arial, sans-serif; 
           background-color: #ffffff; 
-          color: #000000; 
-          padding: 10px;
-          font-size: 11px;
+          color: #111111; 
+          padding: 5px;
+          font-size: 10px;
         }
         .header {
-          border-bottom: 2px solid #000;
-          padding-bottom: 5px;
-          margin-bottom: 10px;
+          border-bottom: 2px solid #222;
+          padding-bottom: 4px;
+          margin-bottom: 8px;
           display: flex;
           justify-content: space-between;
           align-items: flex-end;
         }
-        .title { font-size: 16px; font-weight: bold; text-transform: uppercase; }
-        .subtitle { font-size: 12px; }
+        .title { font-size: 14px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; }
+        .subtitle { font-size: 11px; color: #444; }
         .summary-bar {
-          margin-bottom: 10px;
-          font-size: 10px;
-          border-bottom: 1px solid #ccc;
-          padding-bottom: 4px;
+          margin-bottom: 8px;
+          font-size: 9.5px;
+          background-color: #f8f9fa;
+          border: 1px solid #e9ecef;
+          padding: 4px 8px;
+          border-radius: 4px;
         }
         .columns-container {
           display: flex;
-          gap: 15px;
+          gap: 10px;
         }
         .column {
           flex: 1;
@@ -837,16 +828,16 @@ function exportarListaParaPDF() {
           border-collapse: collapse;
         }
         td {
-          border-bottom: 1px solid #eee;
-          height: 18px;
+          border-bottom: 1px solid #f0f0f0;
+          height: 16px;
           vertical-align: middle;
         }
         .footer {
-          margin-top: 15px;
-          border-top: 1px solid #000;
-          padding-top: 5px;
-          font-size: 9px;
-          text-align: justify;
+          margin-top: 10px;
+          border-top: 1px solid #ddd;
+          padding-top: 4px;
+          font-size: 8px;
+          color: #666;
           display: flex;
           justify-content: space-between;
         }
@@ -856,33 +847,26 @@ function exportarListaParaPDF() {
       <div class="header">
         <div>
           <div class="title">${titulo}</div>
-          <div class="subtitle">Pasta: ${pasta}</div>
+          <div class="subtitle">Pasta: <b>${pasta}</b></div>
         </div>
         <div style="text-align:right;">
-          <div><b>Data:</b> ${dataFormatada}</div>
-          <div>Impresso em: ${new Date().toLocaleDateString('pt-BR')}</div>
+          <div>Data: <b>${dataFormatada}</b></div>
+          <div style="font-size:8px; color:#666;">Gerado via App Imuit</div>
         </div>
       </div>
 
       <div class="summary-bar">
-        <b>Resumo:</b> Total Cadastrados: ${totalMembros} | Presentes: ${contPresentes} | Ausentes: ${contAusentes} | Justificados: ${contJustificados} | Frequência: ${pctPresente}%
+        <b>Resumo de Frequência:</b> Cadastrados: ${totalMembros} | Presentes: ${contPresentes} | Ausentes: ${contAusentes} | Justificados: ${contJustificados} | Assiduidade: <b>${pctPresente}%</b>
       </div>
 
       <div class="columns-container">
-        <div class="column">
-          <table>
-            <tbody>${col1}</tbody>
-          </table>
-        </div>
-        <div class="column">
-          <table>
-            <tbody>${col2}</tbody>
-          </table>
-        </div>
+        <div class="column"><table><tbody>${col1}</tbody></table></div>
+        <div class="column"><table><tbody>${col2}</tbody></table></div>
+        <div class="column"><table><tbody>${col3}</tbody></table></div>
       </div>
 
       <div class="footer">
-        <span>App Imuit - Documento Oficial de Registro de Frequência</span>
+        <span>Documento de Registro Interno de Presença</span>
         <span>Página 1</span>
       </div>
 
