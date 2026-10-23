@@ -1,443 +1,373 @@
-<!DOCTYPE html>
-<html lang="pt-BR" data-theme="dark">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>App Imuit - Gestão Integrada Neo-Glass</title>
-  
-  <!-- Estilos Globais Neo-Apple Glassmorphism -->
-  <link rel="stylesheet" href="styles.css">
-  
-  <!-- Lucide Icons -->
-  <script src="https://unpkg.com/lucide@latest"></script>
-  
-  <!-- Firebase SDKs (Compat layer) -->
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-</head>
-<body>
+/* ==========================================
+   SISTEMA DE DESIGN: NEO-APPLE GLASSMORPHISM 3D (COMPACT & CENTERED)
+   ========================================== */
 
-  <!-- ELEMENTOS DE ILUMINAÇÃO DE FUNDO (ORBES MESH GRADIENT) -->
-  <div class="mesh-glow mesh-1"></div>
-  <div class="mesh-glow mesh-2"></div>
-  <div class="mesh-glow mesh-3"></div>
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
-  <!-- ========================================== -->
-  <!-- MODAL DE AUTENTICAÇÃO (LOGIN / REGISTRO)  -->
-  <!-- ========================================== -->
-  <div id="authModal" class="auth-overlay" style="display: flex;">
-    <div class="auth-card glass-card">
-      
-      <!-- LOGO E TÍTULO CENTRALIZADOS -->
-      <div class="auth-header-center">
-        <div class="logo-img-wrapper glass-icon-3d logo-auth-center">
-          <img src="logo.png" alt="Logo App Imuit" onerror="this.style.display='none'; document.getElementById('fallbackAuthIcon').style.display='inline-block';">
-          <i id="fallbackAuthIcon" data-lucide="church" style="display: none; color: var(--accent-blue); width: 32px; height: 32px;"></i>
-        </div>
-        <h2 id="authTitle"><i data-lucide="lock"></i> Aceder ao App Imuit</h2>
-      </div>
-      
-      <div id="authNameGroup" class="form-group" style="display: none;">
-        <label for="authNome">Nome Completo</label>
-        <input type="text" id="authNome" placeholder="Digite seu nome completo">
-      </div>
+:root {
+  --bg-gradient: radial-gradient(circle at 10% 20%, #eef2f8 0%, #e6edfd 50%, #f7eff9 100%);
+  --glass-bg: rgba(255, 255, 255, 0.65);
+  --glass-bg-hover: rgba(255, 255, 255, 0.85);
+  --glass-border: rgba(255, 255, 255, 0.85);
+  --glass-border-subtle: rgba(255, 255, 255, 0.45);
 
-      <div class="form-group">
-        <label for="authEmail">E-mail</label>
-        <input type="email" id="authEmail" placeholder="seuemail@exemplo.com">
-      </div>
+  --glass-shadow: 0 15px 35px rgba(31, 38, 135, 0.08), inset 0 1px 2px rgba(255, 255, 255, 0.95);
+  --glass-shadow-hover: 0 20px 45px rgba(99, 102, 241, 0.18), inset 0 1px 3px rgba(255, 255, 255, 1);
 
-      <div class="form-group">
-        <label for="authPassword">Palavra-passe / Senha</label>
-        <input type="password" id="authPassword" placeholder="••••••••">
-      </div>
+  --grad-primary: linear-gradient(135deg, #4f46e5 0%, #6366f1 50%, #8b5cf6 100%);
+  --grad-blue: linear-gradient(135deg, #38bdf8 0%, #3b82f6 100%);
+  --grad-pink: linear-gradient(135deg, #f43f5e 0%, #ec4899 100%);
 
-      <button type="button" id="btnAuthSubmit" class="btn-primary" style="width: 100%; margin-top: 10px;">
-        <i data-lucide="log-in"></i> Iniciar Sessão
-      </button>
+  --accent-blue: #38bdf8;
+  --accent-green: #10b981;
+  --accent-red: #f43f5e;
+  --accent-yellow: #f59e0b;
 
-      <!-- BOTÃO ALTERNAR MODO CENTRALIZADO -->
-      <div style="text-align: center; margin-top: 15px; width: 100%;">
-        <button type="button" id="authToggleBtn" class="auth-toggle-btn">
-          Não tem conta? Solicitar Acesso
-        </button>
-      </div>
+  --text-main: #0f172a;
+  --text-heading: #020617;
+  --text-muted: #64748b;
 
-    </div>
-  </div>
+  --radius-xl: 20px;
+  --radius-lg: 14px;
+  --radius-md: 10px;
+  --radius-pill: 999px;
 
-  <!-- MODAL DE AGUARDANDO APROVAÇÃO -->
-  <div id="pendingApprovalModal" class="auth-overlay" style="display: none;">
-    <div class="auth-card glass-card" style="text-align: center;">
-      <i data-lucide="clock" style="width: 48px; height: 48px; color: var(--accent-yellow); margin-bottom: 15px;"></i>
-      <h2>Acesso Pendente</h2>
-      <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">
-        A sua conta foi registrada com sucesso, mas necessita da aprovação de um Administrador para aceder ao sistema.
-      </p>
-      <button type="button" class="btn-secondary" onclick="terminarSessao()">
-        <i data-lucide="log-out"></i> Voltar ao Login
-      </button>
-    </div>
-  </div>
+  --transition-spring: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  --transition-smooth: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
 
-  <!-- ========================================== -->
-  <!-- CONTEÚDO PRINCIPAL DA APLICAÇÃO           -->
-  <!-- ========================================== -->
-  <div id="appMainContent" class="container" style="display: none;">
-    
-    <!-- CABEÇALHO DA APLICAÇÃO -->
-    <header class="app-header glass-card">
-      <div class="brand">
-        <div class="logo-img-wrapper glass-icon-3d">
-          <img src="logo.png" alt="Logo App Imuit" onerror="this.style.display='none'; document.getElementById('fallbackLogoIcon').style.display='inline-block';">
-          <i id="fallbackLogoIcon" data-lucide="church" style="display: none; color: var(--accent-blue); width: 26px; height: 26px;"></i>
-        </div>
-        <div>
-          <h1>App Imuit</h1>
-          <span id="userRoleBadge" class="tag tag-blue" style="font-size: 0.7rem;">Perfil: ---</span>
-        </div>
-      </div>
+[data-theme="dark"] {
+  --bg-gradient: radial-gradient(circle at 15% 15%, #0f172a 0%, #1e1b4b 50%, #090d16 100%);
+  --glass-bg: rgba(15, 23, 42, 0.68);
+  --glass-bg-hover: rgba(30, 41, 59, 0.82);
+  --glass-border: rgba(255, 255, 255, 0.18);
+  --glass-border-subtle: rgba(255, 255, 255, 0.08);
 
-      <div class="header-controls">
-        <div id="status" class="status-badge status-offline">
-          <i data-lucide="wifi-off" style="width: 14px;"></i> Desconectado
-        </div>
-        <button type="button" id="btnTema" class="btn-secondary" onclick="alternarTema()">🌙 Modo Escuro</button>
-        <button type="button" class="btn-danger" onclick="terminarSessao()"><i data-lucide="log-out"></i> Sair</button>
-      </div>
-    </header>
+  --glass-shadow: 0 15px 35px rgba(0, 0, 0, 0.45), inset 0 1px 1px rgba(255, 255, 255, 0.2);
+  --glass-shadow-hover: 0 20px 45px rgba(99, 102, 241, 0.3), inset 0 1px 2px rgba(255, 255, 255, 0.3);
 
-    <!-- NAVEGAÇÃO DE ABAS FLUTUANTES -->
-    <nav class="tabs-nav glass-card">
-      <button type="button" class="tab-btn active" onclick="irParaJanela('tabChamada')">
-        <i data-lucide="check-square"></i> Listas & Chamada
-      </button>
-      <button type="button" class="tab-btn" onclick="irParaJanela('tabCalendario')">
-        <i data-lucide="calendar"></i> Calendário
-      </button>
-      <button type="button" class="tab-btn" onclick="irParaJanela('tabMembros')">
-        <i data-lucide="users"></i> Membros & Ministérios
-      </button>
-      <button type="button" class="tab-btn" onclick="irParaJanela('tabTutorial')">
-        <i data-lucide="help-circle"></i> Tutorial
-      </button>
-      <button type="button" id="tabBtnAdmin" class="tab-btn" style="display: none;" onclick="irParaJanela('tabAdmin')">
-        <i data-lucide="shield"></i> Painel Admin
-      </button>
-    </nav>
+  --text-main: #f8fafc;
+  --text-heading: #ffffff;
+  --text-muted: #94a3b8;
+}
 
-    <!-- ABA 1: LISTAS & CHAMADA -->
-    <section id="tabChamada" class="tab-content" style="display: block;">
-      <div class="grid-2">
-        <div class="card glass-card">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid var(--glass-border-subtle); padding-bottom: 8px;">
-            <h3 class="card-title" style="margin: 0; border: none;"><i data-lucide="edit-3"></i> Registrar Chamada / Lista</h3>
-            <button type="button" class="btn-secondary" style="font-size: 0.8rem; padding: 5px 10px;" onclick="abrirRelatorioMensal()">
-              📊 Relatório Mensal
-            </button>
-          </div>
-          
-          <div class="form-row">
-            <div class="form-group" style="flex: 1;">
-              <label for="selPastaDestino">Pasta de Destino</label>
-              <select id="selPastaDestino"></select>
-            </div>
-            <div class="form-group" style="flex: 1;">
-              <label for="selEventoVinculado">Evento Vinculado</label>
-              <select id="selEventoVinculado">
-                <option value="">Nenhum (Lista Avulsa)</option>
-              </select>
-            </div>
-            <div class="form-group" style="flex: 1;">
-              <label for="listaData">Data da Chamada</label>
-              <input type="date" id="listaData">
-            </div>
-          </div>
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+}
 
-          <div class="form-group">
-            <label for="listaTitulo">Título da Lista / Evento</label>
-            <input type="text" id="listaTitulo" placeholder="Ex: Culto de Domingo, Ensaio Louvor...">
-          </div>
+body {
+  background: var(--bg-gradient);
+  background-attachment: fixed;
+  color: var(--text-main);
+  padding: 16px;
+  overflow-x: hidden;
+  width: 100%;
+  min-height: 100vh;
+}
 
-          <div class="form-row" style="margin-bottom: 8px;">
-            <div class="form-group" style="flex: 2;">
-              <label for="buscaMembroChamada">Filtrar Membros</label>
-              <input type="text" id="buscaMembroChamada" placeholder="Buscar por nome..." onkeyup="atualizarBuscaChamada()">
-            </div>
-            <div class="form-group" style="flex: 1;">
-              <label for="selOrdenacaoChamada">Ordem</label>
-              <select id="selOrdenacaoChamada" onchange="alterarOrdenacaoChamada(this.value)">
-                <option value="PENDENTES_FIM" selected>⏳ Pendentes no Fim</option>
-                <option value="NOME_ASC">🔤 Nome (A-Z)</option>
-                <option value="NOME_DESC">🔤 Nome (Z-A)</option>
-              </select>
-            </div>
-          </div>
+/* ILUMINAÇÃO MESH GRADIENT */
+.mesh-glow {
+  position: fixed;
+  border-radius: 50%;
+  filter: blur(90px);
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.45;
+}
 
-          <div id="boxFiltrosMinisteriosChamada" style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px;"></div>
+.mesh-1 { top: -10%; left: -5%; width: 400px; height: 400px; background: radial-gradient(circle, rgba(99, 102, 241, 0.4) 0%, transparent 70%); }
+.mesh-2 { bottom: -10%; right: -5%; width: 450px; height: 450px; background: radial-gradient(circle, rgba(56, 189, 248, 0.35) 0%, transparent 70%); }
+.mesh-3 { top: 40%; right: 30%; width: 300px; height: 300px; background: radial-gradient(circle, rgba(244, 63, 94, 0.25) 0%, transparent 70%); }
 
-          <div id="boxMembrosChamada" style="max-height: 280px; overflow-y: auto; padding: 4px;"></div>
+.container {
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+}
 
-          <div style="display: flex; gap: 10px; margin-top: 12px;">
-            <button type="button" class="btn-primary" style="flex: 1;" onclick="salvarListaNaPasta()">
-              <i data-lucide="save"></i> Salvar Lista
-            </button>
-            <button type="button" class="btn-secondary" onclick="exportarListaParaPDF()">
-              <i data-lucide="printer"></i> Exportar PDF
-            </button>
-          </div>
-        </div>
+/* GRID RESPONSIVO LADO A LADO */
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
 
-        <div class="card glass-card">
-          <h3 class="card-title"><i data-lucide="folder"></i> Gerenciar Pastas & Histórico</h3>
-          <div class="form-row" style="margin-bottom: 12px;">
-            <input type="text" id="novoNomePastaCat" placeholder="Nova pasta (ex: Cultos, Ensaios)" style="flex: 1;">
-            <button type="button" class="btn-primary" onclick="criarNovaPasta()">+ Criar Pasta</button>
-          </div>
-          <div id="arvorePastasEListas" style="max-height: 420px; overflow-y: auto;"></div>
-        </div>
-      </div>
-    </section>
+@media (max-width: 900px) {
+  .grid-2 {
+    grid-template-columns: 1fr;
+  }
+}
 
-    <!-- ABA 2: CALENDÁRIO & EVENTOS -->
-    <section id="tabCalendario" class="tab-content" style="display: none;">
-      <div class="grid-2">
-        <div class="card glass-card">
-          <h3 class="card-title"><i data-lucide="plus-circle"></i> Novo Evento / Escala</h3>
-          
-          <div class="form-group">
-            <label for="evtTitulo">Título do Evento *</label>
-            <input type="text" id="evtTitulo" placeholder="Ex: Ensaio Geral, Reunião de Líderes">
-          </div>
+/* CARTÕES GLASSMORPHISM */
+.glass-card, .card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  border-radius: var(--radius-xl);
+  padding: 18px;
+  margin-bottom: 16px;
+  transition: var(--transition-spring);
+}
 
-          <div class="form-row">
-            <div class="form-group" style="flex: 1;">
-              <label for="evtData">Data Inicial *</label>
-              <input type="date" id="evtData">
-            </div>
-            <div class="form-group" style="flex: 1;">
-              <label for="evtDataFim">Data Término</label>
-              <input type="date" id="evtDataFim">
-            </div>
-          </div>
+.glass-card:hover, .card:hover {
+  background: var(--glass-bg-hover);
+  box-shadow: var(--glass-shadow-hover);
+}
 
-          <div class="form-row">
-            <div class="form-group" style="flex: 1;">
-              <label for="evtHora">Hora Início</label>
-              <input type="time" id="evtHora" value="19:30">
-            </div>
-            <div class="form-group" style="flex: 1;">
-              <label for="evtHoraFim">Hora Fim</label>
-              <input type="time" id="evtHoraFim" value="21:00">
-            </div>
-          </div>
+/* CABEÇALHO COMPACTO */
+.app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 20px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
 
-          <div class="form-row">
-            <div class="form-group" style="flex: 1;">
-              <label for="evtLocal">Local do Evento</label>
-              <input type="text" id="evtLocal" placeholder="Ex: Templo Principal, Sala 2">
-            </div>
-            <div class="form-group" style="flex: 1;">
-              <label for="evtRecorrencia">Recorrência</label>
-              <select id="evtRecorrencia">
-                <option value="UNICO">Evento Único</option>
-                <option value="SEMANAL">Semanalmente</option>
-                <option value="MENSAL">Mensalmente</option>
-              </select>
-            </div>
-          </div>
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
 
-          <div class="form-group">
-            <label for="evtDescricao">Descrição / Observações</label>
-            <textarea id="evtDescricao" rows="2" placeholder="Detalhes do evento, pregador, pauta..."></textarea>
-          </div>
+.glass-icon-3d {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0.2) 100%);
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
 
-          <button type="button" class="btn-primary" style="width: 100%; margin-top: 10px;" onclick="salvarEvento()">
-            <i data-lucide="calendar-plus"></i> Confirmar Evento
-          </button>
-        </div>
+h1 {
+  font-size: 1.35rem;
+  font-weight: 800;
+  background: var(--grad-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
 
-        <div class="card glass-card">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-            <button type="button" class="btn-secondary" onclick="mudarMesCalendario(-1)">◀ Anterior</button>
-            <h3 id="calTituloMes" style="margin: 0; border: none;">---</h3>
-            <button type="button" class="btn-secondary" onclick="mudarMesCalendario(1)">Próximo ▶</button>
-          </div>
+/* NAVEGAÇÃO DE ABAS */
+.tabs-nav {
+  display: flex;
+  gap: 8px;
+  padding: 6px;
+  border-radius: var(--radius-pill);
+  margin-bottom: 18px;
+  overflow-x: auto;
+}
 
-          <div class="cal-days-header">
-            <div>DOM</div><div>SEG</div><div>TER</div><div>QUA</div><div>QUI</div><div>SEX</div><div>SÁB</div>
-          </div>
+.tab-btn {
+  padding: 10px 18px;
+  border-radius: var(--radius-pill);
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: var(--transition-spring);
+  white-space: nowrap;
+}
 
-          <div id="gridCalendarioDias" class="cal-grid"></div>
+.tab-btn:hover {
+  color: var(--text-heading);
+  background: rgba(255, 255, 255, 0.35);
+}
 
-          <h4 style="margin-top: 15px; font-size: 0.85rem; color: var(--text-muted);">Próximos Eventos:</h4>
-          <div id="listaEventosProximos" style="margin-top: 6px;"></div>
-        </div>
-      </div>
-    </section>
+.tab-btn.active {
+  background: var(--grad-primary);
+  color: #ffffff;
+  box-shadow: 0 6px 18px rgba(99, 102, 241, 0.35);
+}
 
-    <!-- ABA 3: MEMBROS & MINISTÉRIOS -->
-    <section id="tabMembros" class="tab-content" style="display: none;">
-      <div class="grid-2">
-        <div class="card glass-card">
-          <h3 class="card-title"><i data-lucide="user-plus"></i> Novo Membro</h3>
-          
-          <div class="form-row">
-            <div class="form-group" style="flex: 2;">
-              <label for="memNome">Nome Completo *</label>
-              <input type="text" id="memNome" placeholder="Ex: João da Silva">
-            </div>
-            <div class="form-group" style="flex: 1;">
-              <label for="memApelido">Apelido</label>
-              <input type="text" id="memApelido" placeholder="Ex: Joãozinho">
-            </div>
-          </div>
+/* FORMULÁRIOS & INPUTS COMPACTOS */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 10px;
+  width: 100%;
+}
 
-          <div class="form-row">
-            <div class="form-group" style="flex: 1;">
-              <label for="memNasc">Data Nascimento</label>
-              <input type="date" id="memNasc">
-            </div>
-            <div class="form-group" style="flex: 1;">
-              <label for="memFone">Telefone / WhatsApp</label>
-              <input type="text" id="memFone" placeholder="(00) 00000-0000" oninput="mascaraTelefone(this)">
-            </div>
-          </div>
+.form-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  width: 100%;
+}
 
-          <div class="form-row">
-            <div class="form-group" style="flex: 1;">
-              <label for="memResponsavelNome">Nome do Responsável</label>
-              <input type="text" id="memResponsavelNome" placeholder="Para menores">
-            </div>
-            <div class="form-group" style="flex: 1;">
-              <label for="memResponsavelFone">Fone Responsável</label>
-              <input type="text" id="memResponsavelFone" placeholder="(00) 00000-0000" oninput="mascaraTelefone(this)">
-            </div>
-          </div>
+label {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-weight: 700;
+}
 
-          <div class="form-group">
-            <label>Ministérios / Departamentos</label>
-            <div id="boxCheckMinisterios" style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px;"></div>
-          </div>
+input, select, textarea {
+  padding: 9px 12px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--glass-border-subtle);
+  background: rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(10px);
+  color: var(--text-main);
+  font-size: 0.88rem;
+  font-weight: 600;
+  width: 100%;
+  outline: none;
+  transition: var(--transition-smooth);
+}
 
-          <div style="display: flex; gap: 10px; margin-top: 12px;">
-            <button type="button" class="btn-primary" style="flex: 1;" onclick="salvarMembro()">Cadastrar Membro</button>
-            <button type="button" class="btn-secondary" onclick="abrirModalImportacaoMassa()">
-              <i data-lucide="file-spreadsheet"></i> Importar CSV
-            </button>
-          </div>
-        </div>
+input:focus, select:focus, textarea:focus {
+  background: rgba(255, 255, 255, 0.85);
+  border-color: #6366f1;
+}
 
-        <div class="card glass-card">
-          <h3 class="card-title"><i data-lucide="tag"></i> Ministérios Cadastrados</h3>
-          <div class="form-row" style="margin-bottom: 12px;">
-            <input type="text" id="novoMinNome" placeholder="Novo Ministério (ex: Teatro)" style="flex: 1;">
-            <button type="button" class="btn-primary" onclick="criarMinisterio()">+ Criar</button>
-          </div>
-          <div id="listaMinisteriosCadastrados"></div>
-        </div>
-      </div>
+button, .btn-primary {
+  padding: 9px 18px;
+  border-radius: var(--radius-pill);
+  background: var(--grad-primary);
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.88rem;
+  cursor: pointer;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: var(--transition-spring);
+}
 
-      <div class="card glass-card" style="margin-top: 16px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 12px;">
-          <h3 class="card-title" style="margin: 0; border: none;"><i data-lucide="users"></i> Quadro Geral de Membros</h3>
-          <input type="text" id="buscaMembrosLista" placeholder="Buscar membros..." style="max-width: 280px;" onkeyup="renderListaMembros()">
-        </div>
+button:hover, .btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(99, 102, 241, 0.35);
+}
 
-        <div class="table-responsive">
-          <table>
-            <thead>
-              <tr>
-                <th>Nome / Apelido</th>
-                <th>Idade</th>
-                <th>Telefone</th>
-                <th>Ministérios</th>
-                <th>Ações</th>
-              </tr>
-            </thead>
-            <tbody id="tbMembrosCorpo"></tbody>
-          </table>
-        </div>
-      </div>
-    </section>
+button.btn-danger { background: var(--grad-pink); }
+button.btn-secondary {
+  background: rgba(255, 255, 255, 0.4);
+  color: var(--text-main);
+  border: 1px solid var(--glass-border);
+}
 
-    <!-- ABA TUTORIAL -->
-    <section id="tabTutorial" class="tab-content" style="display: none;">
-      <div class="card glass-card">
-        <h3 class="card-title"><i data-lucide="book-open"></i> Guias e Instruções do Sistema</h3>
-        <div style="line-height: 1.6;">
-          <h4>1. Como Fazer Chamadas de Presença</h4>
-          <p style="color: var(--text-muted); margin-bottom: 15px;">
-            Aceda à aba "Listas & Chamada", escolha a pasta de destino, selecione o evento relacionado (se houver), informe o título da reunião e defina o status de cada membro. Membros com 4 ou mais faltas acumuladas serão automaticamente destacados.
-          </p>
-          <h4>2. Eventos e Interligação com o Calendário</h4>
-          <p style="color: var(--text-muted); margin-bottom: 15px;">
-            Ao agendar um evento no Calendário com data, horário, local e descrição, poderá vinculá-lo diretamente à chamada. Clicar no evento no calendário mostrará os detalhes.
-          </p>
-        </div>
-      </div>
-    </section>
+/* ITEM DA LISTA DE CHAMADA COMPACTO */
+.member-item-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  border-radius: var(--radius-md);
+  margin-bottom: 6px;
+  background: rgba(255, 255, 255, 0.3);
+  border: 1px solid var(--glass-border-subtle);
+  gap: 8px;
+}
 
-    <!-- ABA ADMIN -->
-    <section id="tabAdmin" class="tab-content" style="display: none;">
-      <div class="card glass-card">
-        <h3 class="card-title"><i data-lucide="shield-check"></i> Gestão de Utilizadores & Permissões</h3>
-        <div class="table-responsive">
-          <table>
-            <thead>
-              <tr>
-                <th>Nome</th>
-                <th>E-mail</th>
-                <th>Status</th>
-                <th>Nível de Acesso</th>
-                <th>Ações</th>
-              </tr>
-            </thead>
-            <tbody id="tbPerfisUsuarios"></tbody>
-          </table>
-        </div>
-      </div>
-    </section>
+/* AUTENTICAÇÃO CENTRALIZADA (100% CORRIGIDA & ALINHADA AO CENTRO) */
+.auth-overlay {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100vw; height: 100vh;
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(20px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
 
-  </div>
+.auth-card {
+  width: 100%;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
 
-  <!-- MODAIS AUXILIARES -->
-  <div id="fichaMembroModal" class="auth-overlay" style="display: none;">
-    <div class="auth-card glass-card" style="max-width: 500px;">
-      <div id="fichaConteudo" style="margin-bottom: 15px;"></div>
-      <div style="display: flex; gap: 10px;">
-        <button type="button" class="btn-primary" style="flex: 1;" onclick="imprimirFicha()">Imprimir / Exportar</button>
-        <button type="button" class="btn-secondary" onclick="fecharFichaMembro()">Fechar</button>
-      </div>
-    </div>
-  </div>
+.auth-header-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  width: 100%;
+  margin-bottom: 18px;
+}
 
-  <div id="importacaoMassaModal" class="auth-overlay" style="display: none;">
-    <div class="auth-card glass-card" style="max-width: 580px;">
-      <h3 style="margin-bottom: 10px; color: var(--accent-blue);"><i data-lucide="file-text"></i> Importação em Massa via CSV</h3>
-      <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 10px;">
-        Cole o conteúdo CSV ou envie um arquivo (.csv) contendo as colunas: <b>Nome, Apelido, Nascimento, Telefone</b>.
-      </p>
+.logo-auth-center {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 12px auto;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  overflow: hidden;
+}
 
-      <div class="form-group">
-        <label for="arquivoCsvInput">Selecione o arquivo CSV</label>
-        <input type="file" id="arquivoCsvInput" accept=".csv, .txt" onchange="lerArquivoCsv(this)">
-      </div>
+.logo-auth-center img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  display: block;
+  margin: 0 auto;
+}
 
-      <div class="form-group">
-        <label for="textoCsvInput">Ou cole o texto aqui:</label>
-        <textarea id="textoCsvInput" rows="5" placeholder="João da Silva, João, 1995-05-12, (11) 99999-9999"></textarea>
-      </div>
+.auth-toggle-btn {
+  background: transparent;
+  border: none;
+  color: var(--accent-blue);
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: underline;
+  box-shadow: none !important;
+  margin: 0 auto;
+  display: inline-block;
+}
 
-      <div style="display: flex; gap: 10px; margin-top: 12px;">
-        <button type="button" class="btn-primary" style="flex: 1;" onclick="processarImportacaoEmMassa()">Importar Dados</button>
-        <button type="button" class="btn-secondary" onclick="fecharModalImportacaoMassa()">Cancelar</button>
-      </div>
-    </div>
-  </div>
+.auth-toggle-btn:hover {
+  color: #6366f1;
+  background: transparent !important;
+  transform: none !important;
+}
 
-  <script src="script.js"></script>
+/* CALENDÁRIO COMPACTO */
+.cal-days-header {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  text-align: center;
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: var(--text-muted);
+}
 
-</body>
-</html>
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.cal-day-cell {
+  min-height: 58px;
+  background: rgba(255, 255, 255, 0.3);
+  border: 1px solid var(--glass-border-subtle);
+  border-radius: var(--radius-md);
+  padding: 4px;
+  font-size: 0.75rem;
+}
