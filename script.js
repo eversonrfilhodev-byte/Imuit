@@ -758,7 +758,6 @@ function exportarListaParaPDF() {
 
   const pctPresente = totalMembros > 0 ? Math.round((contPresentes / totalMembros) * 100) : 0;
 
-  // DIVISÃO EM 3 COLUNAS PARA ECONOMIA MÁXIMA DE FOLHAS
   let col1 = '', col2 = '', col3 = '';
   const terco = Math.ceil(membrosFormatados.length / 3);
 
