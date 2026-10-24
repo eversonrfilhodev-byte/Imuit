@@ -44,6 +44,7 @@ let currentYear = new Date().getFullYear();
 let isRegisterMode = false;
 let isFirebaseListening = false;
 let editingChamadaId = null;
+let ministerioFiltroAtivo = null; // Filtro ativo para chamada
 
 const TAB_IDS = ['tabChamada', 'tabCalendario', 'tabMembros', 'tabTutorial', 'tabAdmin'];
 
@@ -351,8 +352,9 @@ function alternarTema() {
 
   const btn = document.getElementById('btnTema');
   if (btn) {
-    btn.textContent = novoTema === 'dark' ? '🌙 Modo Escuro' : '☀ Modo Claro';
+    btn.innerHTML = novoTema === 'dark' ? '<span class="glass-icon-mini"><i data-lucide="moon" style="width:14px;height:14px;"></i></span> Tema' : '<span class="glass-icon-mini"><i data-lucide="sun" style="width:14px;height:14px;"></i></span> Tema';
   }
+  if (window.lucide) lucide.createIcons();
 }
 
 function mascaraTelefone(input) {
@@ -434,6 +436,7 @@ function calcularFaltasTotaisPorMembro(memberId) {
   return totalFaltas;
 }
 
+// RENDERIZAR CHAMADA COM SUPORTE A FILTRO DE MINISTÉRIOS E BOLHAS DE VIDRO
 function renderAttendanceListEditor() {
   const container = document.getElementById('boxMembrosChamada');
   const buscaInput = document.getElementById('buscaMembroChamada');
@@ -452,10 +455,12 @@ function renderAttendanceListEditor() {
     }
   });
 
+  // FILTRAGEM POR NOME E POR MINISTÉRIO SELECIONADO
   let membrosFiltrados = state.membros.filter(m => {
     const matchNome = (m.nome || '').toLowerCase().includes(termo);
     const matchApelido = (m.apelido || '').toLowerCase().includes(termo);
-    return matchNome || matchApelido;
+    const matchMin = !ministerioFiltroAtivo || (m.ministerios && m.ministerios.includes(ministerioFiltroAtivo));
+    return (matchNome || matchApelido) && matchMin;
   });
 
   membrosFiltrados.forEach(m => {
@@ -481,7 +486,7 @@ function renderAttendanceListEditor() {
   });
 
   if (!membrosFiltrados.length) {
-    container.innerHTML = '<p style="color:var(--text-muted); padding:10px;">Nenhum membro encontrado.</p>';
+    container.innerHTML = '<p style="color:var(--text-muted); padding:10px; text-align:center;">Nenhum membro encontrado.</p>';
     return;
   }
 
@@ -493,13 +498,13 @@ function renderAttendanceListEditor() {
     const avisoFaltas = temMuitasFaltas ? ` <span style="font-size:0.7rem; background:rgba(244,63,94,0.2); color:#f43f5e; padding:2px 6px; border-radius:4px; font-weight:bold;">⚠️ ${faltasAcumuladas} Faltas</span>` : '';
 
     return `
-      <div class="member-item-row" id="row_member_${m.id}">
+      <div class="member-glass-bubble" id="row_member_${m.id}">
         <div>
           <strong style="${corNomeEstilo}">${m.nome}</strong> ${m.apelido ? `(${m.apelido})` : ''} ${avisoFaltas}
-          <div style="font-size:0.75rem; color:var(--text-muted);">${(m.ministerios || []).join(', ')}</div>
+          <div style="font-size:0.72rem; color:var(--text-muted); font-weight: 500;">${(m.ministerios || []).join(', ')}</div>
         </div>
         <div>
-          <select class="sel-status-presenca" data-id="${m.id}" onchange="aoMudarStatusPresenca()" style="padding:6px 10px; border-radius:6px; background:var(--bg-dark); color:var(--text-main); border:1px solid var(--border-color);">
+          <select class="sel-status-presenca" data-id="${m.id}" onchange="aoMudarStatusPresenca()" style="padding:4px 8px; border-radius:6px; background:rgba(255,255,255,0.2); color:var(--text-main); border:1px solid var(--glass-border-subtle); outline:none;">
             <option value="PENDENTE" ${statusAtual === 'PENDENTE' ? 'selected' : ''}>⏳ Pendente</option>
             <option value="PRESENTE" ${statusAtual === 'PRESENTE' ? 'selected' : ''}>✅ Presente</option>
             <option value="AUSENTE" ${statusAtual === 'AUSENTE' ? 'selected' : ''}>❌ Ausente</option>
@@ -624,19 +629,21 @@ function renderPastasEListasTree() {
   state.pastas.forEach(pasta => {
     const listasDaPasta = (state.chamadas || []).filter(c => c.pasta === pasta);
     html += `
-      <div class="folder-box glass-card" style="margin-bottom:15px; padding:16px;">
-        <h4 style="margin-bottom:8px;">📁 ${pasta} (${listasDaPasta.length} listas)</h4>
-        <div style="padding-left:10px;">
-          ${listasDaPasta.length === 0 ? '<p style="font-size:0.8rem; color:var(--text-muted);">Nenhuma lista nesta pasta.</p>' : ''}
+      <div class="folder-box glass-card" style="margin-bottom:12px; padding:12px 14px;">
+        <h4 style="margin-bottom:8px; font-size:0.9rem; display:flex; align-items:center; gap:6px;">
+          <i data-lucide="folder" style="width:15px;height:15px; color:var(--accent-yellow);"></i> ${pasta} (${listasDaPasta.length} listas)
+        </h4>
+        <div style="padding-left:6px;">
+          ${listasDaPasta.length === 0 ? '<p style="font-size:0.78rem; color:var(--text-muted);">Nenhuma lista nesta pasta.</p>' : ''}
           ${listasDaPasta.map(l => {
             const statusObj = l.statusMembros || {};
             const numPresentes = Object.values(statusObj).filter(v => v === 'PRESENTE').length;
             return `
-              <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid var(--border-color); gap:10px;">
-                <span style="font-size:0.85rem;">📋 <b>${l.titulo}</b> (${l.data}) - ${numPresentes}/${l.totalMembros || state.membros.length} presentes</span>
+              <div style="display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-bottom:1px solid var(--glass-border-subtle); gap:8px;">
+                <span style="font-size:0.8rem;">📋 <b>${l.titulo}</b> (${l.data}) - ${numPresentes}/${l.totalMembros || state.membros.length} presentes</span>
                 <div>
-                  <button type="button" class="btn-secondary" style="padding:4px 8px; font-size:0.75rem; margin-right:4px;" onclick="carregarChamadaParaEdicao('${l.id}')">Abrir</button>
-                  <button type="button" class="btn-danger" style="padding:4px 8px; font-size:0.75rem;" onclick="excluirChamada('${l.id}')">Excluir</button>
+                  <button type="button" class="btn-secondary glass-btn-fx" style="padding:3px 6px; font-size:0.72rem; margin-right:4px;" onclick="carregarChamadaParaEdicao('${l.id}')">Abrir</button>
+                  <button type="button" class="btn-danger glass-btn-fx" style="padding:3px 6px; font-size:0.72rem;" onclick="excluirChamada('${l.id}')">Excluir</button>
                 </div>
               </div>
             `;
@@ -647,6 +654,7 @@ function renderPastasEListasTree() {
   });
 
   container.innerHTML = html;
+  if (window.lucide) lucide.createIcons();
 }
 
 function excluirChamada(id) {
@@ -681,22 +689,22 @@ function abrirRelatorioMensal() {
   if (modal && conteudo) {
     conteudo.innerHTML = `
       <h3>📊 Relatório Mensal (${currentMonth + 1}/${currentYear})</h3>
-      <p style="margin-top:8px; color:var(--text-muted);">Métricas calculadas com base nas listas salvas neste mês.</p>
+      <p style="margin-top:6px; color:var(--text-muted); font-size:0.82rem;">Métricas calculadas com base nas listas salvas neste mês.</p>
       
-      <div style="margin-top:15px; background:rgba(255,255,255,0.1); padding:14px; border-radius:14px; border:1px solid var(--border-color);">
+      <div style="margin-top:12px; background:rgba(255,255,255,0.15); padding:12px; border-radius:10px; border:1px solid var(--glass-border-subtle); font-size:0.84rem;">
         <p><b>Listas Realizadas:</b> ${chamadasDoMes.length}</p>
         <p><b>Presenças Confirmadas:</b> ${totalPresencasMes}</p>
         <p><b>Faltas Registradas:</b> ${totalAusenciasMes}</p>
       </div>
 
-      <h4 style="margin-top:18px; margin-bottom:8px;">Gráfico de Frequência do Mês</h4>
-      <div style="width:100%; background:rgba(255,255,255,0.15); border-radius:12px; height:26px; overflow:hidden; display:flex;">
-        <div style="width:${pctPresenca}%; background:linear-gradient(135deg, #10b981, #34d399); height:100%; text-align:center; color:#fff; font-size:0.75rem; line-height:26px; font-weight:bold;">
+      <h4 style="margin-top:14px; margin-bottom:6px; font-size:0.9rem;">Gráfico de Frequência do Mês</h4>
+      <div style="width:100%; background:rgba(255,255,255,0.15); border-radius:10px; height:24px; overflow:hidden; display:flex;">
+        <div style="width:${pctPresenca}%; background:linear-gradient(135deg, #10b981, #34d399); height:100%; text-align:center; color:#fff; font-size:0.75rem; line-height:24px; font-weight:bold;">
           ${pctPresenca}%
         </div>
         <div style="width:${100 - pctPresenca}%; background:linear-gradient(135deg, #f43f5e, #fb7185); height:100%;"></div>
       </div>
-      <div style="display:flex; justify-content:space-between; font-size:0.78rem; margin-top:6px; color:var(--text-muted);">
+      <div style="display:flex; justify-content:space-between; font-size:0.75rem; margin-top:6px; color:var(--text-muted);">
         <span>🟢 Presenças (${pctPresenca}%)</span>
         <span>🔴 Ausências (${100 - pctPresenca}%)</span>
       </div>
@@ -717,7 +725,7 @@ function exportarListaParaPDF() {
   const [ano, mes, dia] = dataRaw.split('-');
   const dataFormatada = `${dia}/${mes}/${ano}`;
 
-  const rows = document.querySelectorAll('#boxMembrosChamada .member-item-row');
+  const rows = document.querySelectorAll('#boxMembrosChamada .member-glass-bubble');
   
   if (!rows.length) {
     alert('Não há membros na lista para exportar.');
@@ -883,7 +891,7 @@ function exportarListaParaPDF() {
 }
 
 // ==========================================
-// ABA 2: CALENDÁRIO E EVENTOS EXPANDIDOS
+// ABA 2: CALENDÁRIO AMPLO & BOLHAS GLASS
 // ==========================================
 function salvarEvento() {
   const titulo = document.getElementById('evtTitulo')?.value.trim();
@@ -952,8 +960,8 @@ function abrirDetalhesEvento(id) {
   const chamadaVinculada = (state.chamadas || []).find(c => c.eventoId === id);
 
   let acaoListaHtml = chamadaVinculada ? 
-    `<button type="button" class="btn-primary" style="margin-top:10px; width:100%;" onclick="carregarChamadaParaEdicao('${chamadaVinculada.id}'); fecharFichaMembro();">📋 Ver Lista de Chamada Vinculada</button>` :
-    `<p style="margin-top:10px; font-size:0.85rem; color:var(--text-muted);">Nenhuma lista de chamada registrada para este evento ainda.</p>`;
+    `<button type="button" class="btn-primary glass-btn-fx" style="margin-top:10px; width:100%;" onclick="carregarChamadaParaEdicao('${chamadaVinculada.id}'); fecharFichaMembro();">📋 Ver Lista de Chamada Vinculada</button>` :
+    `<p style="margin-top:10px; font-size:0.82rem; color:var(--text-muted);">Nenhuma lista de chamada registrada para este evento ainda.</p>`;
 
   const modal = document.getElementById('fichaMembroModal');
   const conteudo = document.getElementById('fichaConteudo');
@@ -962,34 +970,34 @@ function abrirDetalhesEvento(id) {
     conteudo.innerHTML = `
       <div id="viewEvento">
         <h3>📅 ${evt.titulo}</h3>
-        <p style="margin-top:8px;"><b>Data:</b> ${evt.data} ${evt.dataFim && evt.dataFim !== evt.data ? 'até ' + evt.dataFim : ''}</p>
-        <p><b>Horário:</b> ${evt.hora || '-'} às ${evt.horaFim || '-'}</p>
-        <p><b>Local:</b> ${evt.local || '-'}</p>
-        <p><b>Descrição:</b> ${evt.descricao || 'Nenhuma descrição informada.'}</p>
-        <hr style="margin:12px 0; border-color:var(--border-color);">
+        <p style="margin-top:6px; font-size:0.85rem;"><b>Data:</b> ${evt.data} ${evt.dataFim && evt.dataFim !== evt.data ? 'até ' + evt.dataFim : ''}</p>
+        <p style="font-size:0.85rem;"><b>Horário:</b> ${evt.hora || '-'} às ${evt.horaFim || '-'}</p>
+        <p style="font-size:0.85rem;"><b>Local:</b> ${evt.local || '-'}</p>
+        <p style="font-size:0.85rem;"><b>Descrição:</b> ${evt.descricao || 'Nenhuma descrição informada.'}</p>
+        <hr style="margin:10px 0; border-color:var(--glass-border-subtle);">
         ${acaoListaHtml}
         <div style="display:flex; gap:8px; margin-top:10px;">
-          <button type="button" class="btn-secondary" style="flex:1;" onclick="habilitarEdicaoEvento('${evt.id}')">✏️ Editar Evento</button>
-          <button type="button" class="btn-danger" style="flex:1;" onclick="excluirEvento('${evt.id}'); fecharFichaMembro();">🗑️ Excluir</button>
+          <button type="button" class="btn-secondary glass-btn-fx" style="flex:1;" onclick="habilitarEdicaoEvento('${evt.id}')">✏️ Editar Evento</button>
+          <button type="button" class="btn-danger glass-btn-fx" style="flex:1;" onclick="excluirEvento('${evt.id}'); fecharFichaMembro();">🗑️ Excluir</button>
         </div>
       </div>
       <div id="formEdicaoEvento" style="display:none; margin-top:10px;">
-        <h4>Editar Evento</h4>
-        <label style="margin-top:8px;">Título:</label>
+        <h4 style="font-size:0.9rem; margin-bottom:6px;">Editar Evento</h4>
+        <label>Título:</label>
         <input type="text" id="editEvtTitulo" value="${evt.titulo}">
-        <div style="display:flex; gap:8px; margin-top:8px;">
+        <div style="display:flex; gap:6px; margin-top:6px;">
           <div style="flex:1;"><label>Data Início:</label><input type="date" id="editEvtData" value="${evt.data}"></div>
           <div style="flex:1;"><label>Data Fim:</label><input type="date" id="editEvtDataFim" value="${evt.dataFim || evt.data}"></div>
         </div>
-        <div style="display:flex; gap:8px; margin-top:8px;">
+        <div style="display:flex; gap:6px; margin-top:6px;">
           <div style="flex:1;"><label>Hora Início:</label><input type="time" id="editEvtHora" value="${evt.hora || '19:30'}"></div>
           <div style="flex:1;"><label>Hora Fim:</label><input type="time" id="editEvtHoraFim" value="${evt.horaFim || '21:00'}"></div>
         </div>
-        <label style="margin-top:8px;">Local:</label>
+        <label style="margin-top:6px;">Local:</label>
         <input type="text" id="editEvtLocal" value="${evt.local || ''}">
-        <label style="margin-top:8px;">Descrição:</label>
+        <label style="margin-top:6px;">Descrição:</label>
         <textarea id="editEvtDescricao" rows="2">${evt.descricao || ''}</textarea>
-        <button type="button" class="btn-primary" style="width:100%; margin-top:12px;" onclick="salvarEdicaoEvento('${evt.id}')">💾 Salvar Alterações</button>
+        <button type="button" class="btn-primary glass-btn-fx" style="width:100%; margin-top:10px;" onclick="salvarEdicaoEvento('${evt.id}')">💾 Salvar Alterações</button>
       </div>
     `;
     modal.style.display = 'flex';
@@ -1050,10 +1058,10 @@ function mudarMesCalendario(step) {
   renderCalendar();
 }
 
+// RENDERIZAR CALENDÁRIO AMPLO COM BOLHAS GLASSMOPHISM
 function renderCalendar() {
   const grid = document.getElementById('gridCalendarioDias');
   const tituloMes = document.getElementById('calTituloMes');
-  const listaProximos = document.getElementById('listaEventosProximos');
 
   if (!grid || !tituloMes) return;
 
@@ -1066,7 +1074,8 @@ function renderCalendar() {
 
   for (let x = 0; x < firstDayIndex; x++) {
     const emptyCell = document.createElement('div');
-    emptyCell.className = 'cal-day-cell other-month';
+    emptyCell.className = 'cal-day-cell';
+    emptyCell.style.opacity = '0.25';
     grid.appendChild(emptyCell);
   }
 
@@ -1076,44 +1085,44 @@ function renderCalendar() {
 
     const today = new Date();
     if (day === today.getDate() && currentMonth === today.getMonth() && currentYear === today.getFullYear()) {
-      cell.classList.add('today');
+      cell.style.borderColor = 'var(--accent-blue)';
+      cell.style.background = 'rgba(56, 189, 248, 0.12)';
     }
 
-    cell.innerHTML = `<div class="cal-day-num">${day}</div>`;
+    const numSpan = document.createElement('span');
+    numSpan.className = 'cal-day-number';
+    numSpan.textContent = day;
+    cell.appendChild(numSpan);
 
     const dataFormatada = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
     const evtsDoDia = state.eventos.filter(e => e.data === dataFormatada);
 
     evtsDoDia.forEach(e => {
-      cell.innerHTML += `<div class="cal-evt-badge" onclick="abrirDetalhesEvento('${e.id}')" style="cursor:pointer;" title="Clique para ver detalhes">${e.hora || ''} ${e.titulo}</div>`;
+      const bubble = document.createElement('div');
+      bubble.className = 'event-glass-bubble';
+      bubble.innerHTML = `
+        <span onclick="abrirDetalhesEvento('${e.id}')" style="cursor:pointer; flex:1; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">
+          ${e.hora || ''} ${e.titulo}
+        </span>
+        <button type="button" class="btn-del-evt-glass" title="Excluir Evento" onclick="event.stopPropagation(); excluirEvento('${e.id}')">✕</button>
+      `;
+      cell.appendChild(bubble);
     });
 
     state.membros.forEach(m => {
       if (m.nasc) {
         const [, mMonth, mDay] = m.nasc.split('-');
         if (parseInt(mMonth, 10) === currentMonth + 1 && parseInt(mDay, 10) === day) {
-          cell.innerHTML += `<div class="cal-evt-badge niver">🎂 ${m.apelido || m.nome}</div>`;
+          const niver = document.createElement('div');
+          niver.className = 'event-glass-bubble';
+          niver.style.background = 'rgba(244, 63, 94, 0.25)';
+          niver.innerHTML = `🎂 ${m.apelido || m.nome}`;
+          cell.appendChild(niver);
         }
       }
     });
 
     grid.appendChild(cell);
-  }
-
-  if (listaProximos) {
-    if (!state.eventos.length) {
-      listaProximos.innerHTML = '<p style="color:var(--text-muted);">Nenhum evento agendado.</p>';
-    } else {
-      listaProximos.innerHTML = state.eventos.slice(-10).map(e => `
-        <div style="display:flex; justify-content:space-between; align-items:center; padding:8px; border-bottom:1px solid var(--border-color); cursor:pointer;" onclick="abrirDetalhesEvento('${e.id}')">
-          <div>
-            <strong>${e.titulo}</strong> <br>
-            <small style="color:var(--text-muted);">📅 ${e.data} às ${e.hora || '19:30'} (${e.local || 'Igreja'})</small>
-          </div>
-          <button type="button" class="btn-danger" style="padding:2px 6px; font-size:0.7rem;" onclick="event.stopPropagation(); excluirEvento('${e.id}')">Excluir</button>
-        </div>
-      `).join('');
-    }
   }
 }
 
@@ -1207,43 +1216,43 @@ function abrirFichaMembro(id) {
     conteudo.innerHTML = `
       <div id="visualizacaoFicha">
         <h3>👤 ${membro.nome} ${membro.apelido ? `(${membro.apelido})` : ''}</h3>
-        <p style="margin-top:6px;"><b>Nascimento:</b> ${membro.nasc || '-'} (${calcularIdade(membro.nasc)} anos)</p>
-        <p><b>Telefone:</b> ${membro.fone || '-'}</p>
-        <p><b>Responsável:</b> ${membro.responsavel?.nome || '-'} ${membro.responsavel?.fone ? `(${membro.responsavel.fone})` : ''}</p>
-        <p><b>Ministérios:</b> ${(membro.ministerios || []).join(', ') || 'Nenhum'}</p>
+        <p style="margin-top:6px; font-size:0.85rem;"><b>Nascimento:</b> ${membro.nasc || '-'} (${calcularIdade(membro.nasc)} anos)</p>
+        <p style="font-size:0.85rem;"><b>Telefone:</b> ${membro.fone || '-'}</p>
+        <p style="font-size:0.85rem;"><b>Responsável:</b> ${membro.responsavel?.nome || '-'} ${membro.responsavel?.fone ? `(${membro.responsavel.fone})` : ''}</p>
+        <p style="font-size:0.85rem;"><b>Ministérios:</b> ${(membro.ministerios || []).join(', ') || 'Nenhum'}</p>
 
-        <hr style="margin:12px 0; border-color:var(--border-color);">
-        <h4 style="margin-bottom:8px;">📊 Histórico de Frequência</h4>
-        <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:8px; text-align:center; margin-bottom:10px;">
-          <div style="background:rgba(16,185,129,0.15); padding:8px; border-radius:8px;"><b style="color:#10b981;">${stats.presentes}</b><br><small>Presenças</small></div>
-          <div style="background:rgba(244,63,94,0.15); padding:8px; border-radius:8px;"><b style="color:#f43f5e;">${stats.ausentes}</b><br><small>Faltas</small></div>
-          <div style="background:rgba(245,158,11,0.15); padding:8px; border-radius:8px;"><b style="color:#f59e0b;">${stats.justificativas}</b><br><small>Justificativas</small></div>
+        <hr style="margin:10px 0; border-color:var(--glass-border-subtle);">
+        <h4 style="margin-bottom:6px; font-size:0.9rem;">📊 Histórico de Frequência</h4>
+        <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:6px; text-align:center; margin-bottom:8px;">
+          <div style="background:rgba(16,185,129,0.15); padding:6px; border-radius:6px;"><b style="color:#10b981;">${stats.presentes}</b><br><small>Presenças</small></div>
+          <div style="background:rgba(244,63,94,0.15); padding:6px; border-radius:6px;"><b style="color:#f43f5e;">${stats.ausentes}</b><br><small>Faltas</small></div>
+          <div style="background:rgba(245,158,11,0.15); padding:6px; border-radius:6px;"><b style="color:#f59e0b;">${stats.justificativas}</b><br><small>Justificativas</small></div>
         </div>
-        <p style="font-size:0.85rem; font-weight:bold; text-align:center;">Assiduidade Geral: ${pctFrequencia}%</p>
+        <p style="font-size:0.82rem; font-weight:bold; text-align:center;">Assiduidade Geral: ${pctFrequencia}%</p>
 
-        <button type="button" class="btn-secondary" style="margin-top:15px; width:100%;" onclick="habilitarEdicaoMembro('${membro.id}')">✏️ Editar Informações Cadastrais</button>
+        <button type="button" class="btn-secondary glass-btn-fx" style="margin-top:12px; width:100%;" onclick="habilitarEdicaoMembro('${membro.id}')">✏️ Editar Informações Cadastrais</button>
       </div>
 
       <div id="formEdicaoMembro" style="display:none; margin-top:10px;">
-        <h4 style="margin-bottom:10px;">Editar Membro</h4>
+        <h4 style="margin-bottom:8px; font-size:0.9rem;">Editar Membro</h4>
         <label>Nome Completo:</label>
-        <input type="text" id="editMemNome" value="${membro.nome}" style="width:100%; margin-bottom:8px;">
+        <input type="text" id="editMemNome" value="${membro.nome}">
         <label>Apelido:</label>
-        <input type="text" id="editMemApelido" value="${membro.apelido || ''}" style="width:100%; margin-bottom:8px;">
+        <input type="text" id="editMemApelido" value="${membro.apelido || ''}">
         <label>Data de Nascimento:</label>
-        <input type="date" id="editMemNasc" value="${membro.nasc || ''}" style="width:100%; margin-bottom:8px;">
+        <input type="date" id="editMemNasc" value="${membro.nasc || ''}">
         <label>Telefone:</label>
-        <input type="text" id="editMemFone" value="${membro.fone || ''}" oninput="mascaraTelefone(this)" style="width:100%; margin-bottom:8px;">
+        <input type="text" id="editMemFone" value="${membro.fone || ''}" oninput="mascaraTelefone(this)">
         <label>Nome Responsável:</label>
-        <input type="text" id="editMemRespNome" value="${membro.responsavel?.nome || ''}" style="width:100%; margin-bottom:8px;">
+        <input type="text" id="editMemRespNome" value="${membro.responsavel?.nome || ''}">
         <label>Telefone Responsável:</label>
-        <input type="text" id="editMemRespFone" value="${membro.responsavel?.fone || ''}" oninput="mascaraTelefone(this)" style="width:100%; margin-bottom:8px;">
+        <input type="text" id="editMemRespFone" value="${membro.responsavel?.fone || ''}" oninput="mascaraTelefone(this)">
         <label>Ministérios:</label>
-        <div id="editBoxMinisterios" style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px;">
+        <div id="editBoxMinisterios" style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px;">
           ${ministeriosHtml}
         </div>
 
-        <button type="button" class="btn-primary" style="width:100%;" onclick="salvarEdicaoMembro('${membro.id}')">💾 Salvar Alterações</button>
+        <button type="button" class="btn-primary glass-btn-fx" style="width:100%;" onclick="salvarEdicaoMembro('${membro.id}')">💾 Salvar Alterações</button>
       </div>
     `;
     modal.style.display = 'flex';
@@ -1348,10 +1357,10 @@ function renderMembersTable() {
       <td><b>${m.nome}</b> ${m.apelido ? `<br><small style="color:var(--text-muted);">${m.apelido}</small>` : ''}</td>
       <td>${calcularIdade(m.nasc)} anos</td>
       <td>${m.fone || '-'}</td>
-      <td>${(m.ministerios || []).map(min => `<span class="tag tag-blue">${min}</span>`).join(' ')}</td>
+      <td>${(m.ministerios || []).map(min => `<span class="chip-min-glass active" style="font-size:0.65rem; padding:2px 6px;">${min}</span>`).join(' ')}</td>
       <td>
-        <button type="button" class="btn-secondary" style="padding:4px 8px; font-size:0.75rem;" onclick="abrirFichaMembro('${m.id}')">Ficha / Editar</button>
-        <button type="button" class="btn-danger" style="padding:4px 8px; font-size:0.75rem;" onclick="excluirMembro('${m.id}')">Excluir</button>
+        <button type="button" class="btn-secondary glass-btn-fx" style="padding:3px 6px; font-size:0.72rem;" onclick="abrirFichaMembro('${m.id}')">Ficha / Editar</button>
+        <button type="button" class="btn-danger glass-btn-fx" style="padding:3px 6px; font-size:0.72rem;" onclick="excluirMembro('${m.id}')">Excluir</button>
       </td>
     </tr>
   `).join('');
@@ -1482,6 +1491,7 @@ function excluirMinisterio(nomeMinisterio) {
   }
 }
 
+// RENDERIZAR CHIPS/BOLHAS DE MINISTÉRIOS COM FILTRO
 function renderMinistryCheckboxes() {
   const box = document.getElementById('boxCheckMinisterios');
   const boxChamada = document.getElementById('boxFiltrosMinisteriosChamada');
@@ -1496,20 +1506,43 @@ function renderMinistryCheckboxes() {
     `).join('');
   }
 
+  // RENDERIZAÇÃO DOS CHIPS DE FILTRO DE MINISTÉRIO COM ALTURA/SELEÇÃO CORRIGIDA
   if (boxChamada) {
-    boxChamada.innerHTML = state.ministries.map(m => `
-      <span class="tag tag-blue" style="cursor:pointer;" onclick="renderAttendanceListEditor()">${m}</span>
-    `).join('');
+    boxChamada.innerHTML = '';
+    
+    // Chip "Todos"
+    const chipTodos = document.createElement('span');
+    chipTodos.className = `chip-min-glass ${!ministerioFiltroAtivo ? 'active' : ''}`;
+    chipTodos.textContent = 'Todos';
+    chipTodos.onclick = () => {
+      ministerioFiltroAtivo = null;
+      renderMinistryCheckboxes();
+      renderAttendanceListEditor();
+    };
+    boxChamada.appendChild(chipTodos);
+
+    // Chips individuais
+    state.ministries.forEach(m => {
+      const chip = document.createElement('span');
+      chip.className = `chip-min-glass ${ministerioFiltroAtivo === m ? 'active' : ''}`;
+      chip.textContent = m;
+      chip.onclick = () => {
+        ministerioFiltroAtivo = (ministerioFiltroAtivo === m) ? null : m;
+        renderMinistryCheckboxes();
+        renderAttendanceListEditor();
+      };
+      boxChamada.appendChild(chip);
+    });
   }
 
   if (listaMin) {
     if (!state.ministries.length) {
-      listaMin.innerHTML = '<p style="color:var(--text-muted); font-size:0.85rem;">Nenhum ministério cadastrado.</p>';
+      listaMin.innerHTML = '<p style="color:var(--text-muted); font-size:0.82rem;">Nenhum ministério cadastrado.</p>';
     } else {
       listaMin.innerHTML = state.ministries.map(m => `
-        <div style="display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-bottom:1px solid var(--border-color);">
-          <span>📌 <b>${m}</b></span>
-          <button type="button" class="btn-danger" style="padding:4px 8px; font-size:0.75rem;" onclick="excluirMinisterio('${m}')">
+        <div style="display:flex; justify-content:space-between; align-items:center; padding:5px 0; border-bottom:1px solid var(--glass-border-subtle);">
+          <span style="font-size:0.82rem;">📌 <b>${m}</b></span>
+          <button type="button" class="btn-danger glass-btn-fx" style="padding:3px 6px; font-size:0.72rem;" onclick="excluirMinisterio('${m}')">
             Excluir
           </button>
         </div>
@@ -1557,7 +1590,7 @@ function renderUsersRows(container, list) {
       <td>${u.email}</td>
       <td><span class="tag ${u.aprovado ? 'tag-green' : 'tag-yellow'}">${u.aprovado ? 'Aprovado' : 'Bloqueado'}</span></td>
       <td>
-        <select onchange="alterarPerfilUsuario('${u.uid}', this.value)">
+        <select onchange="alterarPerfilUsuario('${u.uid}', this.value)" style="padding:3px 6px; font-size:0.78rem;">
           <option value="L" ${u.perfil === 'L' ? 'selected' : ''}>Líder</option>
           <option value="O" ${u.perfil === 'O' ? 'selected' : ''}>Ordem de Culto</option>
           <option value="A" ${u.perfil === 'A' ? 'selected' : ''}>Admin</option>
@@ -1565,10 +1598,10 @@ function renderUsersRows(container, list) {
       </td>
       <td>
         ${!u.aprovado ? 
-          `<button type="button" class="btn-secondary" style="padding:4px 8px; font-size:0.75rem; margin-right:4px;" onclick="aprovarUsuario('${u.uid}')">Aprovar</button>` : 
-          `<button type="button" class="btn-danger" style="padding:4px 8px; font-size:0.75rem; margin-right:4px;" onclick="bloquearUsuario('${u.uid}')">Bloquear</button>`
+          `<button type="button" class="btn-secondary glass-btn-fx" style="padding:3px 6px; font-size:0.72rem; margin-right:4px;" onclick="aprovarUsuario('${u.uid}')">Aprovar</button>` : 
+          `<button type="button" class="btn-danger glass-btn-fx" style="padding:3px 6px; font-size:0.72rem; margin-right:4px;" onclick="bloquearUsuario('${u.uid}')">Bloquear</button>`
         }
-        <button type="button" class="btn-danger" style="padding:4px 8px; font-size:0.75rem;" onclick="excluirUsuarioAdmin('${u.uid}')">Excluir</button>
+        <button type="button" class="btn-danger glass-btn-fx" style="padding:3px 6px; font-size:0.72rem;" onclick="excluirUsuarioAdmin('${u.uid}')">Excluir</button>
       </td>
     </tr>
   `).join('');
