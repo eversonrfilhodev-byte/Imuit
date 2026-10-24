@@ -5,7 +5,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
 :root {
-  /* MODO CLARO REFORÇADO PARA ELIMINAR CONFUSÃO VISUAL */
+  /* MODO CLARO REFORÇADO PARA ELIMINAR CONFUSÃO VISUAL DE CAMPO/FUNDO/ABAS */
   --bg-gradient: radial-gradient(circle at 10% 20%, #cbd5e1 0%, #94a3b8 50%, #cbd5e1 100%);
   --glass-bg: rgba(255, 255, 255, 0.85);
   --glass-bg-hover: rgba(255, 255, 255, 0.98);
@@ -405,4 +405,63 @@ button.btn-secondary {
 .table-responsive table td {
   padding: 6px 10px;
   font-size: 0.8rem;
+}
+
+/* ==========================================
+   AJUSTE DE DIMENSÃO DO LOBBY / LOGIN MODAL
+   ========================================== */
+
+/* Overlay de autenticação centralizado */
+.auth-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+/* Card central com largura e espaçamento adequados */
+.auth-card {
+  width: 100%;
+  max-width: 420px;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow-hover);
+  border-radius: var(--radius-xl);
+  padding: 24px 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.auth-header-center {
+  text-align: center;
+  margin-bottom: 20px;
+  width: 100%;
+}
+
+/* Limite estrito na dimensão da imagem do logo para evitar explosão na tela */
+.logo-auth-center {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.logo-auth-center img {
+  max-width: 120px;
+  max-height: 120px;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.25));
 }
