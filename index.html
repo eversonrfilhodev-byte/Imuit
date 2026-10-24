@@ -25,11 +25,11 @@
   <div id="authModal" class="auth-overlay" style="display: flex;">
     <div class="auth-card glass-card">
       <div class="auth-header-center">
-        <div class="logo-img-wrapper glass-icon-3d logo-auth-center">
+        <div class="logo-auth-center">
           <img src="logo.png" alt="Logo" onerror="this.style.display='none'; document.getElementById('fallbackAuthIcon').style.display='inline-block';">
-          <i id="fallbackAuthIcon" data-lucide="church" style="display: none; color: var(--accent-blue); width: 28px; height: 28px;"></i>
+          <i id="fallbackAuthIcon" data-lucide="church" style="display: none; color: var(--accent-blue); width: 36px; height: 36px;"></i>
         </div>
-        <h2 id="authTitle" style="font-size: 1.1rem;"><i data-lucide="lock" style="width:16px;height:16px;"></i> Aceder ao App Imuit</h2>
+        <h2 id="authTitle"><i data-lucide="lock"></i> Aceder ao App Imuit</h2>
       </div>
       
       <div id="authNameGroup" class="form-group" style="display: none;">
@@ -47,11 +47,11 @@
         <input type="password" id="authPassword" placeholder="••••••••">
       </div>
 
-      <button type="button" id="btnAuthSubmit" class="btn-primary" style="width: 100%; margin-top: 6px;">
-        <i data-lucide="log-in" style="width:14px;height:14px;"></i> Iniciar Sessão
+      <button type="button" id="btnAuthSubmit" class="btn-primary" style="width: 100%; margin-top: 10px;">
+        <i data-lucide="log-in"></i> Iniciar Sessão
       </button>
 
-      <div style="text-align: center; margin-top: 10px; width: 100%;">
+      <div style="text-align: center; margin-top: 12px; width: 100%;">
         <button type="button" id="authToggleBtn" class="auth-toggle-btn">
           Não tem conta? Solicitar Acesso
         </button>
@@ -62,13 +62,13 @@
   <!-- MODAL PENDENTE -->
   <div id="pendingApprovalModal" class="auth-overlay" style="display: none;">
     <div class="auth-card glass-card" style="text-align: center;">
-      <i data-lucide="clock" style="width: 40px; height: 40px; color: var(--accent-yellow); margin-bottom: 10px;"></i>
-      <h2 style="font-size: 1.1rem;">Acesso Pendente</h2>
-      <p style="color: var(--text-muted); font-size: 0.82rem; margin-bottom: 15px;">
+      <i data-lucide="clock" style="width: 48px; height: 48px; color: var(--accent-yellow); margin-bottom: 12px;"></i>
+      <h2>Acesso Pendente</h2>
+      <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 18px;">
         A sua conta aguarda aprovação de um Administrador.
       </p>
       <button type="button" class="btn-secondary" onclick="terminarSessao()">
-        <i data-lucide="log-out" style="width:14px;height:14px;"></i> Voltar ao Login
+        <i data-lucide="log-out"></i> Voltar ao Login
       </button>
     </div>
   </div>
@@ -78,40 +78,40 @@
     
     <header class="app-header glass-card">
       <div class="brand">
-        <div class="logo-img-wrapper glass-icon-3d" style="width: 32px; height: 32px;">
+        <div class="logo-header-wrapper">
           <img src="logo.png" alt="Logo" onerror="this.style.display='none'; document.getElementById('fallbackLogoIcon').style.display='inline-block';">
-          <i id="fallbackLogoIcon" data-lucide="church" style="display: none; color: var(--accent-blue); width: 20px; height: 20px;"></i>
+          <i id="fallbackLogoIcon" data-lucide="church" style="display: none; color: var(--accent-blue); width: 24px; height: 24px;"></i>
         </div>
         <div>
-          <h1 style="font-size: 1.05rem;">App Imuit</h1>
-          <span id="userRoleBadge" class="tag tag-blue" style="font-size: 0.65rem; padding: 1px 6px;">Perfil: ---</span>
+          <h1>App Imuit</h1>
+          <span id="userRoleBadge" class="tag tag-blue" style="font-size: 0.7rem;">Perfil: ---</span>
         </div>
       </div>
 
       <div class="header-controls">
-        <div id="status" class="status-badge status-offline" style="font-size: 0.75rem; padding: 3px 8px;">
-          <i data-lucide="wifi-off" style="width: 12px;"></i> Offline
+        <div id="status" class="status-badge status-offline">
+          <i data-lucide="wifi-off" style="width: 14px;"></i> Offline
         </div>
-        <button type="button" id="btnTema" class="btn-secondary" style="font-size: 0.75rem; padding: 5px 10px;" onclick="alternarTema()">🌙 Tema</button>
-        <button type="button" class="btn-danger" style="font-size: 0.75rem; padding: 5px 10px;" onclick="terminarSessao()"><i data-lucide="log-out" style="width: 12px;"></i> Sair</button>
+        <button type="button" id="btnTema" class="btn-secondary" onclick="alternarTema()">🌙 Tema</button>
+        <button type="button" class="btn-danger" onclick="terminarSessao()"><i data-lucide="log-out"></i> Sair</button>
       </div>
     </header>
 
     <nav class="tabs-nav glass-card">
       <button type="button" class="tab-btn active" onclick="irParaJanela('tabChamada')">
-        <i data-lucide="check-square" style="width:14px;height:14px;"></i> Chamada
+        <i data-lucide="check-square"></i> Chamada
       </button>
       <button type="button" class="tab-btn" onclick="irParaJanela('tabCalendario')">
-        <i data-lucide="calendar" style="width:14px;height:14px;"></i> Calendário
+        <i data-lucide="calendar"></i> Calendário
       </button>
       <button type="button" class="tab-btn" onclick="irParaJanela('tabMembros')">
-        <i data-lucide="users" style="width:14px;height:14px;"></i> Membros
+        <i data-lucide="users"></i> Membros
       </button>
       <button type="button" class="tab-btn" onclick="irParaJanela('tabTutorial')">
-        <i data-lucide="help-circle" style="width:14px;height:14px;"></i> Tutorial
+        <i data-lucide="help-circle"></i> Tutorial
       </button>
       <button type="button" id="tabBtnAdmin" class="tab-btn" style="display: none;" onclick="irParaJanela('tabAdmin')">
-        <i data-lucide="shield" style="width:14px;height:14px;"></i> Admin
+        <i data-lucide="shield"></i> Admin
       </button>
     </nav>
 
@@ -119,9 +119,9 @@
     <section id="tabChamada" class="tab-content" style="display: block;">
       <div class="grid-2">
         <div class="card glass-card">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; border-bottom: 1px solid var(--glass-border-subtle); padding-bottom: 4px;">
-            <h3 class="card-title" style="font-size:0.9rem; margin: 0; border: none;"><i data-lucide="edit-3" style="width:14px;height:14px;"></i> Registrar Chamada</h3>
-            <button type="button" class="btn-secondary" style="font-size: 0.72rem; padding: 3px 8px;" onclick="abrirRelatorioMensal()">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid var(--glass-border-subtle); padding-bottom: 6px;">
+            <h3 class="card-title" style="margin: 0; border: none;"><i data-lucide="edit-3"></i> Registrar Chamada</h3>
+            <button type="button" class="btn-secondary" style="font-size: 0.78rem; padding: 4px 10px;" onclick="abrirRelatorioMensal()">
               📊 Relatório
             </button>
           </div>
@@ -148,7 +148,7 @@
             <input type="text" id="listaTitulo" placeholder="Ex: Culto de Domingo">
           </div>
 
-          <div class="form-row" style="margin-bottom: 4px;">
+          <div class="form-row" style="margin-bottom: 6px;">
             <div class="form-group" style="flex: 2;">
               <label for="buscaMembroChamada">Filtrar</label>
               <input type="text" id="buscaMembroChamada" placeholder="Buscar nome..." onkeyup="atualizarBuscaChamada()">
@@ -163,27 +163,27 @@
             </div>
           </div>
 
-          <div id="boxFiltrosMinisteriosChamada" style="display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 6px;"></div>
+          <div id="boxFiltrosMinisteriosChamada" style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px;"></div>
 
-          <div id="boxMembrosChamada" style="max-height: 180px; overflow-y: auto; padding: 2px;"></div>
+          <div id="boxMembrosChamada" style="max-height: 220px; overflow-y: auto; padding: 4px;"></div>
 
-          <div style="display: flex; gap: 8px; margin-top: 8px;">
-            <button type="button" class="btn-primary" style="flex: 1; padding: 6px;" onclick="salvarListaNaPasta()">
-              <i data-lucide="save" style="width:14px;height:14px;"></i> Salvar
+          <div style="display: flex; gap: 10px; margin-top: 10px;">
+            <button type="button" class="btn-primary" style="flex: 1;" onclick="salvarListaNaPasta()">
+              <i data-lucide="save"></i> Salvar
             </button>
-            <button type="button" class="btn-secondary" style="padding: 6px;" onclick="exportarListaParaPDF()">
-              <i data-lucide="printer" style="width:14px;height:14px;"></i> PDF
+            <button type="button" class="btn-secondary" onclick="exportarListaParaPDF()">
+              <i data-lucide="printer"></i> PDF
             </button>
           </div>
         </div>
 
         <div class="card glass-card">
-          <h3 class="card-title" style="font-size:0.9rem; margin-bottom:8px;"><i data-lucide="folder" style="width:14px;height:14px;"></i> Pastas & Histórico</h3>
-          <div class="form-row" style="margin-bottom: 8px;">
+          <h3 class="card-title"><i data-lucide="folder"></i> Pastas & Histórico</h3>
+          <div class="form-row" style="margin-bottom: 10px;">
             <input type="text" id="novoNomePastaCat" placeholder="Nova pasta..." style="flex: 1;">
-            <button type="button" class="btn-primary" style="padding: 6px 10px;" onclick="criarNovaPasta()">+ Criar</button>
+            <button type="button" class="btn-primary" onclick="criarNovaPasta()">+ Criar</button>
           </div>
-          <div id="arvorePastasEListas" style="max-height: 230px; overflow-y: auto;"></div>
+          <div id="arvorePastasEListas" style="max-height: 320px; overflow-y: auto;"></div>
         </div>
       </div>
     </section>
@@ -192,7 +192,7 @@
     <section id="tabCalendario" class="tab-content" style="display: none;">
       <div class="grid-2">
         <div class="card glass-card">
-          <h3 class="card-title" style="font-size:0.9rem; margin-bottom:8px;"><i data-lucide="plus-circle" style="width:14px;height:14px;"></i> Novo Evento</h3>
+          <h3 class="card-title"><i data-lucide="plus-circle"></i> Novo Evento</h3>
           
           <div class="form-group">
             <label for="evtTitulo">Título *</label>
@@ -236,26 +236,26 @@
             </div>
           </div>
 
-          <button type="button" class="btn-primary" style="width: 100%; margin-top: 6px; padding: 6px;" onclick="salvarEvento()">
-            <i data-lucide="calendar-plus" style="width:14px;height:14px;"></i> Confirmar Evento
+          <button type="button" class="btn-primary" style="width: 100%; margin-top: 8px;" onclick="salvarEvento()">
+            <i data-lucide="calendar-plus"></i> Confirmar Evento
           </button>
         </div>
 
         <div class="card glass-card">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-            <button type="button" class="btn-secondary" style="padding: 3px 8px; font-size:0.75rem;" onclick="mudarMesCalendario(-1)">◀ Ant</button>
-            <h3 id="calTituloMes" style="margin: 0; border: none; font-size: 0.9rem;">---</h3>
-            <button type="button" class="btn-secondary" style="padding: 3px 8px; font-size:0.75rem;" onclick="mudarMesCalendario(1)">Pró ▶</button>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <button type="button" class="btn-secondary" onclick="mudarMesCalendario(-1)">◀ Ant</button>
+            <h3 id="calTituloMes" style="margin: 0; border: none;">---</h3>
+            <button type="button" class="btn-secondary" onclick="mudarMesCalendario(1)">Pró ▶</button>
           </div>
 
           <div class="cal-days-header">
-            <div>D</div><div>S</div><div>T</div><div>Q</div><div>Q</div><div>S</div><div>S</div>
+            <div>DOM</div><div>SEG</div><div>TER</div><div>QUA</div><div>QUI</div><div>SEX</div><div>SÁB</div>
           </div>
 
-          <div id="gridCalendarioDias" class="cal-grid" style="max-height: 155px; overflow-y: auto;"></div>
+          <div id="gridCalendarioDias" class="cal-grid" style="max-height: 200px; overflow-y: auto;"></div>
 
-          <h4 style="margin-top: 8px; font-size: 0.8rem; color: var(--text-muted);">Próximos:</h4>
-          <div id="listaEventosProximos" style="max-height: 80px; overflow-y: auto; margin-top: 4px;"></div>
+          <h4 style="margin-top: 10px; font-size: 0.85rem; color: var(--text-muted);">Próximos:</h4>
+          <div id="listaEventosProximos" style="max-height: 100px; overflow-y: auto; margin-top: 4px;"></div>
         </div>
       </div>
     </section>
@@ -264,7 +264,7 @@
     <section id="tabMembros" class="tab-content" style="display: none;">
       <div class="grid-2">
         <div class="card glass-card">
-          <h3 class="card-title" style="font-size:0.9rem; margin-bottom:8px;"><i data-lucide="user-plus" style="width:14px;height:14px;"></i> Novo Membro</h3>
+          <h3 class="card-title"><i data-lucide="user-plus"></i> Novo Membro</h3>
           
           <div class="form-row">
             <div class="form-group" style="flex: 2;">
@@ -290,32 +290,32 @@
 
           <div class="form-group">
             <label>Ministérios</label>
-            <div id="boxCheckMinisterios" style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 2px; max-height: 55px; overflow-y: auto;"></div>
+            <div id="boxCheckMinisterios" style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; max-height: 70px; overflow-y: auto;"></div>
           </div>
 
-          <div style="display: flex; gap: 8px; margin-top: 8px;">
-            <button type="button" class="btn-primary" style="flex: 1; padding: 6px;" onclick="salvarMembro()">Cadastrar</button>
-            <button type="button" class="btn-secondary" style="padding: 6px;" onclick="abrirModalImportacaoMassa()">CSV</button>
+          <div style="display: flex; gap: 10px; margin-top: 10px;">
+            <button type="button" class="btn-primary" style="flex: 1;" onclick="salvarMembro()">Cadastrar</button>
+            <button type="button" class="btn-secondary" onclick="abrirModalImportacaoMassa()">CSV</button>
           </div>
         </div>
 
         <div class="card glass-card">
-          <h3 class="card-title" style="font-size:0.9rem; margin-bottom:8px;"><i data-lucide="tag" style="width:14px;height:14px;"></i> Ministérios</h3>
-          <div class="form-row" style="margin-bottom: 6px;">
+          <h3 class="card-title"><i data-lucide="tag"></i> Ministérios</h3>
+          <div class="form-row" style="margin-bottom: 10px;">
             <input type="text" id="novoMinNome" placeholder="Novo ministério..." style="flex: 1;">
-            <button type="button" class="btn-primary" style="padding: 6px 10px;" onclick="criarMinisterio()">+ Criar</button>
+            <button type="button" class="btn-primary" onclick="criarMinisterio()">+ Criar</button>
           </div>
-          <div id="listaMinisteriosCadastrados" style="max-height: 140px; overflow-y: auto;"></div>
+          <div id="listaMinisteriosCadastrados" style="max-height: 180px; overflow-y: auto;"></div>
         </div>
       </div>
 
-      <div class="card glass-card" style="margin-top: 10px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-          <h3 class="card-title" style="margin: 0; border: none; font-size: 0.9rem;"><i data-lucide="users" style="width:14px;height:14px;"></i> Quadro de Membros</h3>
-          <input type="text" id="buscaMembrosLista" placeholder="Pesquisar..." style="max-width: 200px;" onkeyup="renderListaMembros()">
+      <div class="card glass-card" style="margin-top: 12px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <h3 class="card-title" style="margin: 0; border: none;"><i data-lucide="users"></i> Quadro de Membros</h3>
+          <input type="text" id="buscaMembrosLista" placeholder="Pesquisar..." style="max-width: 240px;" onkeyup="renderListaMembros()">
         </div>
 
-        <div class="table-responsive" style="max-height: 160px; overflow-y: auto;">
+        <div class="table-responsive" style="max-height: 200px; overflow-y: auto;">
           <table>
             <thead>
               <tr>
@@ -335,8 +335,8 @@
     <!-- ABA TUTORIAL -->
     <section id="tabTutorial" class="tab-content" style="display: none;">
       <div class="card glass-card">
-        <h3 class="card-title" style="font-size:0.9rem; margin-bottom:6px;"><i data-lucide="book-open" style="width:14px;height:14px;"></i> Tutorial</h3>
-        <p style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.4;">
+        <h3 class="card-title"><i data-lucide="book-open"></i> Tutorial</h3>
+        <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.5;">
           Utilize as abas superiores para gerenciar chamadas, agendar eventos e cadastrar membros de forma rápida e integrada.
         </p>
       </div>
@@ -345,8 +345,8 @@
     <!-- ABA ADMIN -->
     <section id="tabAdmin" class="tab-content" style="display: none;">
       <div class="card glass-card">
-        <h3 class="card-title" style="font-size:0.9rem; margin-bottom:6px;"><i data-lucide="shield-check" style="width:14px;height:14px;"></i> Gestão de Utilizadores</h3>
-        <div class="table-responsive" style="max-height: 220px; overflow-y: auto;">
+        <h3 class="card-title"><i data-lucide="shield-check"></i> Gestão de Utilizadores</h3>
+        <div class="table-responsive" style="max-height: 280px; overflow-y: auto;">
           <table>
             <thead>
               <tr>
@@ -367,27 +367,27 @@
 
   <!-- MODAIS AUXILIARES -->
   <div id="fichaMembroModal" class="auth-overlay" style="display: none;">
-    <div class="auth-card glass-card" style="max-width: 440px;">
-      <div id="fichaConteudo" style="margin-bottom: 10px; max-height: 300px; overflow-y: auto; width: 100%;"></div>
-      <div style="display: flex; gap: 8px; width: 100%;">
-        <button type="button" class="btn-primary" style="flex: 1; padding: 6px;" onclick="imprimirFicha()">Imprimir</button>
-        <button type="button" class="btn-secondary" style="padding: 6px;" onclick="fecharFichaMembro()">Fechar</button>
+    <div class="auth-card glass-card" style="max-width: 480px;">
+      <div id="fichaConteudo" style="margin-bottom: 12px; max-height: 320px; overflow-y: auto; width: 100%;"></div>
+      <div style="display: flex; gap: 10px; width: 100%;">
+        <button type="button" class="btn-primary" style="flex: 1;" onclick="imprimirFicha()">Imprimir</button>
+        <button type="button" class="btn-secondary" onclick="fecharFichaMembro()">Fechar</button>
       </div>
     </div>
   </div>
 
   <div id="importacaoMassaModal" class="auth-overlay" style="display: none;">
-    <div class="auth-card glass-card" style="max-width: 480px;">
-      <h3 style="margin-bottom: 6px; color: var(--accent-blue); font-size: 1rem;"><i data-lucide="file-text" style="width:14px;height:14px;"></i> Importar CSV</h3>
+    <div class="auth-card glass-card" style="max-width: 520px;">
+      <h3 style="margin-bottom: 8px; color: var(--accent-blue);"><i data-lucide="file-text"></i> Importar CSV</h3>
       <div class="form-group">
         <input type="file" id="arquivoCsvInput" accept=".csv, .txt" onchange="lerArquivoCsv(this)">
       </div>
       <div class="form-group">
-        <textarea id="textoCsvInput" rows="3" placeholder="Cole o CSV aqui..."></textarea>
+        <textarea id="textoCsvInput" rows="4" placeholder="Cole o CSV aqui..."></textarea>
       </div>
-      <div style="display: flex; gap: 8px; margin-top: 8px; width: 100%;">
-        <button type="button" class="btn-primary" style="flex: 1; padding: 6px;" onclick="processarImportacaoEmMassa()">Importar</button>
-        <button type="button" class="btn-secondary" style="padding: 6px;" onclick="fecharModalImportacaoMassa()">Cancelar</button>
+      <div style="display: flex; gap: 10px; margin-top: 10px; width: 100%;">
+        <button type="button" class="btn-primary" style="flex: 1;" onclick="processarImportacaoEmMassa()">Importar</button>
+        <button type="button" class="btn-secondary" onclick="fecharModalImportacaoMassa()">Cancelar</button>
       </div>
     </div>
   </div>
