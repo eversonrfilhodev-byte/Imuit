@@ -199,7 +199,7 @@
       </div>
     </section>
 
-    <!-- ABA 2: CALENDÁRIO COM LADO A LADO E DENTRO DO PAINEL -->
+    <!-- ABA 2: CALENDÁRIO AMPLO -->
     <section id="tabCalendario" class="tab-content" style="display: none;">
       <div class="grid-2" style="grid-template-columns: 1fr 2fr;">
         <div class="card glass-card">
@@ -265,7 +265,6 @@
             <div>DOM</div><div>SEG</div><div>TER</div><div>QUA</div><div>QUI</div><div>SEX</div><div>SÁB</div>
           </div>
 
-          <!-- GRELHA DO CALENDÁRIO COMPLETA SEM LISTA DUPLICADA EM BAIXO -->
           <div id="gridCalendarioDias" class="cal-grid" style="min-height: 380px; flex: 1;"></div>
         </div>
       </div>
@@ -368,7 +367,7 @@
             <h4 style="color: var(--text-heading); font-size: 0.95rem; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
               <i data-lucide="folder" style="width:14px;height:14px; color: var(--accent-blue);"></i> 2. Gestão de Pastas e Histórico
             </h4>
-            <p>Todas as listas salvas são organizadas dentro de pastas temáticas. Na seção de histórico, você pode abrir qualquer pasta para revisar listas passadas e exportar relatórios mensais consolidados.</p>
+            <p>Todas as listas salvas são organizadas dentro de pastas temáticas. Na seção de histórico, você pode abrir qualquer pasta para revisar listas passadas e exportar relatórios flexíveis consolidados.</p>
           </div>
 
           <div>
@@ -409,7 +408,7 @@
   <!-- MODAIS AUXILIARES -->
   <div id="fichaMembroModal" class="auth-overlay" style="display: none;">
     <div class="auth-card glass-card" style="max-width: 480px;">
-      <div id="fichaConteudo" style="margin-bottom: 12px; max-height: 320px; overflow-y: auto; width: 100%;"></div>
+      <div id="fichaConteudo" style="margin-bottom: 12px; max-height: 380px; overflow-y: auto; width: 100%;"></div>
       <div style="display: flex; gap: 10px; width: 100%;">
         <button type="button" class="btn-primary glass-btn-fx" style="flex: 1;" onclick="imprimirFicha()">Imprimir</button>
         <button type="button" class="btn-secondary glass-btn-fx" onclick="fecharFichaMembro()">Fechar</button>
