@@ -27,7 +27,7 @@
       <div class="auth-header-center">
         <div class="logo-auth-center">
           <img src="logo.png" alt="Logo" onerror="this.style.display='none'; document.getElementById('fallbackAuthIcon').style.display='inline-block';">
-          <i id="fallbackAuthIcon" data-lucide="church" style="display: none; color: var(--accent-blue); width: 36px; height: 36px;"></i>
+          <i id="fallbackAuthIcon" data-lucide="lock" style="display: none; color: var(--accent-blue); width: 36px; height: 36px;"></i>
         </div>
         <h2 id="authTitle"><i data-lucide="lock"></i> Aceder ao App Imuit</h2>
       </div>
@@ -47,7 +47,7 @@
         <input type="password" id="authPassword" placeholder="••••••••">
       </div>
 
-      <button type="button" id="btnAuthSubmit" class="btn-primary" style="width: 100%; margin-top: 10px;">
+      <button type="button" id="btnAuthSubmit" class="btn-primary glass-btn-fx" style="width: 100%; margin-top: 10px;">
         <i data-lucide="log-in"></i> Iniciar Sessão
       </button>
 
@@ -62,12 +62,14 @@
   <!-- MODAL PENDENTE -->
   <div id="pendingApprovalModal" class="auth-overlay" style="display: none;">
     <div class="auth-card glass-card" style="text-align: center;">
-      <i data-lucide="clock" style="width: 48px; height: 48px; color: var(--accent-yellow); margin-bottom: 12px;"></i>
+      <div class="glass-icon-badge yellow-badge">
+        <i data-lucide="clock" style="width: 28px; height: 28px; color: var(--accent-yellow);"></i>
+      </div>
       <h2>Acesso Pendente</h2>
       <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 18px;">
         A sua conta aguarda aprovação de um Administrador.
       </p>
-      <button type="button" class="btn-secondary" onclick="terminarSessao()">
+      <button type="button" class="btn-secondary glass-btn-fx" onclick="terminarSessao()">
         <i data-lucide="log-out"></i> Voltar ao Login
       </button>
     </div>
@@ -92,26 +94,30 @@
         <div id="status" class="status-badge status-offline">
           <i data-lucide="wifi-off" style="width: 14px;"></i> Offline
         </div>
-        <button type="button" id="btnTema" class="btn-secondary" onclick="alternarTema()">🌙 Tema</button>
-        <button type="button" class="btn-danger" onclick="terminarSessao()"><i data-lucide="log-out"></i> Sair</button>
+        <button type="button" id="btnTema" class="btn-secondary glass-btn-fx" onclick="alternarTema()">
+          <span class="glass-icon-mini"><i data-lucide="moon" style="width:14px;height:14px;"></i></span> Tema
+        </button>
+        <button type="button" class="btn-danger glass-btn-fx" onclick="terminarSessao()">
+          <i data-lucide="log-out"></i> Sair
+        </button>
       </div>
     </header>
 
     <nav class="tabs-nav glass-card">
-      <button type="button" class="tab-btn active" onclick="irParaJanela('tabChamada')">
-        <i data-lucide="check-square"></i> Chamada
+      <button type="button" class="tab-btn active glass-btn-fx" onclick="irParaJanela('tabChamada')">
+        <span class="tab-icon-glass"><i data-lucide="check-square" style="width:15px;height:15px;"></i></span> Chamada
       </button>
-      <button type="button" class="tab-btn" onclick="irParaJanela('tabCalendario')">
-        <i data-lucide="calendar"></i> Calendário
+      <button type="button" class="tab-btn glass-btn-fx" onclick="irParaJanela('tabCalendario')">
+        <span class="tab-icon-glass"><i data-lucide="calendar" style="width:15px;height:15px;"></i></span> Calendário
       </button>
-      <button type="button" class="tab-btn" onclick="irParaJanela('tabMembros')">
-        <i data-lucide="users"></i> Membros
+      <button type="button" class="tab-btn glass-btn-fx" onclick="irParaJanela('tabMembros')">
+        <span class="tab-icon-glass"><i data-lucide="users" style="width:15px;height:15px;"></i></span> Membros
       </button>
-      <button type="button" class="tab-btn" onclick="irParaJanela('tabTutorial')">
-        <i data-lucide="help-circle"></i> Tutorial
+      <button type="button" class="tab-btn glass-btn-fx" onclick="irParaJanela('tabTutorial')">
+        <span class="tab-icon-glass"><i data-lucide="help-circle" style="width:15px;height:15px;"></i></span> Tutorial
       </button>
-      <button type="button" id="tabBtnAdmin" class="tab-btn" style="display: none;" onclick="irParaJanela('tabAdmin')">
-        <i data-lucide="shield"></i> Admin
+      <button type="button" id="tabBtnAdmin" class="tab-btn glass-btn-fx" style="display: none;" onclick="irParaJanela('tabAdmin')">
+        <span class="tab-icon-glass"><i data-lucide="shield" style="width:15px;height:15px;"></i></span> Admin
       </button>
     </nav>
 
@@ -120,9 +126,11 @@
       <div class="grid-2">
         <div class="card glass-card">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid var(--glass-border-subtle); padding-bottom: 6px;">
-            <h3 class="card-title" style="margin: 0; border: none;"><i data-lucide="edit-3"></i> Registrar Chamada</h3>
-            <button type="button" class="btn-secondary" style="font-size: 0.78rem; padding: 4px 10px;" onclick="abrirRelatorioMensal()">
-              📊 Relatório
+            <h3 class="card-title" style="margin: 0; border: none;">
+              <span class="title-icon-glass"><i data-lucide="edit-3" style="width:15px;height:15px;"></i></span> Registrar Chamada
+            </h3>
+            <button type="button" class="btn-secondary glass-btn-fx" style="font-size: 0.78rem; padding: 4px 10px;" onclick="abrirRelatorioMensal()">
+              <i data-lucide="bar-chart-2" style="width:14px;height:14px;"></i> Relatório
             </button>
           </div>
           
@@ -168,31 +176,35 @@
           <div id="boxMembrosChamada" style="max-height: 220px; overflow-y: auto; padding: 4px;"></div>
 
           <div style="display: flex; gap: 10px; margin-top: 10px;">
-            <button type="button" class="btn-primary" style="flex: 1;" onclick="salvarListaNaPasta()">
+            <button type="button" class="btn-primary glass-btn-fx" style="flex: 1;" onclick="salvarListaNaPasta()">
               <i data-lucide="save"></i> Salvar
             </button>
-            <button type="button" class="btn-secondary" onclick="exportarListaParaPDF()">
+            <button type="button" class="btn-secondary glass-btn-fx" onclick="exportarListaParaPDF()">
               <i data-lucide="printer"></i> PDF
             </button>
           </div>
         </div>
 
         <div class="card glass-card">
-          <h3 class="card-title"><i data-lucide="folder"></i> Pastas & Histórico</h3>
+          <h3 class="card-title">
+            <span class="title-icon-glass"><i data-lucide="folder" style="width:15px;height:15px;"></i></span> Pastas & Histórico
+          </h3>
           <div class="form-row" style="margin-bottom: 10px;">
             <input type="text" id="novoNomePastaCat" placeholder="Nova pasta..." style="flex: 1;">
-            <button type="button" class="btn-primary" onclick="criarNovaPasta()">+ Criar</button>
+            <button type="button" class="btn-primary glass-btn-fx" onclick="criarNovaPasta()">+ Criar</button>
           </div>
           <div id="arvorePastasEListas" style="max-height: 320px; overflow-y: auto;"></div>
         </div>
       </div>
     </section>
 
-    <!-- ABA 2: CALENDÁRIO -->
+    <!-- ABA 2: CALENDÁRIO AMPLO (SEM BOTÃO DE IMPRESSÃO) -->
     <section id="tabCalendario" class="tab-content" style="display: none;">
-      <div class="grid-2">
+      <div class="grid-2" style="grid-template-columns: 1fr 1.6fr;">
         <div class="card glass-card">
-          <h3 class="card-title"><i data-lucide="plus-circle"></i> Novo Evento</h3>
+          <h3 class="card-title">
+            <span class="title-icon-glass"><i data-lucide="plus-circle" style="width:15px;height:15px;"></i></span> Novo Evento
+          </h3>
           
           <div class="form-group">
             <label for="evtTitulo">Título *</label>
@@ -236,26 +248,29 @@
             </div>
           </div>
 
-          <button type="button" class="btn-primary" style="width: 100%; margin-top: 8px;" onclick="salvarEvento()">
+          <button type="button" class="btn-primary glass-btn-fx" style="width: 100%; margin-top: 8px;" onclick="salvarEvento()">
             <i data-lucide="calendar-plus"></i> Confirmar Evento
           </button>
         </div>
 
-        <div class="card glass-card">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-            <button type="button" class="btn-secondary" onclick="mudarMesCalendario(-1)">◀ Ant</button>
-            <h3 id="calTituloMes" style="margin: 0; border: none;">---</h3>
-            <button type="button" class="btn-secondary" onclick="mudarMesCalendario(1)">Pró ▶</button>
+        <div class="card glass-card" style="display: flex; flex-direction: column;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <button type="button" class="btn-secondary glass-btn-fx" onclick="mudarMesCalendario(-1)"><i data-lucide="chevron-left" style="width:16px;"></i> Ant</button>
+            <h3 id="calTituloMes" style="margin: 0; border: none; font-size: 1.05rem; font-weight: 800; background: var(--grad-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">---</h3>
+            <button type="button" class="btn-secondary glass-btn-fx" onclick="mudarMesCalendario(1)">Pró <i data-lucide="chevron-right" style="width:16px;"></i></button>
           </div>
 
           <div class="cal-days-header">
             <div>DOM</div><div>SEG</div><div>TER</div><div>QUA</div><div>QUI</div><div>SEX</div><div>SÁB</div>
           </div>
 
-          <div id="gridCalendarioDias" class="cal-grid" style="max-height: 200px; overflow-y: auto;"></div>
+          <!-- CALENDÁRIO AMPLO & PANORAMA MENSAL -->
+          <div id="gridCalendarioDias" class="cal-grid" style="min-height: 280px; max-height: 380px; overflow-y: auto; flex: 1;"></div>
 
-          <h4 style="margin-top: 10px; font-size: 0.85rem; color: var(--text-muted);">Próximos:</h4>
-          <div id="listaEventosProximos" style="max-height: 100px; overflow-y: auto; margin-top: 4px;"></div>
+          <h4 style="margin-top: 10px; font-size: 0.85rem; color: var(--text-muted); display: flex; align-items: center; gap: 6px;">
+            <i data-lucide="list" style="width:14px;height:14px;"></i> Próximos Eventos do Mês:
+          </h4>
+          <div id="listaEventosProximos" style="max-height: 110px; overflow-y: auto; margin-top: 4px;"></div>
         </div>
       </div>
     </section>
@@ -264,7 +279,9 @@
     <section id="tabMembros" class="tab-content" style="display: none;">
       <div class="grid-2">
         <div class="card glass-card">
-          <h3 class="card-title"><i data-lucide="user-plus"></i> Novo Membro</h3>
+          <h3 class="card-title">
+            <span class="title-icon-glass"><i data-lucide="user-plus" style="width:15px;height:15px;"></i></span> Novo Membro
+          </h3>
           
           <div class="form-row">
             <div class="form-group" style="flex: 2;">
@@ -294,16 +311,18 @@
           </div>
 
           <div style="display: flex; gap: 10px; margin-top: 10px;">
-            <button type="button" class="btn-primary" style="flex: 1;" onclick="salvarMembro()">Cadastrar</button>
-            <button type="button" class="btn-secondary" onclick="abrirModalImportacaoMassa()">CSV</button>
+            <button type="button" class="btn-primary glass-btn-fx" style="flex: 1;" onclick="salvarMembro()">Cadastrar</button>
+            <button type="button" class="btn-secondary glass-btn-fx" onclick="abrirModalImportacaoMassa()">CSV</button>
           </div>
         </div>
 
         <div class="card glass-card">
-          <h3 class="card-title"><i data-lucide="tag"></i> Ministérios</h3>
+          <h3 class="card-title">
+            <span class="title-icon-glass"><i data-lucide="tag" style="width:15px;height:15px;"></i></span> Ministérios
+          </h3>
           <div class="form-row" style="margin-bottom: 10px;">
             <input type="text" id="novoMinNome" placeholder="Novo ministério..." style="flex: 1;">
-            <button type="button" class="btn-primary" onclick="criarMinisterio()">+ Criar</button>
+            <button type="button" class="btn-primary glass-btn-fx" onclick="criarMinisterio()">+ Criar</button>
           </div>
           <div id="listaMinisteriosCadastrados" style="max-height: 180px; overflow-y: auto;"></div>
         </div>
@@ -311,7 +330,9 @@
 
       <div class="card glass-card" style="margin-top: 12px;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-          <h3 class="card-title" style="margin: 0; border: none;"><i data-lucide="users"></i> Quadro de Membros</h3>
+          <h3 class="card-title" style="margin: 0; border: none;">
+            <span class="title-icon-glass"><i data-lucide="users" style="width:15px;height:15px;"></i></span> Quadro de Membros
+          </h3>
           <input type="text" id="buscaMembrosLista" placeholder="Pesquisar..." style="max-width: 240px;" onkeyup="renderListaMembros()">
         </div>
 
@@ -332,20 +353,58 @@
       </div>
     </section>
 
-    <!-- ABA TUTORIAL -->
+    <!-- ABA TUTORIAL COMPLETO E EXTENSO -->
     <section id="tabTutorial" class="tab-content" style="display: none;">
-      <div class="card glass-card">
-        <h3 class="card-title"><i data-lucide="book-open"></i> Tutorial</h3>
-        <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.5;">
-          Utilize as abas superiores para gerenciar chamadas, agendar eventos e cadastrar membros de forma rápida e integrada.
-        </p>
+      <div class="card glass-card" style="padding: 20px;">
+        <h3 class="card-title" style="font-size: 1.15rem; margin-bottom: 14px; display: flex; align-items: center; gap: 8px;">
+          <span class="title-icon-glass"><i data-lucide="book-open" style="width:18px;height:18px;"></i></span> Guia Completo do Sistema App Imuit
+        </h3>
+        
+        <div style="font-size: 0.86rem; color: var(--text-muted); line-height: 1.6; display: flex; flex-direction: column; gap: 14px; max-height: 420px; overflow-y: auto; padding-right: 6px;">
+          <div>
+            <h4 style="color: var(--text-heading); font-size: 0.95rem; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+              <i data-lucide="check-square" style="width:14px;height:14px; color: var(--accent-blue);"></i> 1. Módulo de Chamada & Listas
+            </h4>
+            <p>O sistema de chamadas foi desenvolvido para registrar a presença de membros em cultos, ensaios e reuniões de forma ágil. Na aba <strong>Chamada</strong>, você seleciona a pasta de destino, o evento vinculado (opcional) e a data. O sistema filtra automaticamente os membros por ministérios e permite marcar presenças com um único clique. Você pode alternar a ordenação para enviar membros pendentes para o final da lista, garantindo fluidez no atendimento.</p>
+          </div>
+
+          <div>
+            <h4 style="color: var(--text-heading); font-size: 0.95rem; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+              <i data-lucide="folder" style="width:14px;height:14px; color: var(--accent-blue);"></i> 2. Gestão de Pastas e Histórico
+            </h4>
+            <p>Todas as listas salvas são organizadas dentro de pastas temáticas (ex: Cultos de Celebração, Quartas de Consagração, GCP, etc.). Na seção de histórico, você pode abrir qualquer pasta para revisar listas passadas, exportar relatórios mensais consolidados de frequência em formato PDF ou imprimir resumos analíticos detalhados de assiduidade.</p>
+          </div>
+
+          <div>
+            <h4 style="color: var(--text-heading); font-size: 0.95rem; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+              <i data-lucide="calendar" style="width:14px;height:14px; color: var(--accent-blue);"></i> 3. Calendário & Panorama Mensal
+            </h4>
+            <p>O calendário oferece uma visão panorâmica completa de todo o mês. É possível agendar eventos únicos, semanais ou mensais definindo horários de início, término e local. Os eventos agendados aparecem diretamente na grelha do calendário e na lista de próximos compromissos, permitindo sincronização direta com as chamadas.</p>
+          </div>
+
+          <div>
+            <h4 style="color: var(--text-heading); font-size: 0.95rem; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+              <i data-lucide="users" style="width:14px;height:14px; color: var(--accent-blue);"></i> 4. Cadastro de Membros & Ministérios
+            </h4>
+            <p>Gerencie o cadastro completo dos membros da comunidade incluindo nome, apelido, data de nascimento, telefone com máscara automática e múltiplos ministérios. O painel conta com busca instantânea e suporte à importação em massa via arquivos CSV ou colagem de texto direto. Cada membro possui uma ficha detalhada com histórico individual de frequência.</p>
+          </div>
+
+          <div>
+            <h4 style="color: var(--text-heading); font-size: 0.95rem; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+              <i data-lucide="shield" style="width:14px;height:14px; color: var(--accent-blue);"></i> 5. Permissões & Controlo Administrativo
+            </h4>
+            <p>Administradores possuem acesso exclusivo à aba <strong>Admin</strong>, onde podem aprovar novos utilizadores solicitantes, bloquear acessos ou definir níveis de permissão específicos para a gestão das ferramentas do aplicativo.</p>
+          </div>
+        </div>
       </div>
     </section>
 
     <!-- ABA ADMIN -->
     <section id="tabAdmin" class="tab-content" style="display: none;">
       <div class="card glass-card">
-        <h3 class="card-title"><i data-lucide="shield-check"></i> Gestão de Utilizadores</h3>
+        <h3 class="card-title">
+          <span class="title-icon-glass"><i data-lucide="shield-check" style="width:15px;height:15px;"></i></span> Gestão de Utilizadores
+        </h3>
         <div class="table-responsive" style="max-height: 280px; overflow-y: auto;">
           <table>
             <thead>
@@ -370,15 +429,17 @@
     <div class="auth-card glass-card" style="max-width: 480px;">
       <div id="fichaConteudo" style="margin-bottom: 12px; max-height: 320px; overflow-y: auto; width: 100%;"></div>
       <div style="display: flex; gap: 10px; width: 100%;">
-        <button type="button" class="btn-primary" style="flex: 1;" onclick="imprimirFicha()">Imprimir</button>
-        <button type="button" class="btn-secondary" onclick="fecharFichaMembro()">Fechar</button>
+        <button type="button" class="btn-primary glass-btn-fx" style="flex: 1;" onclick="imprimirFicha()">Imprimir</button>
+        <button type="button" class="btn-secondary glass-btn-fx" onclick="fecharFichaMembro()">Fechar</button>
       </div>
     </div>
   </div>
 
   <div id="importacaoMassaModal" class="auth-overlay" style="display: none;">
     <div class="auth-card glass-card" style="max-width: 520px;">
-      <h3 style="margin-bottom: 8px; color: var(--accent-blue);"><i data-lucide="file-text"></i> Importar CSV</h3>
+      <h3 style="margin-bottom: 8px; color: var(--accent-blue); display: flex; align-items: center; gap: 6px;">
+        <span class="title-icon-glass"><i data-lucide="file-text" style="width:15px;height:15px;"></i></span> Importar CSV
+      </h3>
       <div class="form-group">
         <input type="file" id="arquivoCsvInput" accept=".csv, .txt" onchange="lerArquivoCsv(this)">
       </div>
@@ -386,8 +447,8 @@
         <textarea id="textoCsvInput" rows="4" placeholder="Cole o CSV aqui..."></textarea>
       </div>
       <div style="display: flex; gap: 10px; margin-top: 10px; width: 100%;">
-        <button type="button" class="btn-primary" style="flex: 1;" onclick="processarImportacaoEmMassa()">Importar</button>
-        <button type="button" class="btn-secondary" onclick="fecharModalImportacaoMassa()">Cancelar</button>
+        <button type="button" class="btn-primary glass-btn-fx" style="flex: 1;" onclick="processarImportacaoEmMassa()">Importar</button>
+        <button type="button" class="btn-secondary glass-btn-fx" onclick="fecharModalImportacaoMassa()">Cancelar</button>
       </div>
     </div>
   </div>
