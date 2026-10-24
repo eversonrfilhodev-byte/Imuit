@@ -69,7 +69,7 @@ body {
   min-height: 100vh;
 }
 
-/* MESH GLOW ANIMATIONS (LIGHTWEIGHT MOBILE SAFE) */
+/* MESH GLOW ANIMATIONS */
 .mesh-glow {
   position: fixed;
   border-radius: 50%;
@@ -97,11 +97,11 @@ body {
 
 @media (max-width: 900px) {
   .grid-2 {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr !important;
   }
 }
 
-/* GLASSMORPHISM CARDS COM HOVER REATIVO */
+/* GLASSMORPHISM CARDS */
 .glass-card, .card {
   background: var(--glass-bg);
   backdrop-filter: blur(18px);
@@ -117,10 +117,97 @@ body {
 .glass-card:hover, .card:hover {
   background: var(--glass-bg-hover);
   box-shadow: var(--glass-shadow-hover);
-  transform: translateY(-2px);
 }
 
-/* ÍCONES GLASS 3D (SUBSTITUINDO EMOJIS) */
+/* CHIPS DE FILTRO DE MINISTÉRIO EM ESTILO VIDRO */
+.chip-min-glass {
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  font-size: 0.74rem;
+  font-weight: 700;
+  background: rgba(255, 255, 255, 0.18);
+  border: 1px solid var(--glass-border-subtle);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: var(--transition-spring);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.chip-min-glass:hover {
+  background: rgba(255, 255, 255, 0.35);
+  color: var(--text-heading);
+}
+
+.chip-min-glass.active {
+  background: var(--grad-primary);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.6);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.35);
+}
+
+/* BOLHAS/VIDROS PARA EVENTOS NO CALENDÁRIO */
+.event-glass-bubble {
+  background: rgba(99, 102, 241, 0.25);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 6px;
+  padding: 3px 6px;
+  margin-top: 3px;
+  font-size: 0.7rem;
+  color: var(--text-main);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  transition: var(--transition-spring);
+}
+
+.event-glass-bubble:hover {
+  background: rgba(99, 102, 241, 0.4);
+  transform: scale(1.02);
+}
+
+.btn-del-evt-glass {
+  border: none;
+  background: rgba(244, 63, 94, 0.6);
+  color: #fff;
+  border-radius: 4px;
+  width: 16px;
+  height: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  margin-left: 4px;
+}
+
+.btn-del-evt-glass:hover {
+  background: var(--accent-red);
+}
+
+/* BOLHAS DE MEMBROS EM VIDRO */
+.member-glass-bubble {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  border-radius: var(--radius-lg);
+  margin-bottom: 6px;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--glass-border-subtle);
+  transition: var(--transition-spring);
+}
+
+.member-glass-bubble:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+/* ÍCONES GLASS 3D */
 .title-icon-glass, .tab-icon-glass, .glass-icon-mini {
   display: inline-flex;
   align-items: center;
@@ -135,26 +222,6 @@ body {
   vertical-align: middle;
 }
 
-.glass-icon-mini {
-  width: 22px;
-  height: 22px;
-  margin-right: 4px;
-}
-
-.glass-icon-badge {
-  width: 52px;
-  height: 52px;
-  border-radius: 14px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--grad-glass-icon);
-  border: 1px solid var(--glass-border);
-  box-shadow: 0 6px 15px rgba(0,0,0,0.08);
-  margin: 0 auto 10px auto;
-}
-
-/* CABEÇALHO & LOGO */
 .app-header {
   display: flex;
   justify-content: space-between;
@@ -193,7 +260,6 @@ h1 {
   -webkit-text-fill-color: transparent;
 }
 
-/* NAVEGAÇÃO DE ABAS REATIVA */
 .tabs-nav {
   display: flex;
   gap: 6px;
@@ -222,7 +288,6 @@ h1 {
 .tab-btn:hover {
   color: var(--text-heading);
   background: rgba(255, 255, 255, 0.35);
-  transform: translateY(-1px);
 }
 
 .tab-btn.active {
@@ -231,7 +296,6 @@ h1 {
   box-shadow: 0 6px 18px rgba(99, 102, 241, 0.35);
 }
 
-/* FORMULÁRIOS & INPUTS REATIVOS */
 .form-group {
   display: flex;
   flex-direction: column;
@@ -270,17 +334,6 @@ input, select, textarea {
 input:focus, select:focus, textarea:focus {
   background: rgba(255, 255, 255, 0.9);
   border-color: #6366f1;
-  box-shadow: 0 0 12px rgba(99, 102, 241, 0.2);
-}
-
-/* BOTÕES MOTION FX */
-.glass-btn-fx {
-  transition: var(--transition-spring);
-}
-
-.glass-btn-fx:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(99, 102, 241, 0.3);
 }
 
 button, .btn-primary {
@@ -305,85 +358,16 @@ button.btn-secondary {
   border: 1px solid var(--glass-border);
 }
 
-/* MODAL AUTH */
-.auth-overlay {
-  position: fixed;
-  top: 0; left: 0;
-  width: 100vw; height: 100vh;
-  background: rgba(15, 23, 42, 0.72);
-  backdrop-filter: blur(18px);
-  z-index: 1000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 16px;
-}
-
-.auth-card {
-  width: 100%;
-  max-width: 400px;
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: center !important;
-  justify-content: center !important;
-  text-align: center !important;
-  padding: 22px !important;
-  margin: 0 auto !important;
-}
-
-.auth-header-center {
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: center !important;
-  justify-content: center !important;
-  text-align: center !important;
-  width: 100% !important;
-  margin-bottom: 16px !important;
-}
-
-.logo-auth-center {
-  width: 64px !important;
-  height: 64px !important;
-  margin: 0 auto 10px auto !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  overflow: hidden;
-  border-radius: 16px;
-  background: var(--grad-glass-icon);
-  border: 1px solid var(--glass-border);
-}
-
-.logo-auth-center img {
-  max-width: 100% !important;
-  max-height: 100% !important;
-  object-fit: contain !important;
-  display: block !important;
-  margin: 0 auto !important;
-}
-
-.auth-toggle-btn {
-  background: transparent !important;
-  border: none !important;
-  color: var(--accent-blue) !important;
-  font-size: 0.82rem !important;
-  font-weight: 700 !important;
-  cursor: pointer !important;
-  text-decoration: underline !important;
-  margin: 0 auto !important;
-  display: inline-block !important;
-}
-
-/* CALENDÁRIO AMPLO */
+/* CALENDÁRIO GRANDE */
 .cal-days-header {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: 4px;
   text-align: center;
-  font-size: 0.75rem;
+  font-size: 0.78rem;
   font-weight: 800;
   color: var(--text-muted);
-  margin-bottom: 4px;
+  margin-bottom: 6px;
 }
 
 .cal-grid {
@@ -393,18 +377,20 @@ button.btn-secondary {
 }
 
 .cal-day-cell {
-  min-height: 62px;
-  background: rgba(255, 255, 255, 0.25);
+  min-height: 72px;
+  background: rgba(255, 255, 255, 0.2);
   border: 1px solid var(--glass-border-subtle);
-  border-radius: 8px;
-  padding: 4px;
+  border-radius: 10px;
+  padding: 6px;
   font-size: 0.75rem;
-  transition: var(--transition-smooth);
+  display: flex;
+  flex-direction: column;
 }
 
-.cal-day-cell:hover {
-  background: rgba(255, 255, 255, 0.45);
-  border-color: #6366f1;
+.cal-day-number {
+  font-weight: 800;
+  margin-bottom: 2px;
+  color: var(--text-heading);
 }
 
 .table-responsive table th, 
