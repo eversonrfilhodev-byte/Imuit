@@ -44,7 +44,7 @@ let currentYear = new Date().getFullYear();
 let isRegisterMode = false;
 let isFirebaseListening = false;
 let editingChamadaId = null;
-let ministerioFiltroAtivo = null; // Filtro ativo para chamada
+let ministerioFiltroAtivo = null;
 
 const TAB_IDS = ['tabChamada', 'tabCalendario', 'tabMembros', 'tabTutorial', 'tabAdmin'];
 
@@ -436,7 +436,6 @@ function calcularFaltasTotaisPorMembro(memberId) {
   return totalFaltas;
 }
 
-// RENDERIZAR CHAMADA COM SUPORTE A FILTRO DE MINISTÉRIOS E BOLHAS DE VIDRO
 function renderAttendanceListEditor() {
   const container = document.getElementById('boxMembrosChamada');
   const buscaInput = document.getElementById('buscaMembroChamada');
@@ -455,7 +454,6 @@ function renderAttendanceListEditor() {
     }
   });
 
-  // FILTRAGEM POR NOME E POR MINISTÉRIO SELECIONADO
   let membrosFiltrados = state.membros.filter(m => {
     const matchNome = (m.nome || '').toLowerCase().includes(termo);
     const matchApelido = (m.apelido || '').toLowerCase().includes(termo);
@@ -665,57 +663,135 @@ function excluirChamada(id) {
   }
 }
 
+// RELATÓRIO DINÂMICO COM FILTROS AVANÇADOS
 function abrirRelatorioMensal() {
-  const mesAtualStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}`;
-  
-  const chamadasDoMes = (state.chamadas || []).filter(c => c.data && c.data.startsWith(mesAtualStr));
-  
-  let totalPresencasMes = 0;
-  let totalAusenciasMes = 0;
-
-  chamadasDoMes.forEach(c => {
-    Object.values(c.statusMembros || {}).forEach(status => {
-      if (status === 'PRESENTE') totalPresencasMes++;
-      else if (status === 'AUSENTE' || status === 'FALTA') totalAusenciasMes++;
-    });
-  });
-
-  const totalGeral = totalPresencasMes + totalAusenciasMes;
-  const pctPresenca = totalGeral > 0 ? Math.round((totalPresencasMes / totalGeral) * 100) : 0;
-
   const modal = document.getElementById('fichaMembroModal');
   const conteudo = document.getElementById('fichaConteudo');
 
-  if (modal && conteudo) {
-    conteudo.innerHTML = `
-      <h3>📊 Relatório Mensal (${currentMonth + 1}/${currentYear})</h3>
-      <p style="margin-top:6px; color:var(--text-muted); font-size:0.82rem;">Métricas calculadas com base nas listas salvas neste mês.</p>
-      
-      <div style="margin-top:12px; background:rgba(255,255,255,0.15); padding:12px; border-radius:10px; border:1px solid var(--glass-border-subtle); font-size:0.84rem;">
-        <p><b>Listas Realizadas:</b> ${chamadasDoMes.length}</p>
-        <p><b>Presenças Confirmadas:</b> ${totalPresencasMes}</p>
-        <p><b>Faltas Registradas:</b> ${totalAusenciasMes}</p>
+  if (!modal || !conteudo) return;
+
+  const eventosOptions = (state.eventos || []).map(e => `<option value="${e.id}">${e.titulo} (${e.data})</option>`).join('');
+
+  conteudo.innerHTML = `
+    <div style="padding: 4px;">
+      <h3 style="font-size:1.1rem; margin-bottom:10px; display:flex; align-items:center; gap:8px;">
+        <span class="title-icon-glass"><i data-lucide="bar-chart-2" style="width:16px;height:16px;"></i></span> Gerador de Relatórios
+      </h3>
+
+      <div class="form-group" style="margin-bottom:10px;">
+        <label>Tipo de Relatório / Filtro:</label>
+        <select id="selTipoFiltroRelatorio" onchange="alternarCamposFiltroRelatorio(this.value)">
+          <option value="MENSAL" selected>📅 Mensal</option>
+          <option value="SEMANAL">📆 Semanal (Últimos 7 dias)</option>
+          <option value="ANUAL">🗓️ Anual</option>
+          <option value="EVENTO">📌 Por Evento Específico</option>
+          <option value="CUSTOM">⏳ Período Personalizado</option>
+        </select>
       </div>
 
-      <h4 style="margin-top:14px; margin-bottom:6px; font-size:0.9rem;">Gráfico de Frequência do Mês</h4>
-      <div style="width:100%; background:rgba(255,255,255,0.15); border-radius:10px; height:24px; overflow:hidden; display:flex;">
-        <div style="width:${pctPresenca}%; background:linear-gradient(135deg, #10b981, #34d399); height:100%; text-align:center; color:#fff; font-size:0.75rem; line-height:24px; font-weight:bold;">
-          ${pctPresenca}%
+      <div id="campoFiltroEvento" class="form-group" style="display:none; margin-bottom:10px;">
+        <label>Selecione o Evento:</label>
+        <select id="selEventoRelatorio">
+          <option value="">Selecione um evento...</option>
+          ${eventosOptions}
+        </select>
+      </div>
+
+      <div id="campoFiltroDatasCustom" class="form-row" style="display:none; margin-bottom:10px;">
+        <div class="form-group" style="flex:1;">
+          <label>Data Início:</label>
+          <input type="date" id="relDataInicio">
         </div>
-        <div style="width:${100 - pctPresenca}%; background:linear-gradient(135deg, #f43f5e, #fb7185); height:100%;"></div>
+        <div class="form-group" style="flex:1;">
+          <label>Data Fim:</label>
+          <input type="date" id="relDataFim">
+        </div>
       </div>
-      <div style="display:flex; justify-content:space-between; font-size:0.75rem; margin-top:6px; color:var(--text-muted);">
-        <span>🟢 Presenças (${pctPresenca}%)</span>
-        <span>🔴 Ausências (${100 - pctPresenca}%)</span>
-      </div>
-    `;
-    modal.style.display = 'flex';
-  }
+
+      <button type="button" class="btn-primary glass-btn-fx" style="width:100%; margin-bottom:12px;" onclick="gerarDadosRelatorio()">
+        ⚡ Gerar Relatório
+      </button>
+
+      <div id="resultadoRelatorioContainer"></div>
+    </div>
+  `;
+
+  modal.style.display = 'flex';
+  if (window.lucide) lucide.createIcons();
+  gerarDadosRelatorio();
 }
 
-// ==========================================
-// IMPRESSÃO E RELATÓRIO PDF ULTRA-ECONÔMICO
-// ==========================================
+function alternarCamposFiltroRelatorio(tipo) {
+  const campoEvento = document.getElementById('campoFiltroEvento');
+  const campoCustom = document.getElementById('campoFiltroDatasCustom');
+
+  if (campoEvento) campoEvento.style.display = (tipo === 'EVENTO') ? 'block' : 'none';
+  if (campoCustom) campoCustom.style.display = (tipo === 'CUSTOM') ? 'flex' : 'none';
+}
+
+function gerarDadosRelatorio() {
+  const container = document.getElementById('resultadoRelatorioContainer');
+  const tipo = document.getElementById('selTipoFiltroRelatorio')?.value || 'MENSAL';
+  if (!container) return;
+
+  let chamadasFiltradas = state.chamadas || [];
+  const hoje = new Date();
+
+  if (tipo === 'MENSAL') {
+    const mesAtualStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}`;
+    chamadasFiltradas = chamadasFiltradas.filter(c => c.data && c.data.startsWith(mesAtualStr));
+  } else if (tipo === 'SEMANAL') {
+    const seteDiasAtras = new Date();
+    seteDiasAtras.setDate(hoje.getDate() - 7);
+    chamadasFiltradas = chamadasFiltradas.filter(c => {
+      const d = new Date(c.data + 'T00:00:00');
+      return d >= seteDiasAtras && d <= hoje;
+    });
+  } else if (tipo === 'ANUAL') {
+    const anoAtualStr = `${currentYear}`;
+    chamadasFiltradas = chamadasFiltradas.filter(c => c.data && c.data.startsWith(anoAtualStr));
+  } else if (tipo === 'EVENTO') {
+    const evtId = document.getElementById('selEventoRelatorio')?.value;
+    chamadasFiltradas = chamadasFiltradas.filter(c => c.eventoId === evtId);
+  } else if (tipo === 'CUSTOM') {
+    const dtIni = document.getElementById('relDataInicio')?.value;
+    const dtFim = document.getElementById('relDataFim')?.value;
+    if (dtIni && dtFim) {
+      chamadasFiltradas = chamadasFiltradas.filter(c => c.data >= dtIni && c.data <= dtFim);
+    }
+  }
+
+  let totalPresencas = 0;
+  let totalAusencias = 0;
+
+  chamadasFiltradas.forEach(c => {
+    Object.values(c.statusMembros || {}).forEach(status => {
+      if (status === 'PRESENTE') totalPresencas++;
+      else if (status === 'AUSENTE' || status === 'FALTA') totalAusencias++;
+    });
+  });
+
+  const totalGeral = totalPresencas + totalAusencias;
+  const pctPresenca = totalGeral > 0 ? Math.round((totalPresencas / totalGeral) * 100) : 0;
+
+  container.innerHTML = `
+    <div style="background:rgba(255,255,255,0.25); padding:12px; border-radius:10px; border:1px solid var(--glass-border-subtle); font-size:0.84rem;">
+      <p><b>Listas Processadas:</b> ${chamadasFiltradas.length}</p>
+      <p><b>Presenças Confirmadas:</b> ${totalPresencas}</p>
+      <p><b>Faltas Registradas:</b> ${totalAusencias}</p>
+    </div>
+
+    <h4 style="margin-top:12px; margin-bottom:6px; font-size:0.85rem;">Assiduidade do Período</h4>
+    <div style="width:100%; background:rgba(255,255,255,0.3); border-radius:8px; height:22px; overflow:hidden; display:flex;">
+      <div style="width:${pctPresenca}%; background:linear-gradient(135deg, #10b981, #34d399); height:100%; text-align:center; color:#fff; font-size:0.72rem; line-height:22px; font-weight:bold;">
+        ${pctPresenca}%
+      </div>
+      <div style="width:${100 - pctPresenca}%; background:linear-gradient(135deg, #f43f5e, #fb7185); height:100%;"></div>
+    </div>
+  `;
+}
+
+// IMPRESSÃO E PDF
 function exportarListaParaPDF() {
   const pasta = document.getElementById('selPastaDestino')?.value || 'Geral';
   const inputTitulo = document.getElementById('listaTitulo')?.value.trim();
@@ -1058,7 +1134,6 @@ function mudarMesCalendario(step) {
   renderCalendar();
 }
 
-// RENDERIZAR CALENDÁRIO AMPLO COM BOLHAS GLASSMOPHISM
 function renderCalendar() {
   const grid = document.getElementById('gridCalendarioDias');
   const tituloMes = document.getElementById('calTituloMes');
@@ -1491,7 +1566,6 @@ function excluirMinisterio(nomeMinisterio) {
   }
 }
 
-// RENDERIZAR CHIPS/BOLHAS DE MINISTÉRIOS COM FILTRO
 function renderMinistryCheckboxes() {
   const box = document.getElementById('boxCheckMinisterios');
   const boxChamada = document.getElementById('boxFiltrosMinisteriosChamada');
@@ -1506,11 +1580,9 @@ function renderMinistryCheckboxes() {
     `).join('');
   }
 
-  // RENDERIZAÇÃO DOS CHIPS DE FILTRO DE MINISTÉRIO COM ALTURA/SELEÇÃO CORRIGIDA
   if (boxChamada) {
     boxChamada.innerHTML = '';
     
-    // Chip "Todos"
     const chipTodos = document.createElement('span');
     chipTodos.className = `chip-min-glass ${!ministerioFiltroAtivo ? 'active' : ''}`;
     chipTodos.textContent = 'Todos';
@@ -1521,7 +1593,6 @@ function renderMinistryCheckboxes() {
     };
     boxChamada.appendChild(chipTodos);
 
-    // Chips individuais
     state.ministries.forEach(m => {
       const chip = document.createElement('span');
       chip.className = `chip-min-glass ${ministerioFiltroAtivo === m ? 'active' : ''}`;
@@ -1664,6 +1735,8 @@ window.abrirDetalhesEvento = abrirDetalhesEvento;
 window.habilitarEdicaoEvento = habilitarEdicaoEvento;
 window.salvarEdicaoEvento = salvarEdicaoEvento;
 window.abrirRelatorioMensal = abrirRelatorioMensal;
+window.alternarCamposFiltroRelatorio = alternarCamposFiltroRelatorio;
+window.gerarDadosRelatorio = gerarDadosRelatorio;
 window.alternarTema = alternarTema;
 window.mascaraTelefone = mascaraTelefone;
 window.renderListaMembros = renderListaMembros;
