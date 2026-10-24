@@ -1,21 +1,22 @@
 /* ==========================================
-   SISTEMA DE DESIGN: EQUILIBRADO & FLUIDO
+   SISTEMA DE DESIGN: NEO-GLASS 3D ULTRA-REATIVO
    ========================================== */
 
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
 :root {
   --bg-gradient: radial-gradient(circle at 10% 20%, #eef2f8 0%, #e6edfd 50%, #f7eff9 100%);
-  --glass-bg: rgba(255, 255, 255, 0.68);
-  --glass-bg-hover: rgba(255, 255, 255, 0.88);
-  --glass-border: rgba(255, 255, 255, 0.88);
+  --glass-bg: rgba(255, 255, 255, 0.72);
+  --glass-bg-hover: rgba(255, 255, 255, 0.9);
+  --glass-border: rgba(255, 255, 255, 0.9);
   --glass-border-subtle: rgba(255, 255, 255, 0.45);
 
-  --glass-shadow: 0 12px 30px rgba(31, 38, 135, 0.06), inset 0 1px 2px rgba(255, 255, 255, 0.95);
-  --glass-shadow-hover: 0 16px 38px rgba(99, 102, 241, 0.15), inset 0 1px 3px rgba(255, 255, 255, 1);
+  --glass-shadow: 0 12px 32px rgba(31, 38, 135, 0.07), inset 0 1px 2px rgba(255, 255, 255, 0.95);
+  --glass-shadow-hover: 0 18px 40px rgba(99, 102, 241, 0.18), inset 0 1px 3px rgba(255, 255, 255, 1);
 
   --grad-primary: linear-gradient(135deg, #4f46e5 0%, #6366f1 50%, #8b5cf6 100%);
   --grad-pink: linear-gradient(135deg, #f43f5e 0%, #ec4899 100%);
+  --grad-glass-icon: linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.3) 100%);
 
   --accent-blue: #38bdf8;
   --accent-green: #10b981;
@@ -30,17 +31,21 @@
   --radius-lg: 10px;
   --radius-md: 8px;
   --radius-pill: 999px;
+
+  --transition-spring: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  --transition-smooth: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 [data-theme="dark"] {
   --bg-gradient: radial-gradient(circle at 15% 15%, #0f172a 0%, #1e1b4b 50%, #090d16 100%);
-  --glass-bg: rgba(15, 23, 42, 0.74);
-  --glass-bg-hover: rgba(30, 41, 59, 0.9);
+  --glass-bg: rgba(15, 23, 42, 0.76);
+  --glass-bg-hover: rgba(30, 41, 59, 0.92);
   --glass-border: rgba(255, 255, 255, 0.15);
   --glass-border-subtle: rgba(255, 255, 255, 0.06);
 
-  --glass-shadow: 0 12px 30px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.15);
-  --glass-shadow-hover: 0 16px 38px rgba(99, 102, 241, 0.22), inset 0 1px 2px rgba(255, 255, 255, 0.25);
+  --glass-shadow: 0 12px 32px rgba(0, 0, 0, 0.42), inset 0 1px 1px rgba(255, 255, 255, 0.15);
+  --glass-shadow-hover: 0 18px 40px rgba(99, 102, 241, 0.25), inset 0 1px 2px rgba(255, 255, 255, 0.25);
+  --grad-glass-icon: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.03) 100%);
 
   --text-main: #f8fafc;
   --text-heading: #ffffff;
@@ -64,22 +69,23 @@ body {
   min-height: 100vh;
 }
 
+/* MESH GLOW ANIMATIONS (LIGHTWEIGHT MOBILE SAFE) */
 .mesh-glow {
   position: fixed;
   border-radius: 50%;
-  filter: blur(90px);
+  filter: blur(80px);
   z-index: -1;
   pointer-events: none;
   opacity: 0.35;
 }
 
-.mesh-1 { top: -10%; left: -5%; width: 350px; height: 350px; background: radial-gradient(circle, rgba(99, 102, 241, 0.4) 0%, transparent 70%); }
-.mesh-2 { bottom: -10%; right: -5%; width: 400px; height: 400px; background: radial-gradient(circle, rgba(56, 189, 248, 0.35) 0%, transparent 70%); }
-.mesh-3 { top: 40%; right: 30%; width: 280px; height: 280px; background: radial-gradient(circle, rgba(244, 63, 94, 0.25) 0%, transparent 70%); }
+.mesh-1 { top: -10%; left: -5%; width: 320px; height: 320px; background: radial-gradient(circle, rgba(99, 102, 241, 0.4) 0%, transparent 70%); }
+.mesh-2 { bottom: -10%; right: -5%; width: 380px; height: 380px; background: radial-gradient(circle, rgba(56, 189, 248, 0.35) 0%, transparent 70%); }
+.mesh-3 { top: 40%; right: 30%; width: 260px; height: 260px; background: radial-gradient(circle, rgba(244, 63, 94, 0.25) 0%, transparent 70%); }
 
 .container {
   width: 100%;
-  max-width: 1260px;
+  max-width: 1280px;
   margin: 0 auto;
 }
 
@@ -95,18 +101,60 @@ body {
   }
 }
 
+/* GLASSMORPHISM CARDS COM HOVER REATIVO */
 .glass-card, .card {
   background: var(--glass-bg);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
   border: 1px solid var(--glass-border);
   box-shadow: var(--glass-shadow);
   border-radius: var(--radius-xl);
   padding: 14px 18px;
   margin-bottom: 12px;
+  transition: var(--transition-spring);
 }
 
-/* LOGO DO CABEÇALHO PROPORCIONAL E NATURAL (SEM FORÇAR CUBO) */
+.glass-card:hover, .card:hover {
+  background: var(--glass-bg-hover);
+  box-shadow: var(--glass-shadow-hover);
+  transform: translateY(-2px);
+}
+
+/* ÍCONES GLASS 3D (SUBSTITUINDO EMOJIS) */
+.title-icon-glass, .tab-icon-glass, .glass-icon-mini {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  background: var(--grad-glass-icon);
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  margin-right: 6px;
+  vertical-align: middle;
+}
+
+.glass-icon-mini {
+  width: 22px;
+  height: 22px;
+  margin-right: 4px;
+}
+
+.glass-icon-badge {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--grad-glass-icon);
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 6px 15px rgba(0,0,0,0.08);
+  margin: 0 auto 10px auto;
+}
+
+/* CABEÇALHO & LOGO */
 .app-header {
   display: flex;
   justify-content: space-between;
@@ -145,6 +193,7 @@ h1 {
   -webkit-text-fill-color: transparent;
 }
 
+/* NAVEGAÇÃO DE ABAS REATIVA */
 .tabs-nav {
   display: flex;
   gap: 6px;
@@ -167,18 +216,22 @@ h1 {
   align-items: center;
   gap: 6px;
   white-space: nowrap;
+  transition: var(--transition-spring);
 }
 
 .tab-btn:hover {
   color: var(--text-heading);
   background: rgba(255, 255, 255, 0.35);
+  transform: translateY(-1px);
 }
 
 .tab-btn.active {
   background: var(--grad-primary);
   color: #ffffff;
+  box-shadow: 0 6px 18px rgba(99, 102, 241, 0.35);
 }
 
+/* FORMULÁRIOS & INPUTS REATIVOS */
 .form-group {
   display: flex;
   flex-direction: column;
@@ -211,11 +264,23 @@ input, select, textarea {
   font-weight: 600;
   width: 100%;
   outline: none;
+  transition: var(--transition-smooth);
 }
 
 input:focus, select:focus, textarea:focus {
-  background: rgba(255, 255, 255, 0.88);
+  background: rgba(255, 255, 255, 0.9);
   border-color: #6366f1;
+  box-shadow: 0 0 12px rgba(99, 102, 241, 0.2);
+}
+
+/* BOTÕES MOTION FX */
+.glass-btn-fx {
+  transition: var(--transition-spring);
+}
+
+.glass-btn-fx:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(99, 102, 241, 0.3);
 }
 
 button, .btn-primary {
@@ -240,24 +305,12 @@ button.btn-secondary {
   border: 1px solid var(--glass-border);
 }
 
-.member-item-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 6px 10px;
-  border-radius: var(--radius-md);
-  margin-bottom: 5px;
-  background: rgba(255, 255, 255, 0.25);
-  border: 1px solid var(--glass-border-subtle);
-  gap: 8px;
-}
-
-/* MODAL DE AUTENTICAÇÃO COM LOGO CENTRALIZADA E CORRETA */
+/* MODAL AUTH */
 .auth-overlay {
   position: fixed;
   top: 0; left: 0;
   width: 100vw; height: 100vh;
-  background: rgba(15, 23, 42, 0.7);
+  background: rgba(15, 23, 42, 0.72);
   backdrop-filter: blur(18px);
   z-index: 1000;
   display: flex;
@@ -274,7 +327,7 @@ button.btn-secondary {
   align-items: center !important;
   justify-content: center !important;
   text-align: center !important;
-  padding: 20px !important;
+  padding: 22px !important;
   margin: 0 auto !important;
 }
 
@@ -296,6 +349,9 @@ button.btn-secondary {
   align-items: center !important;
   justify-content: center !important;
   overflow: hidden;
+  border-radius: 16px;
+  background: var(--grad-glass-icon);
+  border: 1px solid var(--glass-border);
 }
 
 .logo-auth-center img {
@@ -318,29 +374,37 @@ button.btn-secondary {
   display: inline-block !important;
 }
 
+/* CALENDÁRIO AMPLO */
 .cal-days-header {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 3px;
+  gap: 4px;
   text-align: center;
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   font-weight: 800;
   color: var(--text-muted);
+  margin-bottom: 4px;
 }
 
 .cal-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 3px;
+  gap: 4px;
 }
 
 .cal-day-cell {
-  min-height: 48px;
+  min-height: 62px;
   background: rgba(255, 255, 255, 0.25);
   border: 1px solid var(--glass-border-subtle);
-  border-radius: 6px;
-  padding: 3px;
-  font-size: 0.72rem;
+  border-radius: 8px;
+  padding: 4px;
+  font-size: 0.75rem;
+  transition: var(--transition-smooth);
+}
+
+.cal-day-cell:hover {
+  background: rgba(255, 255, 255, 0.45);
+  border-color: #6366f1;
 }
 
 .table-responsive table th, 
